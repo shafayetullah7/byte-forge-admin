@@ -1,29 +1,24 @@
 import { fetcher } from "../api-client";
-import type { AdminUser, LoginResponse, LoginLocalAdminDto } from "../types";
+import type { AdminUser, LoginLocalAdminDto, LoginResponse } from "../types";
 
-/**
- * Check if the admin is currently authenticated
- */
-export const checkAuth = async (): Promise<AdminUser> => {
-  return fetcher<AdminUser>("/admin/auth/check");
+export const authApi = {
+  login: async (data: LoginLocalAdminDto): Promise<LoginResponse> => {
+    return fetcher<LoginResponse>("/admin/auth/login", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  
+  checkAuth: async (headers?: HeadersInit): Promise<AdminUser> => {
+    return fetcher<AdminUser>("/admin/auth/check", {
+      headers,
+      strict: false,
+    });
+  },
+
+  logout: async (): Promise<void> => {
+    return fetcher<void>("/admin/auth/logout", {
+      method: "POST",
+    });
+  },
 };
-
-/**
- * Login admin
- */
-export const loginAdmin = async (body: LoginLocalAdminDto): Promise<LoginResponse> => {
-  return fetcher<LoginResponse>("/admin/auth/login", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-};
-
-/**
- * Logout admin
- */
-export const logoutAdmin = async (): Promise<void> => {
-  return fetcher<void>("/admin/auth/logout", {
-    method: "POST",
-  });
-};
-
