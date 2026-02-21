@@ -5,6 +5,8 @@ import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { Input } from "~/components/ui/Input";
 import { PottedPlantIcon } from "~/components/icons/PottedPlantIcon";
+import { EyeIcon } from "~/components/icons/EyeIcon";
+import { EyeSlashIcon } from "~/components/icons/EyeSlashIcon";
 import { authApi } from "~/lib/api";
 import { loginSchema, type LoginFormData } from "~/schemas/login.schema";
 
@@ -27,6 +29,7 @@ export default function LoginPage() {
     const loginTrigger = useAction(loginAction);
     const submission = useSubmission(loginAction);
     const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
+    const [showPassword, setShowPassword] = createSignal(false);
 
     const [loginForm, { Form, Field }] = createForm<LoginFormData>({
         validate: (values) => {
@@ -141,13 +144,24 @@ export default function LoginPage() {
                             {(field, props) => (
                                 <Input
                                     {...props}
-                                    type="password"
+                                    type={showPassword() ? "text" : "password"}
                                     label="Password"
                                     placeholder="••••••••"
                                     value={field.value || ""}
                                     error={field.error}
                                     required
                                     disabled={submission.pending}
+                                    suffix={
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword())}
+                                            class="text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center"
+                                            aria-label={showPassword() ? "Hide password" : "Show password"}
+                                            disabled={submission.pending}
+                                        >
+                                            {showPassword() ? <EyeSlashIcon /> : <EyeIcon />}
+                                        </button>
+                                    }
                                 />
                             )}
                         </Field>
