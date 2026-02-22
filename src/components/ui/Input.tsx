@@ -17,7 +17,7 @@ export function Input(props: InputProps) {
             <div class="relative">
                 <input
                     {...rest}
-                    class={`block w-full rounded-lg border bg-white px-3 py-2.5 text-sm ring-offset-white transition-all focus:border-primary-green focus:outline-none focus:ring-2 focus:ring-primary-green/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 ${error ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-slate-200"
+                    class={`block w-full rounded-lg border bg-white px-3 py-2.5 text-sm ring-offset-white transition-all focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 ${error ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-slate-200"
                         } ${suffix ? "pr-10" : ""} ${props.class || ""}`}
                 />
                 <Show when={suffix}>

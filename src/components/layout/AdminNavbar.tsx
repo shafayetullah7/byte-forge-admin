@@ -12,7 +12,7 @@ export function AdminNavbar() {
                 <button
                     type="button"
                     title="Notifications"
-                    class="text-slate-500 hover:text-primary-green transition-colors relative"
+                    class="text-slate-500 hover:text-primary-green-700 transition-colors relative"
                 >
                     <BellIcon class="w-6 h-6" />
                     <span class="absolute top-0 right-1 w-2 h-2 bg-red-600 rounded-full border border-white"></span>
@@ -21,7 +21,7 @@ export function AdminNavbar() {
                 <button
                     type="button"
                     title="Help"
-                    class="text-slate-500 hover:text-primary-green transition-colors mr-2"
+                    class="text-slate-500 hover:text-primary-green-700 transition-colors mr-2"
                 >
                     <QuestionMarkCircleIcon class="w-6 h-6" />
                 </button>

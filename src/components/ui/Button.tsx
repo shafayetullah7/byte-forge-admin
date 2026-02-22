@@ -10,10 +10,10 @@ export function Button(props: ButtonProps) {
     const merged = mergeProps({ variant: "primary", size: "md" }, props);
 
     const baseClasses =
-        "inline-flex items-center justify-center rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
+        "inline-flex items-center justify-center rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-primary-green-500 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
 
     const variants = {
-        primary: "bg-primary-green text-white hover:bg-primary-green-hover shadow-sm",
+        primary: "bg-primary-green-700 text-white hover:bg-primary-green-800 shadow-sm",
         secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
         outline:
             "border border-slate-200 bg-white hover:bg-slate-50 text-slate-900 shadow-sm",

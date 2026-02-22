@@ -99,15 +99,15 @@ export default function LoginPage() {
     };
 
     return (
-        <main class="min-h-screen bg-soft-green relative flex items-center justify-center p-4 overflow-hidden">
+        <main class="min-h-screen bg-primary-green-50 relative flex items-center justify-center p-4 overflow-hidden">
             {/* Subtle Grid Background */}
             <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
                 style="background-image: radial-gradient(#1F6F4A 1px, transparent 1px); background-size: 24px 24px;"></div>
-            <div class="absolute inset-0 z-0 bg-gradient-to-b from-soft-green to-transparent pointer-events-none"></div>
+            <div class="absolute inset-0 z-0 bg-gradient-to-b from-primary-green-100 to-transparent pointer-events-none"></div>
 
             <div class="w-full max-w-md relative z-10">
                 <div class="text-center mb-10">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-slate-200 shadow-sm mb-6 text-primary-green">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-primary-green-200 shadow-sm mb-6 text-primary-green-700">
                         <PottedPlantIcon class="w-8 h-8" />
                     </div>
                     <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">ByteForge Admin</h1>

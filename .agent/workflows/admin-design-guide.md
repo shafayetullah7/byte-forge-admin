@@ -15,10 +15,15 @@ This document serves as the standard design guide to ensure absolute coherency a
 
 ## 1. Visual Language & Color Palette
 Use these CSS variables for all styling. Do NOT use ad-hoc hex codes.
-- **Primary Action**: `var(--color-primary-green)` - Key actions, primary buttons, active states.
+- **Primary Action**: Built around the `primary-green` scale (Base `#1F6F4A`).
+  - `var(--color-primary-green-700)`: The default base layer for primary buttons.
+  - `var(--color-primary-green-800)`: Button hover states.
+  - `var(--color-primary-green-500)`: Interactive focus rings (Inputs, Buttons).
+  - `var(--color-primary-green-100)`: Active navigation/sidebar background.
+  - `var(--color-primary-green-50)`: Extremely soft backgrounds (Login page, subtle alerts).
 - **Background**: `var(--color-slate-50)` - Main workspace background.
 - **Surface**: `var(--color-white)` - Cards, containers, modals, inputs.
-- **Sidebar**: `var(--color-slate-950)` - Navigation background.
+- **Sidebar**: `var(--color-primary-green-950)` - Navigation background.
 - **Border**: `var(--color-slate-200)` - Default borders for separation.
 - **Text Main**: `var(--color-slate-900)` - Primary text, headings.
 - **Text Muted**: `var(--color-slate-500)` - Secondary info, captions, disabled text.
@@ -109,7 +114,7 @@ Depth should be minimal. Use shadows exclusively to indicate interactivity or fl
 Every page in the admin panel follows a strict 3-part spatial architecture:
 
 ### A. The Shell (Persistent)
-- **Sidebar**: Fixed on the left (`w-[240px]`). Background is `slate-950`.
+- **Sidebar**: Fixed on the left (`w-[240px]`). Background is `primary-green-950`.
 - **Topbar**: Fixed or sticky at the top, holding user profile/search.
 
 ### B. The Page Header
@@ -137,9 +142,9 @@ Use CSS Grid to structure content areas.
 
 | State | Treatment |
 |---|---|
-| **Hover (Buttons)** | Darken background (`hover:bg-primary-green-hover`) or text color. |
+| **Hover (Buttons)** | Darken background (`hover:bg-primary-green-800`) or text color. |
 | **Hover (Table Rows)** | Shift background slightly: `hover:bg-slate-50 transition-colors`. |
-| **Focus** | Provide outline on inputs: `focus:ring-2 focus:ring-primary-green focus:border-primary-green`. |
+| **Focus** | Provide outline on inputs: `focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500`. |
 | **Disabled** | `opacity-50 cursor-not-allowed`. Remove hover effects. |
 
 ---

@@ -1,9 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-green: #1F6F4A;
-  --color-primary-green-hover: #165236;
-  --color-soft-green: #F5F7F6;
+  /* The "Pro Light" Primary Key Scale (#1F6F4A base) */
+  --color-primary-green-50: #F0F8F4;
+  --color-primary-green-100: #DDF0E6;
+  --color-primary-green-200: #BCE0CE;
+  --color-primary-green-300: #8FC9A9;
+  --color-primary-green-400: #5DAC81;
+  --color-primary-green-500: #398E61;
+  --color-primary-green-600: #26724A;
+  --color-primary-green-700: #1F6F4A;
+  --color-primary-green-800: #165236;
+  --color-primary-green-900: #11402A;
+  --color-primary-green-950: #0A2619;
+
+  /* Backward compatibility aliases */
+  --color-primary-green: var(--color-primary-green-700);
+  --color-primary-green-hover: var(--color-primary-green-800);
+  --color-soft-green: var(--color-primary-green-50);
 
   --color-slate-50: #f8fafc;
   --color-slate-100: #f1f5f9;
