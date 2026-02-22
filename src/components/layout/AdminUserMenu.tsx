@@ -37,42 +37,42 @@ export function AdminUserMenu() {
         <div class="relative" ref={menuRef}>
             <button
                 type="button"
-                class="flex items-center gap-3 hover:bg-forest-50 p-1.5 rounded-lg transition-colors"
+                class="flex items-center gap-3 hover:bg-slate-50 p-1.5 rounded-lg transition-colors"
                 onClick={toggleMenu}
             >
-                <div class="w-8 h-8 rounded-full bg-forest-600 flex items-center justify-center text-white font-bold text-sm">
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-sm">
                     {userInitials()}
                 </div>
                 <div class="flex flex-col text-left hidden sm:flex">
-                    <span class="text-sm font-medium text-forest-900 border-none truncate max-w-[120px]">
+                    <span class="text-sm font-medium text-slate-900 border-none truncate max-w-[120px]">
                         {session()?.userName || "Admin User"}
                     </span>
-                    <span class="text-xs text-forest-400">Super Admin</span>
+                    <span class="text-xs text-slate-500">Super Admin</span>
                 </div>
-                <svg class="w-4 h-4 text-forest-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
 
             <Show when={isOpen()}>
-                <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-md border border-cream-200 py-1 z-50">
-                    <div class="px-4 py-2 border-b border-cream-100 sm:hidden">
-                        <p class="text-sm text-forest-900 font-medium truncate">{session()?.userName}</p>
-                        <p class="text-xs text-forest-400">Super Admin</p>
+                <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-md border border-slate-200 py-1 z-50">
+                    <div class="px-4 py-2 border-b border-slate-100 sm:hidden">
+                        <p class="text-sm text-slate-900 font-medium truncate">{session()?.userName}</p>
+                        <p class="text-xs text-slate-500">Super Admin</p>
                     </div>
                     <button
                         onClick={() => { setIsOpen(false); /* navigate to profile */ }}
-                        class="w-full text-left px-4 py-2 text-sm text-forest-700 hover:bg-forest-50 transition-colors"
+                        class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                         Your Profile
                     </button>
                     <button
                         onClick={() => { setIsOpen(false); /* navigate to settings */ }}
-                        class="w-full text-left px-4 py-2 text-sm text-forest-700 hover:bg-forest-50 transition-colors"
+                        class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                         Settings
                     </button>
-                    <div class="border-t border-cream-100 my-1"></div>
+                    <div class="border-t border-slate-100 my-1"></div>
                     <form action={logoutAction} method="post" class="w-full">
                         <button
                             type="submit"

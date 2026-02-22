@@ -1,23 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  /* Global Brand Palette Variables */
-  --color-forest-300: #86A789;
-  --color-forest-400: #739072;
-  --color-forest-500: #4F6F52;
-  --color-forest-600: #3A4D39;
-  --color-forest-700: #2C3E2B;
-  --color-forest-800: #1A2619;
-  --color-forest-900: #0F160E;
+  --color-primary-green: #1F6F4A;
+  --color-primary-green-hover: #165236;
+  --color-soft-green: #F5F7F6;
 
-  --color-cream-50: #FCFAF8;
-  --color-cream-100: #F6F1EA;
-  --color-cream-200: #EBE1D1;
-  --color-terracotta-400: #D87D56;
-  --color-terracotta-500: #C25E30;
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-500: #64748b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #09090b;
+  --color-white: #ffffff;
 
-  --color-sidebar: var(--color-forest-900);
-  --color-sidebar-text: var(--color-forest-300);
+  --color-sidebar: var(--color-slate-950);
+  --color-sidebar-text: var(--color-slate-500);
   --color-sidebar-active: var(--color-white);
 
   --radius-lg: 8px;
@@ -35,8 +32,8 @@
 
 body {
   font-family: var(--font-inter);
-  background-color: var(--color-cream-50);
-  color: var(--color-forest-900);
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

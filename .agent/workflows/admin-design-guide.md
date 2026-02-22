@@ -7,7 +7,7 @@ description: ByteForge Admin "Pro Light" design rules and visual standards
 > **Theme**: "Pro Light" — Data-dense, clean, high-productivity interface.
 > **Audience**: ByteForge administrators and internal staff.
 > **Device**: Desktop-first, responsive for tablet.
-> **Color Rules**: Follows the global ByteForge color palette (`forest`, `terracotta`, `cream`) but focuses heavily on high legibility.
+> **Color Rules**: Standard "Pro Light" theme focusing on legible data tables. Usage of `slate` grays, white backgrounds, and `primary-green` highlights.
 
 This document serves as the standard design guide to ensure absolute coherency across all admin system components.
 
@@ -15,13 +15,13 @@ This document serves as the standard design guide to ensure absolute coherency a
 
 ## 1. Visual Language & Color Palette
 Use these CSS variables for all styling. Do NOT use ad-hoc hex codes.
-- **Primary Action**: `var(--color-forest-600)` - Key actions, primary buttons, active states.
-- **Background**: `var(--color-cream-50)` - Main workspace background.
+- **Primary Action**: `var(--color-primary-green)` - Key actions, primary buttons, active states.
+- **Background**: `var(--color-slate-50)` - Main workspace background.
 - **Surface**: `var(--color-white)` - Cards, containers, modals, inputs.
-- **Sidebar**: `var(--color-forest-900)` - Navigation background.
-- **Border**: `var(--color-cream-200)` - Default borders for separation.
-- **Text Main**: `var(--color-forest-900)` - Primary text, headings.
-- **Text Muted**: `var(--color-forest-400)` - Secondary info, captions, disabled text.
+- **Sidebar**: `var(--color-slate-950)` - Navigation background.
+- **Border**: `var(--color-slate-200)` - Default borders for separation.
+- **Text Main**: `var(--color-slate-900)` - Primary text, headings.
+- **Text Muted**: `var(--color-slate-500)` - Secondary info, captions, disabled text.
 
 ---
 
@@ -33,12 +33,12 @@ The admin panel uses `Inter` for maximum legibility in data-heavy environments.
 ### Scale & Usage
 | Element | Utility Classes | Weight | Color | Usage Context |
 |---|---|---|---|---|
-| Page Title (h1) | `text-2xl` | `font-bold` (700) | `text-forest-900` | Top-level page headers. |
-| Section Title (h2) | `text-xl` or `text-lg`| `font-semibold` (600) | `text-forest-800` | Section headers, modal titles. |
-| Card Title (h3) | `text-base` | `font-semibold` (600) | `text-forest-900` | Titles inside metric cards or tables. |
-| Body Main | `text-sm` | `font-normal` (400) | `text-forest-800` | Default text, table data. |
-| Label | `text-sm` | `font-medium` (500) | `text-forest-700` | Form labels, table headers. |
-| Detail / Hint | `text-xs` | `font-medium` (500) | `text-forest-400` | Small badges, captions, helper text. |
+| Page Title (h1) | `text-2xl` | `font-bold` (700) | `text-slate-900` | Top-level page headers. |
+| Section Title (h2) | `text-xl` or `text-lg`| `font-semibold` (600) | `text-slate-800` | Section headers, modal titles. |
+| Card Title (h3) | `text-base` | `font-semibold` (600) | `text-slate-900` | Titles inside metric cards or tables. |
+| Body Main | `text-sm` | `font-normal` (400) | `text-slate-800` | Default text, table data. |
+| Label | `text-sm` | `font-medium` (500) | `text-slate-700` | Form labels, table headers. |
+| Detail / Hint | `text-xs` | `font-medium` (500) | `text-slate-500` | Small badges, captions, helper text. |
 
 **Rules**:
 - Small, crisp text with generous line-height (`leading-relaxed`).
@@ -51,8 +51,8 @@ The admin panel uses `Inter` for maximum legibility in data-heavy environments.
 
 | Element | Border Radius | Border Width / Color |
 |---|---|---|
-| Main Cards, Modals | `rounded-xl` | `border border-cream-200` |
-| Form Inputs, Buttons | `rounded-lg` | `border border-cream-200` (Inputs) |
+| Main Cards, Modals | `rounded-xl` | `border border-slate-200` |
+| Form Inputs, Buttons | `rounded-lg` | `border border-slate-200` (Inputs) |
 | Badges, Avatars | `rounded-full` | `outline outline-1 outline-color/20` |
 
 **Rules**:
@@ -99,7 +99,7 @@ Depth should be minimal. Use shadows exclusively to indicate interactivity or fl
 | **Overlay** | `shadow-lg` or `shadow-xl` | Modals, sticky headers, slide-over panels. |
 
 **Rules**:
-- A card should ALWAYS have `bg-white`, `border-cream-200`, and `shadow-sm`.
+- A card should ALWAYS have `bg-white`, `border-slate-200`, and `shadow-sm`.
 - Do not use colored shadows.
 
 ---
@@ -109,7 +109,7 @@ Depth should be minimal. Use shadows exclusively to indicate interactivity or fl
 Every page in the admin panel follows a strict 3-part spatial architecture:
 
 ### A. The Shell (Persistent)
-- **Sidebar**: Fixed on the left (`w-[240px]`). Background is `forest-900`.
+- **Sidebar**: Fixed on the left (`w-[240px]`). Background is `slate-950`.
 - **Topbar**: Fixed or sticky at the top, holding user profile/search.
 
 ### B. The Page Header
@@ -117,8 +117,8 @@ Always placed at the top-left of the main scrollable area.
 ```tsx
 <div class="flex items-center justify-between mb-8">
   <div>
-    <h1 class="text-2xl font-bold text-forest-900">Page Title</h1>
-    <p class="text-sm text-forest-400 mt-1">Optional subtitle</p>
+    <h1 class="text-2xl font-bold text-slate-900">Page Title</h1>
+    <p class="text-sm text-slate-500 mt-1">Optional subtitle</p>
   </div>
   <div class="flex gap-3">
      {/* Primary and Secondary Actions (Buttons) go here */}
@@ -137,9 +137,9 @@ Use CSS Grid to structure content areas.
 
 | State | Treatment |
 |---|---|
-| **Hover (Buttons)** | Darken background (`hover:bg-forest-700`) or text color. |
-| **Hover (Table Rows)** | Shift background slightly: `hover:bg-cream-100 transition-colors`. |
-| **Focus** | Provide outline on inputs: `focus:ring-2 focus:ring-forest-500 focus:border-forest-500`. |
+| **Hover (Buttons)** | Darken background (`hover:bg-primary-green-hover`) or text color. |
+| **Hover (Table Rows)** | Shift background slightly: `hover:bg-slate-50 transition-colors`. |
+| **Focus** | Provide outline on inputs: `focus:ring-2 focus:ring-primary-green focus:border-primary-green`. |
 | **Disabled** | `opacity-50 cursor-not-allowed`. Remove hover effects. |
 
 ---
@@ -147,10 +147,10 @@ Use CSS Grid to structure content areas.
 ## 8. State Communication (Empty, Loading, Error)
 
 ### Empty States
-Use a centered container (`py-12`) with a muted icon (`w-12 h-12 text-forest-300`), a helpful `text-base` title, and a `text-sm text-forest-500` description. ALWAYS include a CTA button (e.g., "Add First Product").
+Use a centered container (`py-12`) with a muted icon (`w-12 h-12 text-slate-300`), a helpful `text-base` title, and a `text-sm text-slate-500` description. ALWAYS include a CTA button (e.g., "Add First Product").
 
 ### Loading States
-Do not use generic spinners for full page loads. Use skeleton loaders (`animate-pulse bg-cream-200`) mapped exactly to the shape of the content that is loading (e.g., skeleton table rows matching the padding of real rows).
+Do not use generic spinners for full page loads. Use skeleton loaders (`animate-pulse bg-slate-200`) mapped exactly to the shape of the content that is loading (e.g., skeleton table rows matching the padding of real rows).
 
 ### Badges / Status Indicators
 Badges use `text-[11px]` or `text-xs`, uppercase, tracking-wide.
@@ -164,7 +164,7 @@ Badges use `text-[11px]` or `text-xs`, uppercase, tracking-wide.
 
 ### ❌ DON'T
 - **No Dark Mode**: The Admin panel is a purely Light-themed interface. Avoid `dark:` classes entirely.
-- **No Vibrant Borders**: Borders should always be `cream-200` or `cream-100`.
+- **No Vibrant Borders**: Borders should always be `slate-200` or `slate-100`.
 - **No Ad-Hoc hex**: Every single color must map to a pre-defined `--color-` variable.
 - **No i18n**: Avoid localization logic inside admin core templates; use English keys directly.
 - **No Floating Labels**: Form labels must always be top-aligned block elements for rapid scanning. 
