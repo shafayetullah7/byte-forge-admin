@@ -1,4 +1,4 @@
-import { query, createAsync } from "@solidjs/router";
+import { query, createAsync, action, redirect } from "@solidjs/router";
 import { authApi } from "~/lib/api/endpoints/auth.api";
 
 /**
@@ -20,23 +20,23 @@ export const getSession = query(async () => {
 }, "admin-session");
 
 /**
- * Perform a logout operation
+ * Perform a logout operation via SolidStart actions
  */
-export const performLogout = async () => {
-  const { revalidate } = await import("@solidjs/router");
-
+export const logoutAction = action(async () => {
+  "use server";
   try {
     await authApi.logout();
   } catch (error: any) {
     if (error?.statusCode !== 401) {
       console.error("[Auth] Logout error:", error);
     }
-  } finally {
-    await revalidate("admin-session");
   }
 
-  return true;
-};
+  // Action handles redirecting and clearing cache automatically
+  throw redirect("/login", {
+    revalidate: "admin-session"
+  });
+}, "admin-logout");
 
 /**
  * Hook to access the current session

@@ -2,62 +2,174 @@
 description: ByteForge Admin "Pro Light" design rules and visual standards
 ---
 
-# Admin Design Guide Rules
+# ByteForge Admin Component Design Guide
 
-All UI development in `@byte-forge-admin` MUST follow these "Pro Light" standards to ensure a premium, consistent, and high-productivity experience.
+> **Theme**: "Pro Light" — Data-dense, clean, high-productivity interface.
+> **Audience**: ByteForge administrators and internal staff.
+> **Device**: Desktop-first, responsive for tablet.
+> **Color Rules**: Follows the global ByteForge color palette (`forest`, `terracotta`, `cream`) but focuses heavily on high legibility.
+
+This document serves as the standard design guide to ensure absolute coherency across all admin system components.
+
+---
 
 ## 1. Visual Language & Color Palette
 Use these CSS variables for all styling. Do NOT use ad-hoc hex codes.
-- **Primary**: `var(--color-indigo-600)` (#4f46e5) - Key actions/state.
-- **Background**: `var(--color-slate-50)` (#f8fafc) - Main workspace.
-- **Surface**: `var(--color-white)` (#ffffff) - Cards, inputs, modals.
-- **Sidebar**: `var(--color-slate-950)` (#09090b) - Navigation background.
-- **Border**: `var(--color-slate-200)` (#e2e8f0) - Subtle separation.
-- **Text Main**: `var(--color-slate-900)` (#0f172a) - Primary content.
-- **Text Muted**: `var(--color-slate-500)` (#64748b) - Secondary info.
+- **Primary Action**: `var(--color-forest-600)` - Key actions, primary buttons, active states.
+- **Background**: `var(--color-cream-50)` - Main workspace background.
+- **Surface**: `var(--color-white)` - Cards, containers, modals, inputs.
+- **Sidebar**: `var(--color-forest-900)` - Navigation background.
+- **Border**: `var(--color-cream-200)` - Default borders for separation.
+- **Text Main**: `var(--color-forest-900)` - Primary text, headings.
+- **Text Muted**: `var(--color-forest-400)` - Secondary info, captions, disabled text.
+
+---
 
 ## 2. Typography Standard
-- **Primary Font**: `Inter` (must be loaded via Google Fonts or locally).
-- **Scale**:
-  - `Display`: 24px/700 (text-2xl font-bold) - Page titles.
-  - `Heading`: 18px/600 (text-lg font-semibold) - Cards, sections.
-  - `Body`: 14px/400 (text-sm font-normal) - Default text.
-  - `Detail`: 12px/500 (text-xs font-medium) - Labels, table headers.
-- **Philosophy**: Small, crisp text with generous line-height (`leading-relaxed`) for readability in data-heavy views.
 
-## 3. Spacing Philosophy (4px Grid)
-- **Base Unit**: `4px` (Tailwind `1` unit).
-- **Standards**:
-  - `p-6` (24px): Standard page and large card padding.
-  - `p-4` (16px): Compact card and modal padding.
-  - `gap-4`: Standard spacing between related elements.
-  - `space-y-6`: Standard stack spacing between sections.
-- **White Space**: Prioritize white space to prevent visual clutter in a dense admin environment.
+### Font: Inter (Google Fonts)
+The admin panel uses `Inter` for maximum legibility in data-heavy environments.
 
-## 4. Component Design Directions
-- **Atomic Thinking**: Build reusable atoms (Button, Input, Badge) first.
-- **Cards**: All data containers must be cards with `bg-white`, `border-slate-200`, `rounded-lg`, and `shadow-sm`.
-- **Forms**: Use single-column layouts for simple forms, two-column for complex metadata. Labels must always be top-aligned.
-- **Tables**: Use a "Clean Row" approach: 1px bottom border, no side borders, subtle hover state (`hover:bg-slate-50`).
+### Scale & Usage
+| Element | Utility Classes | Weight | Color | Usage Context |
+|---|---|---|---|---|
+| Page Title (h1) | `text-2xl` | `font-bold` (700) | `text-forest-900` | Top-level page headers. |
+| Section Title (h2) | `text-xl` or `text-lg`| `font-semibold` (600) | `text-forest-800` | Section headers, modal titles. |
+| Card Title (h3) | `text-base` | `font-semibold` (600) | `text-forest-900` | Titles inside metric cards or tables. |
+| Body Main | `text-sm` | `font-normal` (400) | `text-forest-800` | Default text, table data. |
+| Label | `text-sm` | `font-medium` (500) | `text-forest-700` | Form labels, table headers. |
+| Detail / Hint | `text-xs` | `font-medium` (500) | `text-forest-400` | Small badges, captions, helper text. |
 
-## 5. Dos and Don'ts
+**Rules**:
+- Small, crisp text with generous line-height (`leading-relaxed`).
+- Max 3 font sizes per section to prevent visual clutter.
+- Do not use ALL CAPS for continuous text; limit it to tiny badges or table headers (`uppercase tracking-widest`).
 
-### ✅ DO
-- Use **Indigo-600** for primary CTAs only.
-- Use **rounded-lg** (8px) for EVERY interactive/container element.
-- Keep the **Sidebar fixed** and **Topbar sticky**.
-- Use **Empty States** (icons + helpful text) when no data is available.
-- Ensure **all icons** come from a single set (e.g., Lucide or Phosphor).
+---
+
+## 3. Shape & Borders
+
+| Element | Border Radius | Border Width / Color |
+|---|---|---|
+| Main Cards, Modals | `rounded-xl` | `border border-cream-200` |
+| Form Inputs, Buttons | `rounded-lg` | `border border-cream-200` (Inputs) |
+| Badges, Avatars | `rounded-full` | `outline outline-1 outline-color/20` |
+
+**Rules**:
+- Never use `rounded-none`.
+- Interactive elements (buttons, inputs) get `rounded-lg`.
+- Data containers (cards) get `rounded-xl`.
+
+---
+
+## 4. Spacing Philosophy (4px Grid)
+
+Open space is required to prevent data from looking overwhelming.
+
+### Internal Padding
+| Element | Padding |
+|---|---|
+| Large Cards | `p-6` (24px) |
+| Standard Cards/Panels | `p-5` (20px) |
+| Modals | `p-6 sm:p-8` |
+| Buttons (md) | `px-4 py-2` |
+| Buttons (sm) | `px-3 py-1.5` |
+| Inputs | `px-3 py-2` |
+| Table Cells | `px-5 py-4` or `px-4 py-3` (dense) |
+
+### External Spacing
+| Context | Spacing |
+|---|---|
+| Page Sections | `space-y-8` |
+| Card Grids | `gap-6` |
+| Form Fields | `space-y-4` |
+| Title → Content | `mb-6` |
+
+---
+
+## 5. Elevation & Shadows
+
+Depth should be minimal. Use shadows exclusively to indicate interactivity or floating layers above the main z-index.
+
+| Level | Shadow Utility | Usage Context |
+|---|---|---|
+| **Flat** | No shadow | Backgrounds, empty states. |
+| **Resting** | `shadow-sm` | ALL default cards, form inputs, resting buttons. |
+| **Hover / Active** | `shadow-md` | Hover states for cards/buttons, active dropdowns. |
+| **Overlay** | `shadow-lg` or `shadow-xl` | Modals, sticky headers, slide-over panels. |
+
+**Rules**:
+- A card should ALWAYS have `bg-white`, `border-cream-200`, and `shadow-sm`.
+- Do not use colored shadows.
+
+---
+
+## 6. Page Positioning & Layout Hierarchy
+
+Every page in the admin panel follows a strict 3-part spatial architecture:
+
+### A. The Shell (Persistent)
+- **Sidebar**: Fixed on the left (`w-[240px]`). Background is `forest-900`.
+- **Topbar**: Fixed or sticky at the top, holding user profile/search.
+
+### B. The Page Header
+Always placed at the top-left of the main scrollable area.
+```tsx
+<div class="flex items-center justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-bold text-forest-900">Page Title</h1>
+    <p class="text-sm text-forest-400 mt-1">Optional subtitle</p>
+  </div>
+  <div class="flex gap-3">
+     {/* Primary and Secondary Actions (Buttons) go here */}
+  </div>
+</div>
+```
+
+### C. The Grid Layout
+Use CSS Grid to structure content areas.
+- **Metric Grids**: `grid grid-cols-1 md:grid-cols-3 gap-6`
+- **Dashboard Splits**: `grid grid-cols-1 lg:grid-cols-3 gap-6`. The main table takes `col-span-2`, the side-feed takes `col-span-1`.
+
+---
+
+## 7. Interactive States
+
+| State | Treatment |
+|---|---|
+| **Hover (Buttons)** | Darken background (`hover:bg-forest-700`) or text color. |
+| **Hover (Table Rows)** | Shift background slightly: `hover:bg-cream-100 transition-colors`. |
+| **Focus** | Provide outline on inputs: `focus:ring-2 focus:ring-forest-500 focus:border-forest-500`. |
+| **Disabled** | `opacity-50 cursor-not-allowed`. Remove hover effects. |
+
+---
+
+## 8. State Communication (Empty, Loading, Error)
+
+### Empty States
+Use a centered container (`py-12`) with a muted icon (`w-12 h-12 text-forest-300`), a helpful `text-base` title, and a `text-sm text-forest-500` description. ALWAYS include a CTA button (e.g., "Add First Product").
+
+### Loading States
+Do not use generic spinners for full page loads. Use skeleton loaders (`animate-pulse bg-cream-200`) mapped exactly to the shape of the content that is loading (e.g., skeleton table rows matching the padding of real rows).
+
+### Badges / Status Indicators
+Badges use `text-[11px]` or `text-xs`, uppercase, tracking-wide.
+- **Success**: `bg-sage-50 text-sage-700 outline-sage-200`
+- **Warning/Pending**: `bg-amber-50 text-amber-700 outline-amber-200`
+- **Error/Rejected**: `bg-red-50 text-red-700 outline-red-200`
+
+---
+
+## 9. Forbidden Patterns (Dos and Don'ts)
 
 ### ❌ DON'T
-- **No Dark Mode**: Avoid `dark:` classes entirely.
-- **No i18n**: Avoid localization logic; use English keys directly.
-- **No Custom Shadows**: Stick to `shadow-sm` or `shadow-md`.
-- **No Vibrant Borders**: Borders should always be `slate-200` or `slate-100`.
-- **No "Greenery"**: This project is a professional tool; keep it neutral (Slate/Indigo).
+- **No Dark Mode**: The Admin panel is a purely Light-themed interface. Avoid `dark:` classes entirely.
+- **No Vibrant Borders**: Borders should always be `cream-200` or `cream-100`.
+- **No Ad-Hoc hex**: Every single color must map to a pre-defined `--color-` variable.
+- **No i18n**: Avoid localization logic inside admin core templates; use English keys directly.
+- **No Floating Labels**: Form labels must always be top-aligned block elements for rapid scanning. 
 
-## 6. Ensuring Consistency
-1. **The Core CSS**: All project-wide design tokens must be defined in `src/app.css` as CSS variables.
-2. **Atomic Wrapper**: Every UI element must be a component in `src/components/ui/`. Never style raw HTML elements like `<button>` directly in pages.
-3. **Layout Utility**: Use the `AdminShell` component to wrap all routes to guarantee layout persistence.
-4. **Tailwind Config**: Extend the Tailwind theme to use the custom variables, locking the color and spacing choices.
+### ✅ DO
+- Always componentize. Never repeat `<button>` classes; use `<Button>`.
+- Keep spacing consistent: use multiples of 4px.
+- Follow the exact Color Palette limits for the brand.
