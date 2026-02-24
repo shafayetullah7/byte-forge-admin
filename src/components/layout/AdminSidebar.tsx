@@ -10,7 +10,8 @@ import {
     VerifiedUserIcon,
     ChartPieIcon,
     SettingsIcon,
-    ClipboardDocumentListIcon
+    ClipboardDocumentListIcon,
+    FolderIcon
 } from "~/components/icons";
 
 export function AdminSidebar() {
@@ -77,6 +78,16 @@ export function AdminSidebar() {
                 >
                     <ClipboardDocumentListIcon class={`${iconBaseClass} ${location.pathname.startsWith("/tags") ? iconActiveClass : iconInactiveClass}`} />
                     Tag Library
+                </A>
+
+                <A
+                    href="/categories"
+                    class={linkBaseClass}
+                    activeClass={linkActiveClass}
+                    inactiveClass={linkInactiveClass}
+                >
+                    <FolderIcon class={`${iconBaseClass} ${location.pathname.startsWith("/categories") ? iconActiveClass : iconInactiveClass}`} />
+                    Categories
                 </A>
 
                 <A

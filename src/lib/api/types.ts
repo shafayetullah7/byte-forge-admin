@@ -55,3 +55,49 @@ export interface LoginResponse {
   tokens: AuthTokens;
   admin: AdminUser;
 }
+
+/**
+ * Taxonomy Types
+ */
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  usageCount: number;
+  isActive: boolean;
+  tagGroupId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TagGroup {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  tags?: Tag[];
+}
+
+/**
+ * Category Types
+ */
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  isActive: boolean;
+  depth: number;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CategoryNode extends Category {
+  children?: CategoryNode[];
+}
+
+

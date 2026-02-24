@@ -165,7 +165,45 @@ Badges use `text-[11px]` or `text-xs`, uppercase, tracking-wide.
 
 ---
 
-## 9. Forbidden Patterns (Dos and Don'ts)
+## 9. The Entity Hub Pattern (Standard Management Layout)
+
+When designing a module for managing a specific entity (e.g., a Tag Group, a Category, or a Product), use the **Entity Hub Pattern** to balance metadata configuration with operational control.
+
+### Core Anatomy
+1. **Contextual Header**:
+   - Breadcrumbs for upward navigation.
+   - H1 Title with a Status Badge (Active/Inactive) placed immediately after the text.
+   - Split Global Actions: A `Danger` (Delete) and `Primary` (Save) button in the top-right.
+
+2. **The Split Layout**:
+   - Use a `grid-cols-1 lg:grid-cols-3 gap-8`.
+   - **Configuration Plane (1/3 Width)**: A `Card` on the left for permanent metadata (Name, Description, Global Toggles).
+   - **Operational Plane (2/3 Width)**: A dominant `Card` on the right for managing children (e.g., a list of Tags, Image Gallery, or Pricing tiers).
+
+3. **Inline Control Mechanics**:
+   - **Status Switches**: Use inline toggles within table rows for binary states (Enabled/Disabled).
+   - **Quick Add Bar**: Integrate an `<Input>` and `<Button>` row directly inside the Operational Plane card header to allow rapid entry without opening modals.
+   - **Hover Actions**: Destructive actions (Delete/Remove) should be muted by default (`text-slate-400`) and reveal on row hover.
+
+### Component Logic
+```tsx
+// Structure for an Entity Hub Page
+<div class="px-6 py-8 mx-auto max-w-[1400px]">
+  <Breadcrumbs items={...} />
+  <header class="flex justify-between items-center mb-8">
+     <TitleWithBadge title="Entity Name" isActive={true} />
+     <ActionGroup />
+  </header>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+     <aside class="lg:col-span-1"><MetadataCard /></aside>
+     <main class="lg:col-span-2"><OperationalTableCard /></main>
+  </div>
+</div>
+```
+
+---
+
+## 10. Forbidden Patterns (Dos and Don'ts)
 
 ### ❌ DON'T
 - **No Dark Mode**: The Admin panel is a purely Light-themed interface. Avoid `dark:` classes entirely.
@@ -178,3 +216,4 @@ Badges use `text-[11px]` or `text-xs`, uppercase, tracking-wide.
 - Always componentize. Never repeat `<button>` classes; use `<Button>`.
 - Keep spacing consistent: use multiples of 4px.
 - Follow the exact Color Palette limits for the brand.
+
