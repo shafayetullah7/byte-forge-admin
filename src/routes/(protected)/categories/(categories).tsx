@@ -1,19 +1,17 @@
-import { useNavigate, A, createAsync, type RouteDefinition } from "@solidjs/router";
-import { For, Suspense } from "solid-js";
+import { A, createAsync, type RouteDefinition } from "@solidjs/router";
+import { Suspense } from "solid-js";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { CategoryTreeView } from "~/components/categories/CategoryTreeView";
 import { getCategoryTree } from "~/lib/api/taxonomy";
+import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 
 export const route: RouteDefinition = {
     preload: () => getCategoryTree(),
 };
 
-
-
 export default function CategoriesPageIndex() {
-    const navigate = useNavigate();
     const categories = createAsync(() => getCategoryTree());
 
     const metrics = () => {
@@ -35,7 +33,7 @@ export default function CategoriesPageIndex() {
     return (
         <div class="px-6 py-8 mx-auto max-w-[1400px]">
 
-            {/* Page Header */}
+            {/* Page Header — outside boundary, state always preserved */}
             <div class="flex items-center justify-between mb-8">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900">Category Management</h1>
@@ -55,12 +53,20 @@ export default function CategoriesPageIndex() {
                 </div>
             </div>
 
-            {/* Stats Overview */}
-            <Suspense fallback={<div class="h-32 bg-slate-50 rounded-2xl animate-pulse mb-8" />}>
-                <TagMetricsPanel metrics={metrics()} />
-            </Suspense>
+            {/* Stats Overview — isolated boundary */}
+            <div class="mb-8">
+                <SafeErrorBoundary
+                    fallback={(err, reset) => (
+                        <InlineErrorFallback error={err} reset={reset} label="category metrics" />
+                    )}
+                >
+                    <Suspense fallback={<div class="h-32 bg-slate-50 rounded-2xl animate-pulse" />}>
+                        <TagMetricsPanel metrics={metrics()} />
+                    </Suspense>
+                </SafeErrorBoundary>
+            </div>
 
-            {/* Toolbar */}
+            {/* Toolbar — outside boundary, state always preserved */}
             <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <div class="relative w-full sm:max-w-[400px]">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -84,10 +90,16 @@ export default function CategoriesPageIndex() {
                 </div>
             </div>
 
-            {/* Tree Structure */}
-            <Suspense fallback={<div class="h-64 bg-slate-50 rounded-2xl animate-pulse" />}>
-                <CategoryTreeView categories={categories() || []} />
-            </Suspense>
+            {/* Tree Structure — isolated boundary */}
+            <SafeErrorBoundary
+                fallback={(err, reset) => (
+                    <InlineErrorFallback error={err} reset={reset} label="category tree" />
+                )}
+            >
+                <Suspense fallback={<div class="h-64 bg-slate-50 rounded-2xl animate-pulse" />}>
+                    <CategoryTreeView categories={categories() || []} />
+                </Suspense>
+            </SafeErrorBoundary>
 
         </div>
     );

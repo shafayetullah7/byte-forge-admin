@@ -2,6 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createEffect, Show, Suspense } from "solid-js";
 import { useSession } from "~/lib/auth";
 import { AdminSidebar, AdminNavbar } from "~/components/layout";
+import { SafeErrorBoundary, PageErrorFallback } from "~/components/errors";
 
 export default function ProtectedLayout(props: { children: any }) {
     const user = useSession();
@@ -21,10 +22,13 @@ export default function ProtectedLayout(props: { children: any }) {
                 <div class="flex-1 flex flex-col h-full overflow-hidden">
                     <AdminNavbar />
                     <main class="flex-1 overflow-y-auto p-6">
-                        <Suspense>{props.children}</Suspense>
+                        <SafeErrorBoundary fallback={(err, reset) => <PageErrorFallback error={err} reset={reset} />}>
+                            <Suspense>{props.children}</Suspense>
+                        </SafeErrorBoundary>
                     </main>
                 </div>
             </div>
         </Show>
     );
 }
+

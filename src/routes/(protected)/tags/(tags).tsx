@@ -6,12 +6,11 @@ import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { TagGroupCard } from "~/components/taxonomy/TagGroupCard";
 import { CreateTagGroupCard } from "~/components/taxonomy/CreateTagGroupCard";
 import { getTagGroups } from "~/lib/api/taxonomy";
+import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 
 export const route: RouteDefinition = {
     preload: () => getTagGroups(),
 };
-
-
 
 export default function TagsPageIndex() {
     const navigate = useNavigate();
@@ -35,7 +34,7 @@ export default function TagsPageIndex() {
     return (
         <div class="px-6 py-8 mx-auto max-w-[1400px]">
 
-            {/* 1. Header Section */}
+            {/* 1. Header Section — outside boundary, state always preserved */}
             <div class="flex items-center justify-between mb-8">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900">Tag & Attribute Library</h1>
@@ -53,12 +52,20 @@ export default function TagsPageIndex() {
                 </div>
             </div>
 
-            {/* 2. Metrics Block */}
-            <Suspense fallback={<div class="h-32 bg-slate-50 rounded-2xl animate-pulse mb-8" />}>
-                <TagMetricsPanel metrics={metrics()} />
-            </Suspense>
+            {/* 2. Metrics Block — isolated boundary */}
+            <div class="mb-8">
+                <SafeErrorBoundary
+                    fallback={(err, reset) => (
+                        <InlineErrorFallback error={err} reset={reset} label="tag metrics" />
+                    )}
+                >
+                    <Suspense fallback={<div class="h-32 bg-slate-50 rounded-2xl animate-pulse" />}>
+                        <TagMetricsPanel metrics={metrics()} />
+                    </Suspense>
+                </SafeErrorBoundary>
+            </div>
 
-            {/* 3. Toolbar (Search & Filters) */}
+            {/* 3. Toolbar — outside boundary, state always preserved */}
             <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <div class="relative w-full sm:max-w-[400px]">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -83,25 +90,33 @@ export default function TagsPageIndex() {
                 </div>
             </div>
 
-            {/* 4. Tag Groups Grid */}
-            <Suspense fallback={<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                {[1, 2, 3].map(() => <div class="h-64 bg-slate-100 rounded-2xl border border-slate-200" />)}
-            </div>}>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <CreateTagGroupCard />
-                    <For each={tagGroups()}>
-                        {(group: any) => (
-                            <TagGroupCard
-                                id={group.id}
-                                name={group.name}
-                                description={group.description}
-                                tags={group.tags || []}
-                                onEdit={(id) => navigate(`/tags/groups/${id}`)}
-                            />
-                        )}
-                    </For>
-                </div>
-            </Suspense>
+            {/* 4. Tag Groups Grid — isolated boundary */}
+            <SafeErrorBoundary
+                fallback={(err, reset) => (
+                    <InlineErrorFallback error={err} reset={reset} label="tag groups" />
+                )}
+            >
+                <Suspense fallback={
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                        {[1, 2, 3].map(() => <div class="h-64 bg-slate-100 rounded-2xl border border-slate-200" />)}
+                    </div>
+                }>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <CreateTagGroupCard />
+                        <For each={tagGroups()}>
+                            {(group: any) => (
+                                <TagGroupCard
+                                    id={group.id}
+                                    name={group.name}
+                                    description={group.description}
+                                    tags={group.tags || []}
+                                    onEdit={(id) => navigate(`/tags/groups/${id}`)}
+                                />
+                            )}
+                        </For>
+                    </div>
+                </Suspense>
+            </SafeErrorBoundary>
 
         </div>
     );
