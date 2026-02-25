@@ -1,45 +1,36 @@
-import { useNavigate } from "@solidjs/router";
-import { For } from "solid-js";
+import { useNavigate, createAsync, type RouteDefinition } from "@solidjs/router";
+import { For, Suspense } from "solid-js";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { TagGroupCard } from "~/components/taxonomy/TagGroupCard";
 import { CreateTagGroupCard } from "~/components/taxonomy/CreateTagGroupCard";
+import { getTagGroups } from "~/lib/api/taxonomy";
 
-const DUMMY_METRICS = [
-    { label: "Total Tag Groups", value: "12", subValue: "+2 this month" },
-    { label: "Total Active Tags", value: "148", subValue: "+15 this month" },
-    { label: "Most Used Group", value: "Light Requirements", subValue: "450 products attached" },
-    { label: "Empty Groups", value: "1", subValue: "Needs review" },
-];
+export const route: RouteDefinition = {
+    preload: () => getTagGroups(),
+};
 
-const DUMMY_GROUPS = [
-    {
-        id: "uuid-1",
-        name: "Light Requirements",
-        description: "Amount of sunlight a plant needs to thrive indoors or outdoors.",
-        tags: [
-            { id: "1", name: "Full Sun", usageCount: 120, isActive: true },
-            { id: "2", name: "Partial Shade", usageCount: 85, isActive: true },
-            { id: "3", name: "Low Light", usageCount: 40, isActive: true },
-            { id: "4", name: "Bright Indirect", usageCount: 155, isActive: true },
-        ],
-    },
-    {
-        id: "uuid-2",
-        name: "Watering Frequency",
-        description: "Guidelines for how often a plant should be watered.",
-        tags: [
-            { id: "5", name: "Daily", usageCount: 12, isActive: true },
-            { id: "6", name: "Weekly", usageCount: 205, isActive: true },
-            { id: "7", name: "Bi-weekly", usageCount: 95, isActive: true },
-            { id: "8", name: "Monthly", usageCount: 45, isActive: true },
-        ],
-    },
-];
+
 
 export default function TagsPageIndex() {
     const navigate = useNavigate();
+    const tagGroups = createAsync(() => getTagGroups());
+
+    const metrics = () => {
+        const data = tagGroups();
+        if (!data) return [];
+
+        const totalGroups = data.length;
+        const totalTags = data.reduce((acc: number, g: any) => acc + (g.tagCount || 0), 0);
+
+        return [
+            { label: "Total Tag Groups", value: totalGroups.toString(), subValue: "Live from backend" },
+            { label: "Total Active Tags", value: totalTags.toString(), subValue: "Aggregated" },
+            { label: "Most Used Group", value: "Dynamic", subValue: "Calculating..." },
+            { label: "Empty Groups", value: data.filter((g: any) => (g.tagCount || 0) === 0).length.toString(), subValue: "Needs attention" },
+        ];
+    };
 
     return (
         <div class="px-6 py-8 mx-auto max-w-[1400px]">
@@ -63,7 +54,9 @@ export default function TagsPageIndex() {
             </div>
 
             {/* 2. Metrics Block */}
-            <TagMetricsPanel metrics={DUMMY_METRICS} />
+            <Suspense fallback={<div class="h-32 bg-slate-50 rounded-2xl animate-pulse mb-8" />}>
+                <TagMetricsPanel metrics={metrics()} />
+            </Suspense>
 
             {/* 3. Toolbar (Search & Filters) */}
             <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -91,20 +84,24 @@ export default function TagsPageIndex() {
             </div>
 
             {/* 4. Tag Groups Grid */}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <CreateTagGroupCard />
-                <For each={DUMMY_GROUPS}>
-                    {(group) => (
-                        <TagGroupCard
-                            id={group.id}
-                            name={group.name}
-                            description={group.description}
-                            tags={group.tags}
-                            onEdit={(id) => navigate(`/tags/groups/${id}`)}
-                        />
-                    )}
-                </For>
-            </div>
+            <Suspense fallback={<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                {[1, 2, 3].map(() => <div class="h-64 bg-slate-100 rounded-2xl border border-slate-200" />)}
+            </div>}>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <CreateTagGroupCard />
+                    <For each={tagGroups()}>
+                        {(group: any) => (
+                            <TagGroupCard
+                                id={group.id}
+                                name={group.name}
+                                description={group.description}
+                                tags={group.tags || []}
+                                onEdit={(id) => navigate(`/tags/groups/${id}`)}
+                            />
+                        )}
+                    </For>
+                </div>
+            </Suspense>
 
         </div>
     );

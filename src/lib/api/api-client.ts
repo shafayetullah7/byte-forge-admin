@@ -186,3 +186,5 @@ export async function fetcher<T>(
     throw new ApiError(error instanceof Error ? error.message : "Network request failed", 0);
   }
 }
+
+export const apiClient = fetcher;

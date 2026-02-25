@@ -1,8 +1,10 @@
 import { For, createSignal } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Card } from "../ui/Card";
 import { TagBadge } from "./TagBadge";
+import { createTagGroup } from "~/lib/api/taxonomy";
 
 interface TagGroupFormProps {
     initialValues?: {
@@ -15,6 +17,11 @@ interface TagGroupFormProps {
 }
 
 export function TagGroupForm(props: TagGroupFormProps) {
+    const navigate = useNavigate();
+    const [name, setName] = createSignal(props.initialValues?.name || "");
+    const [description, setDescription] = createSignal(props.initialValues?.description || "");
+    const [isActive, setIsActive] = createSignal(props.initialValues?.isActive !== false);
+
     const [tags, setTags] = createSignal<string[]>(props.initialValues?.tags || []);
     const [tagInput, setTagInput] = createSignal("");
 
@@ -29,6 +36,20 @@ export function TagGroupForm(props: TagGroupFormProps) {
         setTags(tags().filter(tag => tag !== tagToRemove));
     };
 
+    const handleSubmit = async () => {
+        if (!name().trim()) return;
+
+        await createTagGroup({
+            name: name().trim(),
+            description: description().trim(),
+            isActive: isActive()
+        });
+
+        // Note: Batch tag creation not currently supported in the base create action
+        // Usually, the user adds tags later in the detail page.
+        navigate("/tags");
+    };
+
     return (
         <div class="space-y-6">
             <Card class="p-6">
@@ -39,7 +60,8 @@ export function TagGroupForm(props: TagGroupFormProps) {
                         <Input
                             label="Group Name *"
                             placeholder="e.g. Light Requirements"
-                            value={props.initialValues?.name || ""}
+                            value={name()}
+                            onInput={(e) => setName(e.currentTarget.value)}
                         />
                         <p class="text-xs text-slate-500 mt-1.5">
                             This name will be displayed in the product filters.
@@ -54,7 +76,8 @@ export function TagGroupForm(props: TagGroupFormProps) {
                             rows={3}
                             class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 transition-shadow m-0"
                             placeholder="Briefly describe what attributes this group holds..."
-                            value={props.initialValues?.description || ""}
+                            value={description()}
+                            onInput={(e) => setDescription(e.currentTarget.value)}
                         />
                     </div>
 
@@ -64,7 +87,7 @@ export function TagGroupForm(props: TagGroupFormProps) {
                             <p class="text-xs text-slate-500 mt-0.5">Toggle whether this group is visible globally.</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only peer" checked={props.initialValues?.isActive !== false} />
+                            <input type="checkbox" class="sr-only peer" checked={isActive()} onChange={(e) => setIsActive(e.currentTarget.checked)} />
                             <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-green-600"></div>
                         </label>
                     </div>
@@ -139,10 +162,10 @@ export function TagGroupForm(props: TagGroupFormProps) {
             </Card>
 
             <div class="flex justify-end gap-3 pt-2">
-                <Button variant="outline" size="md">
+                <Button variant="outline" size="md" onClick={() => navigate("/tags")}>
                     Cancel
                 </Button>
-                <Button variant="primary" size="md">
+                <Button variant="primary" size="md" onClick={handleSubmit}>
                     {props.isEdit ? "Save Changes" : "Create Tag Group"}
                 </Button>
             </div>

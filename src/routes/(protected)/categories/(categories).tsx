@@ -1,51 +1,36 @@
-import { useNavigate, A } from "@solidjs/router";
-import { For } from "solid-js";
+import { useNavigate, A, createAsync, type RouteDefinition } from "@solidjs/router";
+import { For, Suspense } from "solid-js";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { CategoryTreeView } from "~/components/categories/CategoryTreeView";
+import { getCategoryTree } from "~/lib/api/taxonomy";
 
-const DUMMY_METRICS = [
-    { label: "Total Categories", value: "34", subValue: "Root + Nested" },
-    { label: "Taxonomy Depth", value: "3 Levels", subValue: "Maximum allowed" },
-    { label: "Active Nodes", value: "28", subValue: "Serving catalog" },
-    { label: "System Health", value: "Optimal", subValue: "Closure table synced" },
-];
+export const route: RouteDefinition = {
+    preload: () => getCategoryTree(),
+};
 
-const DUMMY_TREE_DATA = [
-    {
-        id: "1",
-        name: "Home & Garden",
-        slug: "home-garden",
-        depth: 0,
-        isActive: true,
-        children: [
-            {
-                id: "2",
-                name: "Furniture",
-                slug: "furniture",
-                depth: 1,
-                isActive: true,
-                children: [
-                    { id: "3", name: "Laptops", slug: "laptops", depth: 2, isActive: true },
-                    { id: "4", name: "Office Chairs", slug: "office-chairs", depth: 2, isActive: true },
-                ]
-            },
-            { id: "5", name: "Kitchen", slug: "kitchen", depth: 1, isActive: true }
-        ]
-    },
-    {
-        id: "6",
-        name: "Electronics",
-        slug: "electronics",
-        depth: 0,
-        isActive: true,
-        children: []
-    }
-];
+
 
 export default function CategoriesPageIndex() {
     const navigate = useNavigate();
+    const categories = createAsync(() => getCategoryTree());
+
+    const metrics = () => {
+        const data = categories();
+        if (!data) return [];
+
+        const countNodes = (nodes: any[]): number => {
+            return nodes.reduce((acc, node) => acc + 1 + countNodes(node.children || []), 0);
+        };
+
+        return [
+            { label: "Total Categories", value: countNodes(data).toString(), subValue: "Live from backend" },
+            { label: "Taxonomy Depth", value: "3 Levels", subValue: "Maximum allowed" },
+            { label: "Active Nodes", value: "Syncing...", subValue: "Serving catalog" },
+            { label: "System Health", value: "Optimal", subValue: "Closure table synced" },
+        ];
+    };
 
     return (
         <div class="px-6 py-8 mx-auto max-w-[1400px]">
@@ -71,7 +56,9 @@ export default function CategoriesPageIndex() {
             </div>
 
             {/* Stats Overview */}
-            <TagMetricsPanel metrics={DUMMY_METRICS} />
+            <Suspense fallback={<div class="h-32 bg-slate-50 rounded-2xl animate-pulse mb-8" />}>
+                <TagMetricsPanel metrics={metrics()} />
+            </Suspense>
 
             {/* Toolbar */}
             <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -98,7 +85,9 @@ export default function CategoriesPageIndex() {
             </div>
 
             {/* Tree Structure */}
-            <CategoryTreeView categories={DUMMY_TREE_DATA} />
+            <Suspense fallback={<div class="h-64 bg-slate-50 rounded-2xl animate-pulse" />}>
+                <CategoryTreeView categories={categories() || []} />
+            </Suspense>
 
         </div>
     );
