@@ -2,12 +2,13 @@ import { createSignal, createEffect } from "solid-js";
 import { Modal } from "../ui/Modal";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
+import type { Tag, UpdateTagDto } from "~/lib/api/types";
 
 interface TagEditModalProps {
     show: boolean;
-    tag: any;
+    tag: Tag | null;
     onClose: () => void;
-    onSave: (data: any) => Promise<void>;
+    onSave: (id: string, data: UpdateTagDto) => Promise<void>;
 }
 
 export function TagEditModal(props: TagEditModalProps) {
@@ -47,11 +48,10 @@ export function TagEditModal(props: TagEditModalProps) {
 
         setIsSaving(true);
         try {
-            await props.onSave({
-                id: props.tag.id,
+            await props.onSave(props.tag!.id, {
                 name: name().trim(),
                 slug: slug().trim(),
-                description: desc().trim()
+                description: desc().trim() || undefined
             });
             props.onClose();
         } finally {

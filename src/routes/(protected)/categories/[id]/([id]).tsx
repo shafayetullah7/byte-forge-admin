@@ -70,13 +70,12 @@ export default function CategoryManagementHub() {
 
     const handleSaveChanges = async () => {
         if (!editName().trim() || !editSlug().trim()) return;
-        await updateCategory({
-            id: params.id!,
+        await updateCategory(params.id!, {
             name: editName().trim(),
             slug: editSlug().trim(),
             description: editDesc().trim() || undefined,
             isActive: editActive(),
-            parentId: editParentId() || null
+            parentId: editParentId() || undefined
         });
     };
 

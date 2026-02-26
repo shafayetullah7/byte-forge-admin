@@ -1,4 +1,4 @@
-import { createSignal, For, Show, Suspense, createEffect } from "solid-js";
+import { createSignal, For, Show, Suspense, createEffect, onCleanup } from "solid-js";
 import { A, useParams, createAsync, useNavigate, type RouteDefinition } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
@@ -9,55 +9,65 @@ import {
     updateTagGroup,
     createTag,
     updateTag,
-    deleteTag
+    deleteTag,
+    getTagsByGroup
 } from "~/lib/api/taxonomy";
-import { TagEditModal } from "~/components/taxonomy/TagEditModal";
+import type { UpdateTagDto } from "~/lib/api/types";
+import { TagRow, StatusToggle } from "~/components/taxonomy/TagRow";
+import { slugify } from "~/lib/utils/slugify";
+import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 
 export const route: RouteDefinition = {
-    preload: ({ params }) => getTagGroupDetail(params.id!),
+    preload: ({ params }) => {
+        getTagGroupDetail(params.id!);
+        getTagsByGroup({ groupId: params.id!, limit: 50 });
+    }
 };
-
-function StatusToggle(props: { checked: boolean; onChange: (checked: boolean) => void; label?: string }) {
-    return (
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input
-                type="checkbox"
-                class="sr-only peer"
-                checked={props.checked}
-                onChange={(e) => props.onChange(e.currentTarget.checked)}
-            />
-            <div class="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-green-600"></div>
-            {props.label && <span class="ml-3 text-sm font-medium text-slate-700">{props.label}</span>}
-        </label>
-    );
-}
 
 export default function TagGroupManagementPage() {
     const params = useParams();
-    const groupData = createAsync(() => getTagGroupDetail(params.id!));
     const navigate = useNavigate();
 
-    // Local edit state
+    // Server data
+    const groupData = createAsync(() => getTagGroupDetail(params.id!));
+
+    // Tag list search & sort state
+    const [searchQuery, setSearchQuery] = createSignal("");
+    const [debouncedSearch, setDebouncedSearch] = createSignal("");
+    let searchTimeout: any;
+
+    const handleSearchInput = (e: Event) => {
+        const val = (e.currentTarget as HTMLInputElement).value;
+        setSearchQuery(val);
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            setDebouncedSearch(val);
+        }, 300);
+    };
+
+    onCleanup(() => clearTimeout(searchTimeout));
+
+    // Live tag list powered by the dedicated endpoint (allows backend search)
+    const tagListData = createAsync(() => getTagsByGroup({
+        groupId: params.id!,
+        limit: 50,
+        search: debouncedSearch() || undefined
+    }));
+
+    // Local edit state for Group
     const [editName, setEditName] = createSignal("");
     const [editDesc, setEditDesc] = createSignal("");
     const [editActive, setEditActive] = createSignal(true);
+    const [isSavingGroup, setIsSavingGroup] = createSignal(false);
+    const [deleteError, setDeleteError] = createSignal("");
+
+    // Inline "Add Tag" state
     const [newTagName, setNewTagName] = createSignal("");
     const [newTagSlug, setNewTagSlug] = createSignal("");
     const [isNewTagSlugManual, setIsNewTagSlugManual] = createSignal(false);
+    const [isAddingTag, setIsAddingTag] = createSignal(false);
 
-    // Tag edit modal state
-    const [selectedTag, setSelectedTag] = createSignal<any>(null);
-    const [showEditModal, setShowEditModal] = createSignal(false);
-
-    const generateSlug = (val: string) => {
-        return val
-            .toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/[\s_-]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-    };
-
+    // Initialize group edit form
     createEffect(() => {
         const data = groupData();
         if (data) {
@@ -67,206 +77,242 @@ export default function TagGroupManagementPage() {
         }
     });
 
+    // Auto-generate tag slug in real time
     createEffect(() => {
         const name = newTagName();
         if (!isNewTagSlugManual() && name) {
-            setNewTagSlug(generateSlug(name));
+            setNewTagSlug(slugify(name));
         }
     });
 
-    const handleSaveChanges = async () => {
-        await updateTagGroup({
-            id: params.id!,
-            name: editName(),
-            description: editDesc(),
-            isActive: editActive()
-        });
+    const handleSaveGroup = async () => {
+        if (!editName().trim()) return;
+        setIsSavingGroup(true);
+        try {
+            await updateTagGroup(params.id!, {
+                name: editName().trim(),
+                description: editDesc().trim() || undefined,
+                isActive: editActive()
+            });
+        } finally {
+            setIsSavingGroup(false);
+        }
     };
 
     const handleDeleteGroup = async () => {
-        if (confirm("Permanently delete this group and all its tags?")) {
+        setDeleteError("");
+        const data = tagListData();
+        if (data && data.length > 0) {
+            setDeleteError("Cannot delete group: It still contains active tags. Please delete or move the tags first.");
+            return;
+        }
+
+        try {
             await deleteTagGroup(params.id!);
             navigate("/tags");
+        } catch (err: any) {
+            setDeleteError(err.message || "Failed to delete group.");
         }
     };
 
     const handleAddTag = async () => {
         if (!newTagName().trim() || !newTagSlug().trim()) return;
-        await createTag({
-            name: newTagName().trim(),
-            slug: newTagSlug().trim(),
-            groupId: params.id!
-        });
-        setNewTagName("");
-        setNewTagSlug("");
-        setIsNewTagSlugManual(false);
-    };
-
-    const toggleTagStatus = async (tag: any) => {
-        await updateTag({ id: tag.id, isActive: !tag.isActive });
-    };
-
-    const handleDeleteTag = async (tagId: string) => {
-        if (confirm("Delete this tag?")) {
-            await deleteTag(tagId);
+        setIsAddingTag(true);
+        try {
+            await createTag({
+                name: newTagName().trim(),
+                slug: newTagSlug().trim(),
+                groupId: params.id!
+            });
+            // Reset form
+            setNewTagName("");
+            setNewTagSlug("");
+            setIsNewTagSlugManual(false);
+        } finally {
+            setIsAddingTag(false);
         }
     };
 
-    const handleOpenEdit = (tag: any) => {
-        setSelectedTag(tag);
-        setShowEditModal(true);
+    const handleUpdateTag = async (id: string, data: UpdateTagDto) => {
+        await updateTag(id, data);
     };
 
-    const handleUpdateTag = async (data: any) => {
-        await updateTag(data);
+    const handleDeleteTag = async (tagId: string) => {
+        if (confirm("Delete this tag permanently?")) {
+            await deleteTag(tagId);
+        }
     };
 
     return (
         <div class="px-6 py-8 mx-auto max-w-[1400px]">
             <Suspense fallback={<div class="animate-pulse space-y-6">
                 <div class="h-4 w-32 bg-slate-100 rounded" />
-                <div class="h-12 w-full bg-slate-50 rounded-xl" />
-                <div class="grid grid-cols-3 gap-8">
-                    <div class="h-80 bg-slate-50 rounded-2xl" />
-                    <div class="col-span-2 h-80 bg-slate-50 rounded-2xl" />
+                <div class="h-12 w-96 bg-slate-50 rounded-xl" />
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="h-96 bg-slate-50 rounded-2xl" />
+                    <div class="col-span-2 h-96 bg-slate-50 rounded-2xl" />
                 </div>
             </div>}>
                 <Show when={groupData()}>
                     {(data) => (
                         <>
+                            {/* Breadcrumbs */}
                             <nav class="flex mb-4 text-sm font-medium text-slate-500">
-                                <A href="/tags" class="hover:text-primary-green-700 transition-colors">Tags</A>
+                                <A href="/tags" class="hover:text-primary-green-700 transition-colors">Tag Library</A>
                                 <span class="mx-2 text-slate-300">/</span>
                                 <span class="text-slate-900 font-semibold">{data().name}</span>
                             </nav>
 
-                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <div>
-                                    <div class="flex items-center gap-3">
-                                        <h1 class="text-2xl font-bold text-slate-900">{data().name}</h1>
-                                        <span class={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${data().isActive ? 'bg-primary-green-50 text-primary-green-700 border border-primary-green-100' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
-                                            {data().isActive ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </div>
-                                    <p class="text-sm text-slate-500 mt-1">Management hub for grouping and attribute settings.</p>
-                                </div>
-                                <div class="flex gap-3">
-                                    <Button variant="outline" class="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700" onClick={handleDeleteGroup}>
-                                        Delete Group
-                                    </Button>
-                                    <Button variant="primary" onClick={handleSaveChanges}>
-                                        Save Changes
-                                    </Button>
-                                </div>
+                            {/* Header */}
+                            <div class="flex items-center gap-3 mb-8">
+                                <h1 class="text-2xl font-bold text-slate-900">{data().name}</h1>
+                                <span class={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${data().isActive ? 'bg-primary-green-50 text-primary-green-700 border border-primary-green-100' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                                    {data().isActive ? 'Active Group' : 'Inactive Group'}
+                                </span>
                             </div>
 
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                {/* Column 1: Config */}
-                                <div class="lg:col-span-1 space-y-6">
-                                    <Card class="p-6">
-                                        <h2 class="text-base font-bold text-slate-900 mb-6 underline decoration-primary-green-500/30 underline-offset-8">General Identity</h2>
-                                        <div class="space-y-5">
-                                            <Input
-                                                label="Group Name"
-                                                value={editName()}
-                                                onInput={(e) => setEditName(e.currentTarget.value)}
-                                            />
-                                            <div class="space-y-2">
-                                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-[10px]">Description</label>
-                                                <textarea
-                                                    class="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 transition-all min-h-[100px]"
-                                                    value={editDesc()}
-                                                    onInput={(e) => setEditDesc(e.currentTarget.value)}
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+                                {/* ─── LEFT COLUMN: Group Settings ─── */}
+                                <div class="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
+                                    <form onSubmit={(e) => { e.preventDefault(); handleSaveGroup(); }}>
+                                        <Card class="p-6">
+                                            <div class="mb-6">
+                                                <h2 class="text-base font-bold text-slate-900">Group Settings</h2>
+                                                <p class="text-xs text-slate-500 mt-1">Manage core identity and catalog visibility.</p>
+                                            </div>
+
+                                            <div class="space-y-5">
+                                                <Input
+                                                    label="Group Name *"
+                                                    value={editName()}
+                                                    onInput={(e) => setEditName(e.currentTarget.value)}
                                                 />
-                                            </div>
-                                            <div class="pt-5 border-t border-slate-100 flex items-center justify-between">
-                                                <div>
-                                                    <p class="text-sm font-semibold text-slate-900">Active Status</p>
-                                                    <p class="text-xs text-slate-500">Enable visibility in catalog filters.</p>
+                                                <div class="space-y-2">
+                                                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-[10px]">Description (Optional)</label>
+                                                    <textarea
+                                                        class="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 transition-all min-h-[100px]"
+                                                        value={editDesc()}
+                                                        onInput={(e) => setEditDesc(e.currentTarget.value)}
+                                                    />
                                                 </div>
-                                                <StatusToggle checked={editActive()} onChange={setEditActive} />
+                                                <div class="pt-5 border-t border-slate-100 flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-semibold text-slate-900">Active Status</p>
+                                                        <p class="text-xs text-slate-500">Enable visibility in filters.</p>
+                                                    </div>
+                                                    <StatusToggle checked={editActive()} onChange={setEditActive} />
+                                                </div>
+
+                                                <div class="pt-6">
+                                                    <Button type="submit" variant="primary" class="w-full" isLoading={isSavingGroup()}>
+                                                        Save Settings
+                                                    </Button>
+                                                </div>
                                             </div>
+                                        </Card>
+                                    </form>
+
+                                    {/* Danger Zone */}
+                                    <Card class="p-6 border-red-100 bg-red-50/30">
+                                        <div class="mb-4">
+                                            <h2 class="text-sm font-bold text-red-700">Danger Zone</h2>
+                                            <p class="text-xs text-red-600/80 mt-1">Permanently remove this group. Tags must be deleted first.</p>
                                         </div>
+                                        <Show when={deleteError()}>
+                                            <div class="mb-4 p-3 rounded-lg bg-red-100 text-xs text-red-800 border border-red-200">
+                                                {deleteError()}
+                                            </div>
+                                        </Show>
+                                        <Button variant="outline" class="w-full text-red-700 border-red-200 hover:bg-red-50 hover:border-red-300" onClick={handleDeleteGroup}>
+                                            Delete Group
+                                        </Button>
                                     </Card>
                                 </div>
 
-                                {/* Column 2: Items */}
-                                <div class="lg:col-span-2 space-y-8">
+                                {/* ─── RIGHT COLUMN: Tag Library ─── */}
+                                <div class="lg:col-span-2 space-y-6">
                                     <Card class="p-6">
-                                        <div class="flex items-center justify-between mb-8">
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                             <div>
-                                                <h2 class="text-base font-bold text-slate-900">Tag Library</h2>
-                                                <p class="text-xs text-slate-500 mt-1">Manage individual tags within this group.</p>
+                                                <h2 class="text-base font-bold text-slate-900">Tags in {data().name}</h2>
+                                                <p class="text-xs text-slate-500 mt-1">Manage the specific attributes within this group.</p>
                                             </div>
-                                            <div class="px-3 py-1 bg-slate-50 border border-slate-100 rounded text-[10px] font-bold text-slate-500">
-                                                {(data().tags || []).length} TOTAL
+
+                                            {/* Search box connected to backend */}
+                                            <div class="relative w-full sm:w-64">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" class="text-slate-400" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    class="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 outline-none"
+                                                    placeholder="Search tags..."
+                                                    value={searchQuery()}
+                                                    onInput={handleSearchInput}
+                                                />
                                             </div>
                                         </div>
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-slate-50/50 p-4 rounded-xl border border-slate-100 items-end">
-                                            <Input
-                                                label="Tag Name *"
-                                                placeholder="e.g. Low Light"
-                                                value={newTagName()}
-                                                onInput={(e) => setNewTagName(e.currentTarget.value)}
-                                                onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                                            />
-                                            <div class="flex gap-2 items-end">
-                                                <div class="flex-1">
+                                        {/* Inline Add Tag Form */}
+                                        <div class="mb-6 p-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50">
+                                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Add New Tag</h3>
+                                            <form onSubmit={(e) => { e.preventDefault(); handleAddTag(); }} class="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+                                                <div class="w-full sm:flex-1">
                                                     <Input
-                                                        label="Slug *"
+                                                        label="Tag Name *"
+                                                        placeholder="e.g. Low Light"
+                                                        value={newTagName()}
+                                                        onInput={(e) => setNewTagName(e.currentTarget.value)}
+                                                    />
+                                                </div>
+                                                <div class="w-full sm:flex-1">
+                                                    <Input
+                                                        label="Tag Slug *"
                                                         placeholder="e.g. low-light"
                                                         value={newTagSlug()}
                                                         onInput={(e) => {
                                                             setNewTagSlug(e.currentTarget.value);
                                                             setIsNewTagSlugManual(true);
                                                         }}
-                                                        onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
                                                     />
                                                 </div>
-                                                <Button variant="primary" size="md" onClick={handleAddTag} class="h-[42px]">Add</Button>
-                                            </div>
+                                                <Button type="submit" variant="primary" class="w-full sm:w-auto mt-1 sm:mt-0" isLoading={isAddingTag()}>
+                                                    Add Tag
+                                                </Button>
+                                            </form>
                                         </div>
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <For each={data().tags} fallback={
-                                                <div class="col-span-2 py-12 text-center text-slate-400 border border-dashed border-slate-200 rounded-xl">
-                                                    No tags registered.
+                                        {/* Tag List */}
+                                        <SafeErrorBoundary
+                                            fallback={(err, reset) => (
+                                                <InlineErrorFallback error={err} reset={reset} label="tag list" />
+                                            )}
+                                        >
+                                            <Suspense fallback={
+                                                <div class="space-y-3 animate-pulse">
+                                                    {[1, 2, 3].map(() => <div class="h-16 bg-slate-100 rounded-xl" />)}
                                                 </div>
                                             }>
-                                                {(tag) => (
-                                                    <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:border-primary-green-200 transition-all group shadow-sm hover:shadow-md">
-                                                        <div class="flex items-center gap-3">
-                                                            <StatusToggle checked={tag.isActive} onChange={() => toggleTagStatus(tag)} />
-                                                            <div class="flex flex-col">
-                                                                <span class="text-sm font-semibold text-slate-900">{tag.name}</span>
-                                                                <span class="text-[10px] text-slate-400 font-mono">ID: {tag.id.slice(0, 8)}</span>
-                                                            </div>
+                                                <div class="space-y-3">
+                                                    <Show when={tagListData()?.length === 0}>
+                                                        <div class="py-12 text-center text-slate-400 border border-dashed border-slate-200 rounded-xl">
+                                                            {searchQuery() ? "No tags match your search." : "No tags in this group yet."}
                                                         </div>
-                                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                            <button
-                                                                class="p-2 text-slate-300 hover:text-primary-green-600 transition-all"
-                                                                onClick={() => handleOpenEdit(tag)}
-                                                                title="Edit Tag"
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" />
-                                                                </svg>
-                                                            </button>
-                                                            <button
-                                                                class="p-2 text-slate-300 hover:text-red-600 transition-all"
-                                                                onClick={() => handleDeleteTag(tag.id)}
-                                                                title="Delete Tag"
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                                                </svg>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </For>
-                                        </div>
+                                                    </Show>
+                                                    <For each={tagListData()}>
+                                                        {(tag) => (
+                                                            <TagRow
+                                                                tag={tag}
+                                                                onUpdate={handleUpdateTag}
+                                                                onDelete={handleDeleteTag}
+                                                            />
+                                                        )}
+                                                    </For>
+                                                </div>
+                                            </Suspense>
+                                        </SafeErrorBoundary>
+
                                     </Card>
                                 </div>
                             </div>
@@ -274,13 +320,6 @@ export default function TagGroupManagementPage() {
                     )}
                 </Show>
             </Suspense>
-
-            <TagEditModal
-                show={showEditModal()}
-                tag={selectedTag()}
-                onClose={() => setShowEditModal(false)}
-                onSave={handleUpdateTag}
-            />
         </div>
     );
 }
