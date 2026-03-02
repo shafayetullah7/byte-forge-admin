@@ -2,7 +2,7 @@ import { createSignal, createEffect } from "solid-js";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { slugify } from "~/lib/utils/slugify";
-import type { Tag, UpdateTagDto } from "~/lib/api/types";
+import type { Tag, UpdateTagDto } from "~/lib/api/endpoints/tags";
 
 export function StatusToggle(props: { checked: boolean; onChange: (checked: boolean) => void; label?: string }) {
     return (
@@ -28,37 +28,24 @@ interface TagRowProps {
 export function TagRow(props: TagRowProps) {
     const [isEditing, setIsEditing] = createSignal(false);
 
-    // Edit state
-    const [editName, setEditName] = createSignal("");
+    // Edit state — name/description are read-only display fields (require translation upsert)
+    // Only slug and isActive can be directly patched via PATCH /admin/tags/:id
     const [editSlug, setEditSlug] = createSignal("");
     const [isEditSlugManual, setIsEditSlugManual] = createSignal(false);
-    const [editDesc, setEditDesc] = createSignal("");
     const [isSaving, setIsSaving] = createSignal(false);
 
-    // Sync slug in real-time
-    createEffect(() => {
-        const name = editName();
-        if (isEditing() && !isEditSlugManual() && name) {
-            setEditSlug(slugify(name));
-        }
-    });
-
     const startEdit = () => {
-        setEditName(props.tag.name);
         setEditSlug(props.tag.slug);
-        setEditDesc(props.tag.description || "");
-        setIsEditSlugManual(true); // Don't auto-overwrite existing slug initially
+        setIsEditSlugManual(true);
         setIsEditing(true);
     };
 
     const handleSave = async () => {
-        if (!editName().trim() || !editSlug().trim()) return;
+        if (!editSlug().trim()) return;
         setIsSaving(true);
         try {
             await props.onUpdate(props.tag.id, {
-                name: editName().trim(),
-                slug: editSlug().trim(),
-                description: editDesc().trim() || undefined
+                slug: editSlug().trim()
             });
             setIsEditing(false);
         } finally {
@@ -73,13 +60,7 @@ export function TagRow(props: TagRowProps) {
     if (isEditing()) {
         return (
             <div class="p-4 rounded-xl border border-primary-green-200 bg-primary-green-50/30 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                    <Input
-                        label="Tag Name *"
-                        value={editName()}
-                        onInput={(e) => setEditName(e.currentTarget.value)}
-                        placeholder="e.g. Low Light"
-                    />
+                <div class="mb-3">
                     <Input
                         label="Slug *"
                         value={editSlug()}
@@ -90,15 +71,7 @@ export function TagRow(props: TagRowProps) {
                         placeholder="e.g. low-light"
                     />
                 </div>
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-[10px] mb-1">Description (Optional)</label>
-                    <textarea
-                        class="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 transition-all min-h-[60px]"
-                        value={editDesc()}
-                        onInput={(e) => setEditDesc(e.currentTarget.value)}
-                        placeholder="Optional description..."
-                    />
-                </div>
+                <p class="text-[10px] text-slate-400 mb-4">To edit the tag name, use the translations endpoint.</p>
                 <div class="flex justify-end gap-2 border-t border-primary-green-100 pt-3">
                     <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving()}>Cancel</Button>
                     <Button variant="primary" size="sm" onClick={handleSave} isLoading={isSaving()}>Save Tag</Button>

@@ -9,7 +9,7 @@ import {
     createCategory,
     updateCategory,
     deleteCategory
-} from "~/lib/api/taxonomy";
+} from "~/lib/api/endpoints/categories";
 
 export const route: RouteDefinition = {
     preload: ({ params }) => getCategoryDetail(params.id!),

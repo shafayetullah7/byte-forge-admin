@@ -3,7 +3,7 @@ import { A, useNavigate } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
-import { createCategory } from "~/lib/api/taxonomy";
+import { createCategory } from "~/lib/api/endpoints/categories";
 
 export default function CreateCategoryPage() {
     const navigate = useNavigate();

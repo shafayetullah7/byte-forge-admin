@@ -3,7 +3,7 @@ import { useNavigate, createAsync, type RouteDefinition } from "@solidjs/router"
 import { Button } from "~/components/ui/Button";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { TagGroupCard } from "~/components/taxonomy/TagGroupCard";
-import { getTagGroups } from "~/lib/api/taxonomy";
+import { getTagGroups } from "~/lib/api/endpoints/tag-groups";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 
 export const route: RouteDefinition = {

@@ -4,7 +4,7 @@ import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { CategoryTreeView } from "~/components/categories/CategoryTreeView";
-import { getCategoryTree } from "~/lib/api/taxonomy";
+import { getCategoryTree } from "~/lib/api/endpoints/categories";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 
 export const route: RouteDefinition = {

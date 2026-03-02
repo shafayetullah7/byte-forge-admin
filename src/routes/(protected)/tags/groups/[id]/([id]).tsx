@@ -6,13 +6,15 @@ import { Card } from "~/components/ui/Card";
 import {
     getTagGroupDetail,
     deleteTagGroup,
-    updateTagGroup,
+    updateTagGroup
+} from "~/lib/api/endpoints/tag-groups";
+import {
     createTag,
     updateTag,
     deleteTag,
     getTagsByGroup
-} from "~/lib/api/taxonomy";
-import type { UpdateTagDto } from "~/lib/api/types";
+} from "~/lib/api/endpoints/tags";
+import type { UpdateTagDto } from "~/lib/api/endpoints/tags";
 import { TagRow, StatusToggle } from "~/components/taxonomy/TagRow";
 import { slugify } from "~/lib/utils/slugify";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";

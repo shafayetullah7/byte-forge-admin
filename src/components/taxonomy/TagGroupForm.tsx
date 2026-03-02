@@ -4,7 +4,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Card } from "../ui/Card";
 import { TagBadge } from "./TagBadge";
-import { createTagGroup } from "~/lib/api/taxonomy";
+import { createTagGroup } from "~/lib/api/endpoints/tag-groups";
 import { slugify } from "~/lib/utils/slugify";
 
 interface TagGroupFormProps {

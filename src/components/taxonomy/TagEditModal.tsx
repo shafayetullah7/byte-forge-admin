@@ -2,7 +2,7 @@ import { createSignal, createEffect } from "solid-js";
 import { Modal } from "../ui/Modal";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
-import type { Tag, UpdateTagDto } from "~/lib/api/types";
+import type { Tag, UpdateTagDto } from "~/lib/api/endpoints/tags";
 
 interface TagEditModalProps {
     show: boolean;
@@ -12,46 +12,22 @@ interface TagEditModalProps {
 }
 
 export function TagEditModal(props: TagEditModalProps) {
-    const [name, setName] = createSignal("");
     const [slug, setSlug] = createSignal("");
-    const [desc, setDesc] = createSignal("");
-    const [isSlugManual, setIsSlugManual] = createSignal(false);
     const [isSaving, setIsSaving] = createSignal(false);
 
     createEffect(() => {
         if (props.show && props.tag) {
-            setName(props.tag.name);
             setSlug(props.tag.slug);
-            setDesc(props.tag.description || "");
-            setIsSlugManual(false);
         }
     });
 
-    const generateSlug = (val: string) => {
-        return val
-            .toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/[\s_-]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-    };
-
-    createEffect(() => {
-        const currentName = name();
-        if (!isSlugManual() && currentName && props.show) {
-            setSlug(generateSlug(currentName));
-        }
-    });
 
     const handleSave = async () => {
-        if (!name().trim() || !slug().trim()) return;
-
+        if (!slug().trim()) return;
         setIsSaving(true);
         try {
             await props.onSave(props.tag!.id, {
-                name: name().trim(),
-                slug: slug().trim(),
-                description: desc().trim() || undefined
+                slug: slug().trim()
             });
             props.onClose();
         } finally {
@@ -76,30 +52,17 @@ export function TagEditModal(props: TagEditModalProps) {
             }
         >
             <div class="space-y-5">
-                <Input
-                    label="Tag Name *"
-                    value={name()}
-                    onInput={(e) => setName(e.currentTarget.value)}
-                    placeholder="e.g. Low Light"
-                />
+                <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Name</p>
+                    <p class="text-sm font-semibold text-slate-900">{props.tag?.name || "—"}</p>
+                    <p class="text-[10px] text-slate-400 mt-1">To edit the name, use the translations endpoint.</p>
+                </div>
                 <Input
                     label="Slug *"
                     value={slug()}
-                    onInput={(e) => {
-                        setSlug(e.currentTarget.value);
-                        setIsSlugManual(true);
-                    }}
+                    onInput={(e) => setSlug(e.currentTarget.value)}
                     placeholder="e.g. low-light"
                 />
-                <div class="space-y-2">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-[10px]">Description</label>
-                    <textarea
-                        class="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 transition-all min-h-[80px]"
-                        value={desc()}
-                        onInput={(e) => setDesc(e.currentTarget.value)}
-                        placeholder="Optional description..."
-                    />
-                </div>
             </div>
         </Modal>
     );
