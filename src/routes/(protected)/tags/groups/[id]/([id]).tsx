@@ -71,8 +71,7 @@ export default function TagGroupManagementPage() {
     createEffect(() => {
         const data = groupData();
         if (data) {
-            setEditName(data.name);
-            setEditDesc(data.description || "");
+            setEditName(data.name || "");
             setEditActive(data.isActive);
         }
     });
@@ -90,10 +89,10 @@ export default function TagGroupManagementPage() {
         setIsSavingGroup(true);
         try {
             await updateTagGroup(params.id!, {
-                name: editName().trim(),
-                description: editDesc().trim() || undefined,
                 isActive: editActive()
             });
+            // Note: Since name and description require translation upsert, 
+            // we'll need to implement that separately for full editing support
         } finally {
             setIsSavingGroup(false);
         }
@@ -119,10 +118,12 @@ export default function TagGroupManagementPage() {
         if (!newTagName().trim() || !newTagSlug().trim()) return;
         setIsAddingTag(true);
         try {
-            await createTag({
-                name: newTagName().trim(),
+            await createTag(params.id!, {
                 slug: newTagSlug().trim(),
-                groupId: params.id!
+                translations: [{
+                    locale: "en",
+                    name: newTagName().trim()
+                }]
             });
             // Reset form
             setNewTagName("");

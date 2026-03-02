@@ -141,7 +141,6 @@ export const deleteTagGroup = async (id: string) => {
  */
 export const getTagsByGroup = query(async (params: TagListParams) => {
     const searchParams = new URLSearchParams();
-    if (params.groupId) searchParams.set("groupId", params.groupId);
     if (params.search) searchParams.set("search", params.search);
     if (params.isActive) searchParams.set("isActive", params.isActive);
     if (params.sortBy) searchParams.set("sortBy", params.sortBy);
@@ -149,7 +148,7 @@ export const getTagsByGroup = query(async (params: TagListParams) => {
     if (params.limit) searchParams.set("limit", params.limit.toString());
     
     const qs = searchParams.toString();
-    const url = qs ? `/admin/tags?${qs}` : "/admin/tags";
+    const url = qs ? `/admin/tag-groups/${params.groupId}/tags?${qs}` : `/admin/tag-groups/${params.groupId}/tags`;
     
     // Note: The backend returns a paginated response wrapper
     const result = await apiClient<any>(url, { unwrapData: false } as any);
@@ -159,13 +158,13 @@ export const getTagsByGroup = query(async (params: TagListParams) => {
 /**
  * Create a new tag.
  */
-export const createTag = async (data: CreateTagDto) => {
-    const result = await apiClient<Tag>("/admin/tags", {
+export const createTag = async (groupId: string, data: CreateTagDto) => {
+    const result = await apiClient<Tag>(`/admin/tag-groups/${groupId}/tags`, {
         method: "POST",
         body: JSON.stringify(data)
     });
     revalidate("tag-groups");
-    if (result.groupId) revalidate(["tag-group-detail", result.groupId]);
+    revalidate(["tag-group-detail", groupId]);
     return result;
 };
 

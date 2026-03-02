@@ -86,15 +86,27 @@ export interface TagGroupListParams {
 
 /** Request DTO: POST /admin/tag-groups */
 export interface CreateTagGroupDto {
-  name: string;
-  description?: string;
+  slug: string;
   isActive?: boolean;
+  translations: {
+    locale: string;
+    name: string;
+    description?: string;
+  }[];
+  tags?: {
+    slug: string;
+    isActive?: boolean;
+    translations: {
+      locale: string;
+      name: string;
+      description?: string;
+    }[];
+  }[];
 }
 
 /** Request DTO: PATCH /admin/tag-groups/:id */
 export interface UpdateTagGroupDto {
-  name?: string;
-  description?: string;
+  slug?: string;
   isActive?: boolean;
 }
 
@@ -105,20 +117,20 @@ export interface UpdateTagGroupDto {
  */
 export interface TagGroup {
   id: string;
-  name: string;
-  description: string | null;
+  slug: string;
+  name: string | null;
   isActive: boolean;
   tagCount?: number;        // Only present on list endpoint
-  tags?: Tag[];             // Only present on detail endpoint
+  tags?: Tag[];             // Embedded active tags
   createdAt: string;
   updatedAt: string;
 }
 
 // ─── Tag ─────────────────────────────────────────────────────────────────────
 
-/** List Query Params: GET /admin/tags */
+/** List Query Params: GET /admin/tag-groups/:groupId/tags */
 export interface TagListParams {
-  groupId?: string;
+  groupId: string;
   search?: string;
   id?: string;
   name?: string;
@@ -128,21 +140,21 @@ export interface TagListParams {
   limit?: number;
 }
 
-/** Request DTO: POST /admin/tags */
+/** Request DTO: POST /admin/tag-groups/:groupId/tags */
 export interface CreateTagDto {
-  groupId: string;          // UUID — required, must reference an existing TagGroup
-  name: string;
   slug: string;
-  description?: string;
   isActive?: boolean;
+  translations: {
+    locale: string;
+    name: string;
+    description?: string;
+  }[];
 }
 
 /** Request DTO: PATCH /admin/tags/:id */
 export interface UpdateTagDto {
   groupId?: string;         // Optional reparent — backend validates the target group exists
-  name?: string;
   slug?: string;
-  description?: string;
   isActive?: boolean;
 }
 
@@ -153,9 +165,8 @@ export interface UpdateTagDto {
 export interface Tag {
   id: string;
   groupId: string;
-  name: string;
+  name: string | null;
   slug: string;
-  description: string | null;
   isActive: boolean;
   usageCount: number;
   createdAt: string;

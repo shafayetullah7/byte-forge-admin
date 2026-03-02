@@ -4,7 +4,9 @@ description: ByteForge Admin code quality, file sizing, naming conventions, and 
 
 # ByteForge Admin Code Quality Standard
 
-This document defines the strict maintainability and architectural standards for the ByteForge Admin panel. Antigravity must adhere to these rules for all code generation and refactorings.
+## 0. AI Assistant Strict Rules (CRITICAL)
+- **No Unsolicited Refactoring:** Do NOT arbitrarily refactor, re-architect, or rewrite working code (e.g., swapping out working libraries, rewriting logic flows) unless explicitly instructed by the user. Fix the exact bug requested and touch nothing else.
+- **Strict Typing:** Never use `any`, implicit types, or inline mapped objects globally. Always use the proper exported TypeScript interfaces or SolidJS inferred types.
 
 ## 1. File Sizing and Organization
 - **Sweet Spot (100–300 lines):** Target size for components/modules.

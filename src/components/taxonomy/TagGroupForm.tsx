@@ -5,6 +5,7 @@ import { Input } from "../ui/Input";
 import { Card } from "../ui/Card";
 import { TagBadge } from "./TagBadge";
 import { createTagGroup } from "~/lib/api/taxonomy";
+import { slugify } from "~/lib/utils/slugify";
 
 interface TagGroupFormProps {
     initialValues?: {
@@ -40,9 +41,21 @@ export function TagGroupForm(props: TagGroupFormProps) {
         if (!name().trim()) return;
 
         await createTagGroup({
-            name: name().trim(),
-            description: description().trim(),
-            isActive: isActive()
+            slug: slugify(name().trim()),
+            isActive: isActive(),
+            translations: [{
+                locale: "en",
+                name: name().trim(),
+                description: description().trim() || undefined
+            }],
+            tags: tags().length > 0 ? tags().map(tag => ({
+                slug: slugify(tag),
+                isActive: true,
+                translations: [{
+                    locale: "en",
+                    name: tag
+                }]
+            })) : undefined
         });
 
         // Note: Batch tag creation not currently supported in the base create action
