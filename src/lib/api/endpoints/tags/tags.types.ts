@@ -45,3 +45,18 @@ export interface Tag {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface TagTranslation {
+    tagId: string;
+    locale: string;
+    name: string;
+    description: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface UpsertTagTranslationDto {
+    locale: string;
+    name: string;
+    description?: string;
+}

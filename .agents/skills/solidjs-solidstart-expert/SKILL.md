@@ -133,6 +133,27 @@ const setTodos = (newTodos: Todo[]) => {
 setState('settings', 'theme', 'light');
 ```
 
+### Form State (Always Use createStore)
+
+When you have **3 or more related state fields** (e.g., a form), use `createStore` — never individual `createSignal` calls.
+
+```typescript
+// ❌ WRONG: Multiple signals for a form — creates subscription explosion
+const [name, setName] = createSignal("");
+const [slug, setSlug] = createSignal("");
+const [isActive, setIsActive] = createSignal(true);
+const [parentId, setParentId] = createSignal<string | null>(null);
+
+// ✅ CORRECT: One store for all related form fields
+const [form, setForm] = createStore({
+  name: "",
+  slug: "",
+  isActive: true,
+  parentId: null as string | null,
+});
+// Update: setForm("name", value) or setForm({ slug: value })
+```
+
 ### Resources (Async Data)
 
 ```typescript
@@ -502,6 +523,58 @@ createEffect(() => {
   ws.onmessage = handleMessage;
   onCleanup(() => ws.close());
 });
+```
+
+### Accidental Reactive Dependency in Effects (Untrack)
+
+```typescript
+const [isManual, setIsManual] = createSignal(false);
+const [name, setName] = createSignal("");
+const [slug, setSlug] = createSignal("");
+
+// ❌ WRONG: isManual() inside effect makes it a reactive dependency.
+// The effect re-runs whenever isManual changes, even if name didn't.
+createEffect(() => {
+  const n = name();
+  if (!isManual() && n) setSlug(slugify(n)); // isManual is tracked!
+});
+
+// ✅ CORRECT: Use untrack() to read a value without subscribing to it
+createEffect(() => {
+  const n = name();
+  if (!untrack(isManual) && n) setSlug(slugify(n)); // only tracks name
+});
+```
+
+### createEffect for Form Initialization — Anti-Pattern
+
+Using `createEffect` to mirror server/async data into local signals creates **derived mirrored state** — it runs on every data refetch, wiping user edits.
+
+```typescript
+// ❌ WRONG: Wipes edits if data revalidates mid-session
+createEffect(() => {
+  const data = serverData();
+  if (data) {
+    setName(data.name); // ← overwrites user's edits on revalidation!
+    setSlug(data.slug);
+  }
+});
+
+// ✅ CORRECT: Pass server data into a child component as a prop.
+// The child initializes its store once from props — no mirroring.
+function EditForm(props: { data: Category }) {
+  const [form, setForm] = createStore({
+    name: props.data.name,
+    slug: props.data.slug,
+    isActive: props.data.isActive,
+  });
+  // form is now independent local state — safe to edit without re-sync
+}
+
+// In the parent, render with <Show> to ensure data exists before mount:
+<Show when={categoryData()}>
+  {(data) => <EditForm data={data()} />}
+</Show>
 ```
 
 ### SSR Hydration

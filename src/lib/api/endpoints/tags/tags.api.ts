@@ -5,7 +5,12 @@ import type {
     TagListParams,
     CreateTagDto,
     UpdateTagDto,
+    TagTranslation,
+    UpsertTagTranslationDto
 } from "./tags.types";
+import type { PaginatedResponse } from "../../types";
+
+// ─── Tags ────────────────────────────────────────────────────────────────────
 
 /**
  * Fetch all tags within a specific tag group, scoped by groupId.
@@ -14,7 +19,7 @@ import type {
 export const getTagsByGroup = query(async (params: TagListParams) => {
     const searchParams = new URLSearchParams();
     if (params.search) searchParams.set("search", params.search);
-    if (params.isActive) searchParams.set("isActive", params.isActive);
+    if (params.isActive !== undefined) searchParams.set("isActive", params.isActive.toString());
     if (params.sortBy) searchParams.set("sortBy", params.sortBy);
     if (params.page) searchParams.set("page", params.page.toString());
     if (params.limit) searchParams.set("limit", params.limit.toString());
@@ -43,6 +48,16 @@ export const createTag = async (groupId: string, data: CreateTagDto) => {
 };
 
 /**
+ * Retrieve a single Tag by ID
+ */
+export async function getTagDetail(id: string): Promise<Tag> {
+    const result = await apiClient<Tag>(`/admin/tags/${id}`, {
+        method: "GET",
+    });
+    return result;
+}
+
+/**
  * Update an existing tag's slug, active status, or reparent to another group.
  * Endpoint: PATCH /admin/tags/:id
  */
@@ -60,10 +75,42 @@ export const updateTag = async (id: string, data: UpdateTagDto) => {
  * Endpoint: DELETE /admin/tags/:id
  */
 export const deleteTag = async (id: string) => {
-    const result = await apiClient<Tag>(`/admin/tags/${id}`, {
+    const result = await apiClient<void>(`/admin/tags/${id}`, {
         method: "DELETE"
     });
     revalidate("tag-groups");
     revalidate("tag-group-detail");
     return result;
 };
+
+// ─── Tag Translations ─────────────────────────────────────────────────────────
+
+/**
+ * Get all translations for a Tag
+ */
+export async function getTagTranslations(tagId: string): Promise<TagTranslation[]> {
+    const result = await apiClient<TagTranslation[]>(`/admin/tags/${tagId}/translations`, {
+        method: "GET",
+    });
+    return result;
+}
+
+/**
+ * Upsert a translation for a Tag (Create or Update)
+ */
+export async function upsertTagTranslation(tagId: string, data: UpsertTagTranslationDto): Promise<TagTranslation> {
+    const result = await apiClient<TagTranslation>(`/admin/tags/${tagId}/translations`, {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+    return result;
+}
+
+/**
+ * Delete a specific translation locale from a Tag
+ */
+export async function deleteTagTranslation(tagId: string, locale: string): Promise<void> {
+    await apiClient<void>(`/admin/tags/${tagId}/translations/${locale}`, {
+        method: "DELETE",
+    });
+}

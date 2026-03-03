@@ -1,7 +1,6 @@
-
 // ─── Tag Group ────────────────────────────────────────────────────────────────
 
-import { Tag } from "../tags";
+import type { Tag } from "../tags";
 
 /** List Query Params: GET /admin/tag-groups */
 export interface TagGroupListParams {
@@ -54,4 +53,19 @@ export interface TagGroup {
   tags?: Tag[];       // Embedded active tags (up to 3)
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TagGroupTranslation {
+  tagGroupId: string;
+  locale: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertTagGroupTranslationDto {
+  locale: string;
+  name: string;
+  description?: string;
 }

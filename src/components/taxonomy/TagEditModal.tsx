@@ -1,6 +1,5 @@
-import { createSignal, createEffect } from "solid-js";
+import { createSignal } from "solid-js";
 import { Modal } from "../ui/Modal";
-import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import type { Tag, UpdateTagDto } from "~/lib/api/endpoints/tags";
 
@@ -12,23 +11,14 @@ interface TagEditModalProps {
 }
 
 export function TagEditModal(props: TagEditModalProps) {
-    const [slug, setSlug] = createSignal("");
+    const [slug, setSlug] = createSignal(props.tag?.slug ?? "");
     const [isSaving, setIsSaving] = createSignal(false);
-
-    createEffect(() => {
-        if (props.show && props.tag) {
-            setSlug(props.tag.slug);
-        }
-    });
-
 
     const handleSave = async () => {
         if (!slug().trim()) return;
         setIsSaving(true);
         try {
-            await props.onSave(props.tag!.id, {
-                slug: slug().trim()
-            });
+            await props.onSave(props.tag!.id, { slug: slug().trim() });
             props.onClose();
         } finally {
             setIsSaving(false);
@@ -55,14 +45,17 @@ export function TagEditModal(props: TagEditModalProps) {
                 <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Name</p>
                     <p class="text-sm font-semibold text-slate-900">{props.tag?.name || "—"}</p>
-                    <p class="text-[10px] text-slate-400 mt-1">To edit the name, use the translations endpoint.</p>
+                    <p class="text-[10px] text-slate-400 mt-1">To edit the name, use the Translations panel on the group page.</p>
                 </div>
-                <Input
-                    label="Slug *"
-                    value={slug()}
-                    onInput={(e) => setSlug(e.currentTarget.value)}
-                    placeholder="e.g. low-light"
-                />
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Slug *</label>
+                    <input
+                        class="block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 transition-shadow"
+                        value={slug()}
+                        onInput={(e) => setSlug(e.currentTarget.value)}
+                        placeholder="e.g. low-light"
+                    />
+                </div>
             </div>
         </Modal>
     );

@@ -5,6 +5,8 @@ import type {
     TagGroupListParams,
     CreateTagGroupDto,
     UpdateTagGroupDto,
+    TagGroupTranslation,
+    UpsertTagGroupTranslationDto,
 } from "./tag-groups.types";
 import type { PaginatedResponse } from "../../types";
 
@@ -16,11 +18,12 @@ export const getTagGroups = query(async (params?: TagGroupListParams) => {
     const searchParams = new URLSearchParams();
     if (params) {
         if (params.search) searchParams.set("search", params.search);
-        if (params.isActive) searchParams.set("isActive", params.isActive);
+        if (params.isActive !== undefined) searchParams.set("isActive", params.isActive.toString());
         if (params.sortBy) searchParams.set("sortBy", params.sortBy);
         if (params.page) searchParams.set("page", params.page.toString());
         if (params.limit) searchParams.set("limit", params.limit.toString());
     }
+
     const qs = searchParams.toString();
     const url = qs ? `/admin/tag-groups?${qs}` : "/admin/tag-groups";
 
@@ -71,3 +74,35 @@ export const deleteTagGroup = async (id: string) => {
     revalidate("tag-groups");
     return result;
 };
+
+// ─── Tag Group Translations ───────────────────────────────────────────────────
+
+/**
+ * Get all translations for a Tag Group
+ */
+export async function getTagGroupTranslations(groupId: string): Promise<TagGroupTranslation[]> {
+    const result = await apiClient<TagGroupTranslation[]>(`/admin/tag-groups/${groupId}/translations`, {
+        method: "GET",
+    });
+    return result;
+}
+
+/**
+ * Upsert a translation for a Tag Group (Create or Update)
+ */
+export async function upsertTagGroupTranslation(groupId: string, data: UpsertTagGroupTranslationDto): Promise<TagGroupTranslation> {
+    const result = await apiClient<TagGroupTranslation>(`/admin/tag-groups/${groupId}/translations`, {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+    return result;
+}
+
+/**
+ * Delete a specific translation locale from a Tag Group
+ */
+export async function deleteTagGroupTranslation(groupId: string, locale: string): Promise<void> {
+    await apiClient<void>(`/admin/tag-groups/${groupId}/translations/${locale}`, {
+        method: "DELETE",
+    });
+}

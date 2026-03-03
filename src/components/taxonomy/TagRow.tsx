@@ -1,7 +1,4 @@
-import { createSignal, createEffect } from "solid-js";
-import { Button } from "~/components/ui/Button";
-import { Input } from "~/components/ui/Input";
-import { slugify } from "~/lib/utils/slugify";
+import { createSignal } from "solid-js";
 import type { Tag, UpdateTagDto } from "~/lib/api/endpoints/tags";
 
 export function StatusToggle(props: { checked: boolean; onChange: (checked: boolean) => void; label?: string }) {
@@ -27,16 +24,11 @@ interface TagRowProps {
 
 export function TagRow(props: TagRowProps) {
     const [isEditing, setIsEditing] = createSignal(false);
-
-    // Edit state — name/description are read-only display fields (require translation upsert)
-    // Only slug and isActive can be directly patched via PATCH /admin/tags/:id
     const [editSlug, setEditSlug] = createSignal("");
-    const [isEditSlugManual, setIsEditSlugManual] = createSignal(false);
     const [isSaving, setIsSaving] = createSignal(false);
 
     const startEdit = () => {
         setEditSlug(props.tag.slug);
-        setIsEditSlugManual(true);
         setIsEditing(true);
     };
 
@@ -44,9 +36,7 @@ export function TagRow(props: TagRowProps) {
         if (!editSlug().trim()) return;
         setIsSaving(true);
         try {
-            await props.onUpdate(props.tag.id, {
-                slug: editSlug().trim()
-            });
+            await props.onUpdate(props.tag.id, { slug: editSlug().trim() });
             setIsEditing(false);
         } finally {
             setIsSaving(false);
@@ -59,22 +49,34 @@ export function TagRow(props: TagRowProps) {
 
     if (isEditing()) {
         return (
-            <div class="p-4 rounded-xl border border-primary-green-200 bg-primary-green-50/30 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
-                <div class="mb-3">
-                    <Input
-                        label="Slug *"
-                        value={editSlug()}
-                        onInput={(e) => {
-                            setEditSlug(e.currentTarget.value);
-                            setIsEditSlugManual(true);
-                        }}
-                        placeholder="e.g. low-light"
-                    />
+            <div class="p-4 rounded-xl border border-primary-green-200 bg-primary-green-50/30 shadow-sm">
+                <div class="space-y-3 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Slug *</label>
+                        <input
+                            class="block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 transition-shadow"
+                            value={editSlug()}
+                            onInput={(e) => setEditSlug(e.currentTarget.value)}
+                            placeholder="e.g. low-light"
+                        />
+                    </div>
+                    <p class="text-[10px] text-slate-400">To edit the tag name or description, use the Translations tab.</p>
                 </div>
-                <p class="text-[10px] text-slate-400 mb-4">To edit the tag name, use the translations endpoint.</p>
                 <div class="flex justify-end gap-2 border-t border-primary-green-100 pt-3">
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving()}>Cancel</Button>
-                    <Button variant="primary" size="sm" onClick={handleSave} isLoading={isSaving()}>Save Tag</Button>
+                    <button
+                        onClick={() => setIsEditing(false)}
+                        disabled={isSaving()}
+                        class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving()}
+                        class="px-3 py-1.5 rounded-lg bg-primary-green-600 text-white text-sm hover:bg-primary-green-700 transition-colors disabled:opacity-50"
+                    >
+                        {isSaving() ? "Saving..." : "Save Tag"}
+                    </button>
                 </div>
             </div>
         );
@@ -85,11 +87,11 @@ export function TagRow(props: TagRowProps) {
             <div class="flex items-center gap-4">
                 <StatusToggle checked={props.tag.isActive} onChange={toggleStatus} />
                 <div class="flex flex-col">
-                    <span class="text-sm font-semibold text-slate-900">{props.tag.name}</span>
+                    <span class="text-sm font-semibold text-slate-900">{props.tag.name || props.tag.slug}</span>
                     <div class="flex items-center gap-2 mt-0.5">
                         <span class="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded">{props.tag.slug}</span>
                         <span class="text-[10px] text-slate-400">&bull;</span>
-                        <span class="text-[10px] text-slate-500">{props.tag.usageCount} uses</span>
+                        <span class="text-[10px] text-slate-500">{props.tag.usageCount || 0} uses</span>
                     </div>
                 </div>
             </div>
