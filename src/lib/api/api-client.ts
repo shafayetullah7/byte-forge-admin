@@ -77,7 +77,7 @@ export async function fetcher<T>(
 
   // 1. SSR Context Identification
   let event: any;
-  if (typeof window === "undefined") {
+  if (import.meta.env.SSR) {
     const { getRequestEvent } = await import("solid-js/web");
     try {
       event = getRequestEvent();
@@ -144,7 +144,7 @@ export async function fetcher<T>(
     }
 
     // 4. SSR Cookie Propagation
-    if (event) {
+    if (import.meta.env.SSR && event) {
       try {
         const { appendResponseHeader } = await import("vinxi/http");
         // FIX: Reliable Set-Cookie handling

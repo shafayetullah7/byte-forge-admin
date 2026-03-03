@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vinxi dev --port 3050",
     "build": "vinxi build",
-    "start": "vinxi start"
+    "start": "vinxi start --port 3050"
   },
   "dependencies": {
     "@modular-forms/solid": "^0.25.1",

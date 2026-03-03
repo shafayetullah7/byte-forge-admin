@@ -84,3 +84,19 @@ const deleteCategory = action(async (id: string) => {
 - **No `onMount` fetching** for data that should be SSR-ready.
 - **No storage of JWTs in localStorage**. Use the HttpOnly cookies provided by the backend.
 - **No multiple loading signals** per component. Rely on Resource/Async states.
+
+## 7. Client/Server Isolation (Build Safety)
+To prevent Node.js-specific modules (like `vinxi/http` or `node:fs`) from leaking into the client bundle and causing errors like `AsyncLocalStorage is not exported`, always use build-time guards.
+
+### ✅ DO
+Use `import.meta.env.SSR` for code that should only exist in the server-side bundle. This allows Vite to statically tree-shake the code and its imports during the client build.
+```ts
+if (import.meta.env.SSR && event) {
+  const { appendResponseHeader } = await import("vinxi/http");
+  // ...
+}
+```
+
+### ❌ DON'T
+Do not use `typeof window === "undefined"` for imports that depend on Node.js modules. While safe at runtime, the bundler will still attempt to resolve the imports, which can crash the client build.
+```
