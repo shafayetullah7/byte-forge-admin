@@ -1,4 +1,5 @@
-import { createSignal } from "solid-js";
+import { Show } from "solid-js";
+import { createStore } from "solid-js/store";
 import type { Tag, UpdateTagDto } from "~/lib/api/endpoints/tags";
 
 export function StatusToggle(props: { checked: boolean; onChange: (checked: boolean) => void; label?: string }) {
@@ -23,23 +24,29 @@ interface TagRowProps {
 }
 
 export function TagRow(props: TagRowProps) {
-    const [isEditing, setIsEditing] = createSignal(false);
-    const [editSlug, setEditSlug] = createSignal("");
-    const [isSaving, setIsSaving] = createSignal(false);
+    const [state, setState] = createStore({
+        isEditing: false,
+        slug: "",
+        isSaving: false,
+        isConfirmingDelete: false,
+    });
 
     const startEdit = () => {
-        setEditSlug(props.tag.slug);
-        setIsEditing(true);
+        setState({
+            slug: props.tag.slug,
+            isEditing: true,
+            isConfirmingDelete: false,
+        });
     };
 
     const handleSave = async () => {
-        if (!editSlug().trim()) return;
-        setIsSaving(true);
+        if (!state.slug.trim()) return;
+        setState("isSaving", true);
         try {
-            await props.onUpdate(props.tag.id, { slug: editSlug().trim() });
-            setIsEditing(false);
+            await props.onUpdate(props.tag.id, { slug: state.slug.trim() });
+            setState("isEditing", false);
         } finally {
-            setIsSaving(false);
+            setState("isSaving", false);
         }
     };
 
@@ -47,7 +54,7 @@ export function TagRow(props: TagRowProps) {
         props.onUpdate(props.tag.id, { isActive: !props.tag.isActive });
     };
 
-    if (isEditing()) {
+    if (state.isEditing) {
         return (
             <div class="p-4 rounded-xl border border-primary-green-200 bg-primary-green-50/30 shadow-sm">
                 <div class="space-y-3 mb-4">
@@ -55,8 +62,8 @@ export function TagRow(props: TagRowProps) {
                         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Slug *</label>
                         <input
                             class="block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 transition-shadow"
-                            value={editSlug()}
-                            onInput={(e) => setEditSlug(e.currentTarget.value)}
+                            value={state.slug}
+                            onInput={(e) => setState("slug", e.currentTarget.value)}
                             placeholder="e.g. low-light"
                         />
                     </div>
@@ -64,18 +71,18 @@ export function TagRow(props: TagRowProps) {
                 </div>
                 <div class="flex justify-end gap-2 border-t border-primary-green-100 pt-3">
                     <button
-                        onClick={() => setIsEditing(false)}
-                        disabled={isSaving()}
+                        onClick={() => setState("isEditing", false)}
+                        disabled={state.isSaving}
                         class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={isSaving()}
+                        disabled={state.isSaving}
                         class="px-3 py-1.5 rounded-lg bg-primary-green-600 text-white text-sm hover:bg-primary-green-700 transition-colors disabled:opacity-50"
                     >
-                        {isSaving() ? "Saving..." : "Save Tag"}
+                        {state.isSaving ? "Saving..." : "Save Tag"}
                     </button>
                 </div>
             </div>
@@ -95,25 +102,43 @@ export function TagRow(props: TagRowProps) {
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <button
-                    class="p-2 text-slate-400 hover:text-primary-green-600 hover:bg-primary-green-50 rounded-lg transition-all"
-                    onClick={startEdit}
-                    title="Edit Tag"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" />
-                    </svg>
-                </button>
-                <button
-                    class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                    onClick={() => props.onDelete(props.tag.id)}
-                    title="Delete Tag"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    </svg>
-                </button>
+            <div class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" classList={{ 'opacity-100 md:opacity-100': state.isConfirmingDelete }}>
+                <Show when={!state.isConfirmingDelete} fallback={
+                    <div class="flex items-center gap-2 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 animate-in fade-in slide-in-from-right-4 duration-200">
+                        <span class="text-xs font-medium text-red-800 mr-1">Delete tag?</span>
+                        <button
+                            class="px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded transition-colors"
+                            onClick={() => setState("isConfirmingDelete", false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            class="px-2 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 rounded transition-colors"
+                            onClick={() => { setState("isConfirmingDelete", false); props.onDelete(props.tag.id); }}
+                        >
+                            Confirm
+                        </button>
+                    </div>
+                }>
+                    <button
+                        class="p-2 text-slate-400 hover:text-primary-green-600 hover:bg-primary-green-50 rounded-lg transition-all"
+                        onClick={startEdit}
+                        title="Edit Tag"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" />
+                        </svg>
+                    </button>
+                    <button
+                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        onClick={() => setState("isConfirmingDelete", true)}
+                        title="Delete Tag"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </Show>
             </div>
         </div>
     );

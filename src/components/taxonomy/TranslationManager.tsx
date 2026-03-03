@@ -1,4 +1,5 @@
-import { For, createSignal, Show } from "solid-js";
+import { For, Show } from "solid-js";
+import { createStore } from "solid-js/store";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 
@@ -21,47 +22,59 @@ interface TranslationManagerProps {
 }
 
 export function TranslationManager(props: TranslationManagerProps) {
-    const [locale, setLocale] = createSignal("");
-    const [name, setName] = createSignal("");
-    const [description, setDescription] = createSignal("");
-    const [isSubmitting, setIsSubmitting] = createSignal(false);
-    const [editingLocale, setEditingLocale] = createSignal<string | null>(null);
+    const [form, setForm] = createStore({
+        locale: "",
+        name: "",
+        description: "",
+        editingLocale: null as string | null,
+        isSubmitting: false,
+        error: "",
+    });
 
     const resetForm = () => {
-        setLocale("");
-        setName("");
-        setDescription("");
-        setEditingLocale(null);
+        setForm({
+            locale: "",
+            name: "",
+            description: "",
+            editingLocale: null,
+            error: "",
+        });
     };
 
     const handleEdit = (translation: TranslationItem) => {
-        setLocale(translation.locale);
-        setName(translation.name);
-        setDescription(translation.description || "");
-        setEditingLocale(translation.locale);
+        setForm({
+            locale: translation.locale,
+            name: translation.name,
+            description: translation.description || "",
+            editingLocale: translation.locale,
+            error: "",
+        });
     };
 
     const handleSubmit = async () => {
-        if (!locale().trim() || !name().trim()) return;
+        if (!form.locale.trim() || !form.name.trim()) return;
 
-        setIsSubmitting(true);
+        setForm("isSubmitting", true);
+        setForm("error", "");
         try {
             await props.onUpsert({
-                locale: locale().trim().toLowerCase(),
-                name: name().trim(),
-                description: description().trim() || undefined
+                locale: form.locale.trim().toLowerCase(),
+                name: form.name.trim(),
+                description: form.description.trim() || undefined
             });
             resetForm();
         } finally {
-            setIsSubmitting(false);
+            setForm("isSubmitting", false);
         }
     };
 
     const handleDelete = async (targetLocale: string) => {
         if (targetLocale === 'en') {
-            alert("The base English ('en') translation cannot be deleted.");
+            setForm("error", "The base English ('en') translation cannot be deleted.");
             return;
         }
+
+        setForm("error", "");
         if (confirm(`Are you sure you want to delete the '${targetLocale}' translation?`)) {
             await props.onDelete(targetLocale);
         }
@@ -69,6 +82,13 @@ export function TranslationManager(props: TranslationManagerProps) {
 
     return (
         <div class="space-y-6">
+            <Show when={form.error}>
+                <div class="p-3 rounded-lg bg-red-100/50 border border-red-200 text-sm text-red-700 flex justify-between items-center">
+                    <span>{form.error}</span>
+                    <button onClick={() => setForm("error", "")} class="text-red-400 hover:text-red-700 font-bold p-1">✕</button>
+                </div>
+            </Show>
+
             {/* List of existing translations */}
             <div class="rounded-lg border border-slate-200 overflow-hidden bg-white">
                 <table class="min-w-full divide-y divide-slate-200">
@@ -130,7 +150,7 @@ export function TranslationManager(props: TranslationManagerProps) {
             {/* Upsert Form */}
             <div class="bg-slate-50 rounded-lg p-5 border border-slate-200">
                 <h3 class="text-sm font-semibold text-slate-800 mb-4">
-                    {editingLocale() ? `Edit Translation: ${editingLocale()?.toUpperCase()}` : "Add New Translation"}
+                    {form.editingLocale ? `Edit Translation: ${form.editingLocale.toUpperCase()}` : "Add New Translation"}
                 </h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -138,17 +158,17 @@ export function TranslationManager(props: TranslationManagerProps) {
                         <Input
                             label="Locale Code *"
                             placeholder="e.g. fr, es, de"
-                            value={locale()}
-                            onInput={(e) => setLocale(e.currentTarget.value)}
-                            disabled={editingLocale() !== null} // Cannot change locale code when editing
+                            value={form.locale}
+                            onInput={(e) => setForm("locale", e.currentTarget.value)}
+                            disabled={form.editingLocale !== null} // Cannot change locale code when editing
                         />
                     </div>
                     <div class="md:col-span-3">
                         <Input
                             label="Translated Name *"
                             placeholder="Translation for the name..."
-                            value={name()}
-                            onInput={(e) => setName(e.currentTarget.value)}
+                            value={form.name}
+                            onInput={(e) => setForm("name", e.currentTarget.value)}
                         />
                     </div>
                     <div class="md:col-span-4">
@@ -159,15 +179,15 @@ export function TranslationManager(props: TranslationManagerProps) {
                             rows={2}
                             class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 transition-shadow m-0"
                             placeholder="Translation for the description..."
-                            value={description()}
-                            onInput={(e) => setDescription(e.currentTarget.value)}
+                            value={form.description}
+                            onInput={(e) => setForm("description", e.currentTarget.value)}
                         />
                     </div>
                 </div>
 
                 <div class="mt-4 flex justify-end gap-3">
-                    <Show when={locale() || name() || description()}>
-                        <Button variant="outline" size="sm" onClick={resetForm} disabled={isSubmitting()}>
+                    <Show when={form.locale || form.name || form.description}>
+                        <Button variant="outline" size="sm" onClick={resetForm} disabled={form.isSubmitting}>
                             Cancel
                         </Button>
                     </Show>
@@ -175,9 +195,10 @@ export function TranslationManager(props: TranslationManagerProps) {
                         variant="primary"
                         size="sm"
                         onClick={handleSubmit}
-                        disabled={!locale().trim() || !name().trim() || isSubmitting()}
+                        disabled={!form.locale.trim() || !form.name.trim() || form.isSubmitting}
+                        isLoading={form.isSubmitting}
                     >
-                        {isSubmitting() ? "Saving..." : editingLocale() ? "Update Translation" : "Add Translation"}
+                        {form.isSubmitting ? "Saving..." : form.editingLocale ? "Update Translation" : "Add Translation"}
                     </Button>
                 </div>
             </div>

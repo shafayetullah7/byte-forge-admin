@@ -4,6 +4,7 @@ import { Button } from "~/components/ui/Button";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { TagGroupCard } from "~/components/taxonomy/TagGroupCard";
 import { getTagGroups } from "~/lib/api/endpoints/tag-groups";
+import type { TagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.types";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 
 export const route: RouteDefinition = {
@@ -42,7 +43,7 @@ export default function TagsPageIndex() {
         const groups = tagGroups();
         if (!groups) return [];
         if (activeFilter() === 'empty') {
-            return groups.filter((g: any) => (g.tagCount || 0) === 0);
+            return groups.filter((g) => (g.tagCount || 0) === 0);
         }
         return groups;
     };
@@ -51,12 +52,12 @@ export default function TagsPageIndex() {
         const data = tagGroups();
         if (!data) return [];
         const totalGroups = data.length;
-        const totalTags = data.reduce((acc: number, g: any) => acc + (g.tagCount || 0), 0);
+        const totalTags = data.reduce((acc: number, g) => acc + (g.tagCount || 0), 0);
 
         return [
             { label: "Total Tag Groups", value: totalGroups.toString(), subValue: "Live from backend" },
             { label: "Total Active Tags", value: totalTags.toString(), subValue: "Aggregated" },
-            { label: "Empty Groups", value: data.filter((g: any) => (g.tagCount || 0) === 0).length.toString(), subValue: "Needs attention" },
+            { label: "Empty Groups", value: data.filter((g) => (g.tagCount || 0) === 0).length.toString(), subValue: "Needs attention" },
         ];
     };
 
@@ -150,12 +151,13 @@ export default function TagsPageIndex() {
                                 <Button variant="outline" onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setActiveFilter('all'); }}>Clear Filters</Button>
                             </div>
                         }>
-                            {(group: any) => (
+                            {(group: TagGroup) => (
                                 <TagGroupCard
                                     id={group.id}
-                                    name={group.name}
-                                    description={group.description}
+                                    name={group.name ?? ""}
                                     tags={group.tags || []}
+                                    isActive={group.isActive}
+                                    tagCount={group.tagCount}
                                     onEdit={(id) => navigate(`/tags/groups/${id}`)}
                                 />
                             )}

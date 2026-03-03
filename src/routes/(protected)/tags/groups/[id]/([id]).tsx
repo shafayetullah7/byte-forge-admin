@@ -11,7 +11,7 @@ import {
     upsertTagGroupTranslation,
     deleteTagGroupTranslation
 } from "~/lib/api/endpoints/tag-groups";
-import type { TagGroupTranslation, UpsertTagGroupTranslationDto } from "~/lib/api/endpoints/tag-groups";
+import type { TagGroup, TagGroupTranslation, UpsertTagGroupTranslationDto } from "~/lib/api/endpoints/tag-groups";
 import {
     createTag,
     updateTag,
@@ -35,14 +35,14 @@ export const route: RouteDefinition = {
 
 // Extracted inner component to ensure props.data is available for immediate setup
 // without needing createEffect.
-function HubContent(props: { groupData: any; translations: TagGroupTranslation[] }) {
+function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslation[] }) {
     const params = useParams();
     const navigate = useNavigate();
 
     // ─── Tag List State ───
     const [searchQuery, setSearchQuery] = createSignal("");
     const [debouncedSearch, setDebouncedSearch] = createSignal("");
-    let searchTimeout: any;
+    let searchTimeout: ReturnType<typeof setTimeout>;
 
     const handleSearchInput = (e: Event) => {
         const val = (e.currentTarget as HTMLInputElement).value;
@@ -130,9 +130,7 @@ function HubContent(props: { groupData: any; translations: TagGroupTranslation[]
     };
 
     const handleDeleteTag = async (tagId: string) => {
-        if (confirm("Delete this tag permanently?")) {
-            await deleteTag(tagId);
-        }
+        await deleteTag(tagId);
     };
 
     // ─── Translation Manager Handlers ───
@@ -295,6 +293,12 @@ export default function TagGroupManagementPage() {
     const groupData = createAsync(() => getTagGroupDetail(params.id!));
     const translationsData = createAsync(() => getTagGroupTranslations(params.id!));
 
+    const allData = () => {
+        const g = groupData();
+        const t = translationsData();
+        return g && t ? { group: g, translations: t } : undefined;
+    };
+
     return (
         <Suspense fallback={<div class="animate-pulse space-y-6 px-6 py-8 mx-auto max-w-[1400px]">
             <div class="h-4 w-32 bg-slate-100 rounded" />
@@ -304,8 +308,8 @@ export default function TagGroupManagementPage() {
                 <div class="col-span-2 h-96 bg-slate-50 rounded-2xl" />
             </div>
         </div>}>
-            <Show when={groupData() && translationsData()}>
-                <HubContent groupData={groupData()!} translations={translationsData()!} />
+            <Show when={allData()}>
+                {(data) => <HubContent groupData={data().group} translations={data().translations} />}
             </Show>
         </Suspense>
     );

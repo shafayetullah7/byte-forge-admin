@@ -10,9 +10,13 @@ import { slugify } from "~/lib/utils/slugify";
 
 // ─── Shared Styles/Components ────────────────────────────────────────────────
 
+import type { SetStoreFunction } from "solid-js/store";
+
+type BaseFormState = { name: string; description: string; isActive: boolean };
+
 function BaseFormSections(props: {
-    form: { name: string; description: string; isActive: boolean };
-    setForm: any;
+    form: BaseFormState;
+    setForm: SetStoreFunction<BaseFormState>;
     isEdit: boolean;
 }) {
     return (
@@ -71,6 +75,8 @@ export function CreateTagGroupForm() {
     });
 
     const [tagInput, setTagInput] = createSignal("");
+    const [submitError, setSubmitError] = createSignal("");
+    const [isSubmitting, setIsSubmitting] = createSignal(false);
 
     const handleAddTag = () => {
         if (tagInput().trim() !== '' && !form.tags.includes(tagInput().trim())) {
@@ -86,25 +92,32 @@ export function CreateTagGroupForm() {
     const handleSubmit = async () => {
         if (!form.name.trim()) return;
 
-        await createTagGroup({
-            slug: slugify(form.name.trim()),
-            isActive: form.isActive,
-            translations: [{
-                locale: "en",
-                name: form.name.trim(),
-                description: form.description.trim() || undefined
-            }],
-            tags: form.tags.length > 0 ? form.tags.map(tag => ({
-                slug: slugify(tag),
-                isActive: true,
+        setSubmitError("");
+        setIsSubmitting(true);
+        try {
+            await createTagGroup({
+                slug: slugify(form.name.trim()),
+                isActive: form.isActive,
                 translations: [{
                     locale: "en",
-                    name: tag
-                }]
-            })) : undefined
-        });
+                    name: form.name.trim(),
+                    description: form.description.trim() || undefined
+                }],
+                tags: form.tags.length > 0 ? form.tags.map(tag => ({
+                    slug: slugify(tag),
+                    isActive: true,
+                    translations: [{
+                        locale: "en",
+                        name: tag
+                    }]
+                })) : undefined
+            });
 
-        navigate("/tags");
+            navigate("/tags");
+        } catch (err: any) {
+            setSubmitError(err?.message || "Failed to create tag group. Please try again.");
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -174,11 +187,17 @@ export function CreateTagGroupForm() {
                 </div>
             </Card>
 
+            {submitError() && (
+                <div class="p-3 mb-4 rounded-lg bg-red-100/50 border border-red-200 text-sm text-red-700">
+                    {submitError()}
+                </div>
+            )}
+
             <div class="flex justify-end gap-3 pt-2">
                 <Button variant="outline" size="md" onClick={() => navigate("/tags")}>
                     Cancel
                 </Button>
-                <Button variant="primary" size="md" onClick={handleSubmit}>
+                <Button variant="primary" size="md" onClick={handleSubmit} isLoading={isSubmitting()}>
                     Create Tag Group
                 </Button>
             </div>
@@ -235,9 +254,3 @@ export function EditTagGroupForm(props: EditTagGroupFormProps) {
     );
 }
 
-// ─── Legacy Export ────────────────────────────────────────────────────────────
-
-// To prevent breaking changes if it's imported elsewhere as `TagGroupForm`
-export function TagGroupForm(props: { isEdit?: boolean; initialValues?: any }) {
-    return <CreateTagGroupForm />;
-}
