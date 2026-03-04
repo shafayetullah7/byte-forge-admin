@@ -1,23 +1,37 @@
+// ─── Category Translations ──────────────────────────────────────────────────
+
+export interface CategoryTranslation {
+  id?: string;
+  categoryId?: string;
+  locale: string;
+  name: string;
+  description: string | null; // Removed optional '?' to match TranslationItem
+}
+
+export interface UpsertCategoryTranslationDto {
+    locale: string;
+    name: string;
+    description?: string;
+}
+
 // ─── Category ────────────────────────────────────────────────────────────────
 
 /** Request DTO: POST /admin/categories */
 export interface CreateCategoryDto {
-  name: string;
   slug: string;
   parentId?: string;        // UUID — optional, creates a root category if omitted
-  description?: string;
   isActive?: boolean;
   commissionRate?: number;  // 0–100, stored as decimal(5,2)
+  translations: CategoryTranslation[];
 }
 
 /** Request DTO: PATCH /admin/categories/:id */
 export interface UpdateCategoryDto {
-  name?: string;
   slug?: string;
   parentId?: string;
-  description?: string;
   isActive?: boolean;
   commissionRate?: number;
+  translations?: CategoryTranslation[];
 }
 
 /**
@@ -27,7 +41,7 @@ export interface UpdateCategoryDto {
  */
 export interface Category {
   id: string;
-  name: string;
+  name: string; // English resolved name from backend
   slug: string;
   description: string | null;
   isActive: boolean;
@@ -35,6 +49,7 @@ export interface Category {
   usageCount: number;
   createdAt: string;
   updatedAt: string;
+  translations: CategoryTranslation[];
 }
 
 /** Tree node: returned by GET /admin/categories/tree */
@@ -45,7 +60,7 @@ export interface CategoryNode {
   isActive: boolean;
   parentId: string | null;
   depth: number;
-  subCategoryCount: number;
+  childrenCount: number;
   children: CategoryNode[];
 }
 
@@ -63,7 +78,7 @@ export interface CategoryChildSummary {
   name: string;
   slug: string;
   isActive: boolean;
-  subCategoryCount: number;
+  childrenCount: number; 
 }
 
 export interface CategoryParentOption {

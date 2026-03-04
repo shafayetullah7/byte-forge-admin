@@ -146,7 +146,7 @@ export function AdminSidebar() {
                 <div class="px-5 mt-8 mb-3 text-xs font-semibold text-primary-green-500 uppercase tracking-widest">System</div>
 
                 <A
-                    href="/settings"
+                    href="/settings/languages"
                     class={linkBaseClass}
                     activeClass={linkActiveClass}
                     inactiveClass={linkInactiveClass}

@@ -6,6 +6,7 @@ import type {
     CategoryDetail,
     CreateCategoryDto,
     UpdateCategoryDto,
+    CategoryTranslation,
 } from "./categories.types";
 
 /**
@@ -55,5 +56,38 @@ export const deleteCategory = async (id: string) => {
         method: "DELETE"
     });
     revalidate("category-tree");
+    return result;
+};
+
+/**
+ * Fetch all translations for a category.
+ */
+export const getCategoryTranslations = query(async (categoryId: string) => {
+    return apiClient<CategoryTranslation[]>(`/admin/categories/${categoryId}/translations`);
+}, "category-translations");
+
+/**
+ * Upsert a category translation.
+ */
+export const upsertCategoryTranslation = async (categoryId: string, data: Partial<CategoryTranslation>) => {
+    const result = await apiClient<CategoryTranslation>(`/admin/categories/${categoryId}/translations`, {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+    revalidate("category-translations");
+    revalidate("category-detail");
+    revalidate("category-tree");
+    return result;
+};
+
+/**
+ * Delete a category translation.
+ */
+export const deleteCategoryTranslation = async (categoryId: string, locale: string) => {
+    const result = await apiClient(`/admin/categories/${categoryId}/translations/${locale}`, {
+        method: "DELETE"
+    });
+    revalidate("category-translations");
+    revalidate("category-detail");
     return result;
 };

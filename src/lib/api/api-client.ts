@@ -147,11 +147,15 @@ export async function fetcher<T>(
     if (import.meta.env.SSR && event) {
       try {
         const { appendResponseHeader } = await import("vinxi/http");
-        // FIX: Reliable Set-Cookie handling
-        const setCookies = (response.headers as any).getSetCookie?.() || [];
-        setCookies.forEach((cookie: string) => {
-          appendResponseHeader(event.nativeEvent, "Set-Cookie", cookie);
-        });
+        // FIX: Prevent ERR_HTTP_HEADERS_SENT by checking if headers are already dispatched
+        const isResponseFinished = event.nativeEvent.node.res.headersSent || event.nativeEvent.node.res.writableEnded;
+        
+        if (!isResponseFinished) {
+          const setCookies = (response.headers as any).getSetCookie?.() || [];
+          setCookies.forEach((cookie: string) => {
+            appendResponseHeader(event.nativeEvent, "Set-Cookie", cookie);
+          });
+        }
       } catch (e) {
         console.warn("[API] Cookie sync failed", e);
       }

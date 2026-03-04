@@ -51,6 +51,7 @@ export interface TagGroup {
   isActive: boolean;
   tagCount?: number;  // Only present on list endpoint
   tags?: Tag[];       // Embedded active tags (up to 3)
+  translations: TagGroupTranslation[];
   createdAt: string;
   updatedAt: string;
 }

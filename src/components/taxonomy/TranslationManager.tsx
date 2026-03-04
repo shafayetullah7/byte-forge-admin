@@ -1,7 +1,10 @@
-import { For, Show } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
+import { createAsync } from "@solidjs/router";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
+import { getLanguages } from "~/lib/api/endpoints/languages";
 
 export interface TranslationItem {
     locale: string;
@@ -30,6 +33,24 @@ export function TranslationManager(props: TranslationManagerProps) {
         isSubmitting: false,
         error: "",
     });
+
+    const languages = createAsync(() => getLanguages());
+
+    const availableLanguages = createMemo(() => {
+        const all = languages() || [];
+        const existingLocales = props.translations.map(t => t.locale);
+
+        return all
+            .filter(l => !existingLocales.includes(l.code) || l.code === form.editingLocale)
+            .map(l => ({
+                value: l.code,
+                label: `${l.name} (${l.code.toUpperCase()})${l.isRtl ? ' [RTL]' : ''}`
+            }));
+    });
+
+    const baseTranslation = createMemo(() =>
+        props.translations.find(t => t.locale === 'en')
+    );
 
     const resetForm = () => {
         setForm({
@@ -153,14 +174,29 @@ export function TranslationManager(props: TranslationManagerProps) {
                     {form.editingLocale ? `Edit Translation: ${form.editingLocale.toUpperCase()}` : "Add New Translation"}
                 </h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Show when={form.locale && form.locale !== 'en' && baseTranslation()}>
+                    <div class="mb-4 p-3 bg-primary-green-50 border border-primary-green-200 rounded-lg flex items-start gap-3">
+                        <div class="mt-0.5 text-primary-green-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6 6-6" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-primary-green-700 leading-tight">Translating from English (Base)</p>
+                            <p class="text-sm font-medium text-slate-900 mt-0.5 italic">"{baseTranslation()?.name}"</p>
+                            <Show when={baseTranslation()?.description}>
+                                <p class="text-xs text-slate-500 mt-1 line-clamp-2">{baseTranslation()?.description}</p>
+                            </Show>
+                        </div>
+                    </div>
+                </Show>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 transition-all">
                     <div class="md:col-span-1">
-                        <Input
-                            label="Locale Code *"
-                            placeholder="e.g. fr, es, de"
+                        <Select
+                            label="Target Language *"
+                            options={availableLanguages()}
                             value={form.locale}
-                            onInput={(e) => setForm("locale", e.currentTarget.value)}
-                            disabled={form.editingLocale !== null} // Cannot change locale code when editing
+                            onChange={(e) => setForm("locale", e.currentTarget.value)}
+                            disabled={form.editingLocale !== null}
                         />
                     </div>
                     <div class="md:col-span-3">

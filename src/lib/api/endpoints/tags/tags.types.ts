@@ -42,6 +42,7 @@ export interface Tag {
   slug: string;
   isActive: boolean;
   usageCount: number;
+  translations: TagTranslation[];
   createdAt: string;
   updatedAt: string;
 }

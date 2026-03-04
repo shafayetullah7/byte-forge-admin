@@ -34,10 +34,15 @@ export default function CreateCategoryPage() {
         if (!name().trim() || !slug().trim()) return;
 
         await createCategory({
-            name: name().trim(),
             slug: slug().trim(),
-            description: description().trim() || undefined,
-            isActive: isActive()
+            isActive: isActive(),
+            translations: [
+                {
+                    locale: "en",
+                    name: name().trim(),
+                    description: description().trim() || null
+                }
+            ]
         });
 
         navigate("/categories");

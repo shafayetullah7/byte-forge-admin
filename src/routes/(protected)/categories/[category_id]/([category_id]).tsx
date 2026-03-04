@@ -8,8 +8,13 @@ import {
     getCategoryDetail,
     createCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getCategoryTranslations,
+    upsertCategoryTranslation,
+    deleteCategoryTranslation
 } from "~/lib/api/endpoints/categories";
+import { TranslationManager } from "~/components/taxonomy/TranslationManager";
+import { UpsertCategoryTranslationDto } from "~/lib/api/endpoints/categories/categories.types"; // Need to export this if not already
 
 export const route: RouteDefinition = {
     preload: ({ params }) => getCategoryDetail(params.category_id!),
@@ -19,6 +24,7 @@ export default function CategoryManagementHub() {
     const params = useParams();
     const navigate = useNavigate();
     const categoryData = createAsync(() => getCategoryDetail(params.category_id!));
+    const translationsData = createAsync(() => getCategoryTranslations(params.category_id!));
 
     // Edit state
     const [editName, setEditName] = createSignal("");
@@ -71,12 +77,25 @@ export default function CategoryManagementHub() {
     const handleSaveChanges = async () => {
         if (!editName().trim() || !editSlug().trim()) return;
         await updateCategory(params.category_id!, {
-            name: editName().trim(),
             slug: editSlug().trim(),
-            description: editDesc().trim() || undefined,
             isActive: editActive(),
-            parentId: editParentId() || undefined
+            parentId: editParentId() || undefined,
+            translations: [
+                {
+                    locale: "en",
+                    name: editName().trim(),
+                    description: editDesc().trim() || null
+                }
+            ]
         });
+    };
+
+    const handleUpsertTranslation = async (dto: UpsertCategoryTranslationDto) => {
+        await upsertCategoryTranslation(params.category_id!, dto);
+    };
+
+    const handleDeleteTranslation = async (locale: string) => {
+        await deleteCategoryTranslation(params.category_id!, locale);
     };
 
     const handleDelete = async () => {
@@ -89,10 +108,16 @@ export default function CategoryManagementHub() {
     const handleAddSub = async () => {
         if (!newSubName().trim() || !newSubSlug().trim()) return;
         await createCategory({
-            name: newSubName().trim(),
             slug: newSubSlug().trim(),
             parentId: params.category_id!,
-            isActive: true
+            isActive: true,
+            translations: [
+                {
+                    locale: "en",
+                    name: newSubName().trim(),
+                    description: null
+                }
+            ]
         });
         setNewSubName("");
         setNewSubSlug("");
@@ -198,6 +223,19 @@ export default function CategoryManagementHub() {
                                             </div>
                                         </div>
                                     </Card>
+
+                                    {/* Column 1: Translations */}
+                                    <Card class="p-6">
+                                        <div class="mb-6">
+                                            <h2 class="text-base font-bold text-slate-900">Category Translations</h2>
+                                            <p class="text-xs text-slate-500 mt-1">Manage names and descriptions across locales.</p>
+                                        </div>
+                                        <TranslationManager
+                                            translations={translationsData() || []}
+                                            onUpsert={handleUpsertTranslation}
+                                            onDelete={handleDeleteTranslation}
+                                        />
+                                    </Card>
                                 </div>
 
                                 {/* Column 2/3: Operational Plane (Logic & Relationships) */}
@@ -269,7 +307,7 @@ export default function CategoryManagementHub() {
                                                                 </div>
                                                                 <div class="flex flex-col">
                                                                     <span class="text-sm font-semibold text-slate-900">{sub.name}</span>
-                                                                    <span class="text-[10px] text-slate-400">{sub.subCategoryCount || 0} Children</span>
+                                                                    <span class="text-[10px] text-slate-400">{sub.childrenCount || 0} Children</span>
                                                                 </div>
                                                             </div>
                                                             <A href={`/categories/${sub.id}`} class="text-[10px] font-bold text-primary-green-600 hover:text-primary-green-700 uppercase tracking-wider px-2 py-1 bg-primary-green-50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
