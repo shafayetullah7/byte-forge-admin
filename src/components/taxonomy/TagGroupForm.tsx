@@ -17,19 +17,19 @@ import { createTagGroupSchema, updateTagGroupSchema, type CreateTagGroupFormData
 const createTagGroupAction = action(async (data: CreateTagGroupFormData) => {
     "use server";
     return await createTagGroup({
-        slug: slugify(data.name.trim()),
+        slug: data.slug.trim(),
         isActive: data.isActive,
         translations: [{
             locale: "en",
             name: data.name.trim(),
             description: data.description?.trim() || undefined
         }],
-        tags: data.tags.length > 0 ? (data.tags as string[]).map((tag: string) => ({
-            slug: slugify(tag),
+        tags: data.tags.length > 0 ? (data.tags as { name: string, slug: string }[]).map((tag: { name: string, slug: string }) => ({
+            slug: slugify(tag.slug),
             isActive: true,
             translations: [{
                 locale: "en",
-                name: tag
+                name: tag.name
             }]
         })) : undefined
     });
@@ -38,6 +38,7 @@ const createTagGroupAction = action(async (data: CreateTagGroupFormData) => {
 const updateTagGroupAction = action(async (data: { id: string; form: UpdateTagGroupFormData }) => {
     "use server";
     return await updateTagGroup(data.id, {
+        slug: data.form.slug?.trim(),
         isActive: data.form.isActive,
     });
 }, "update-tag-group");
@@ -97,10 +98,15 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
     const submission = useSubmission(createTagGroupAction);
 
     const [tagInput, setTagInput] = createSignal("");
+    const [tagSlugInput, setTagSlugInput] = createSignal("");
+    const [isTagSlugManual, setIsTagSlugManual] = createSignal(false);
 
-    const [tagGroupForm, { Form, Field }] = createForm<CreateTagGroupFormData>({
+    const [isSlugManual, setIsSlugManual] = createSignal(false);
+
+    const [tagGroupForm, { Form, Field, FieldArray }] = createForm<CreateTagGroupFormData>({
         initialValues: {
             name: "",
+            slug: "",
             description: "",
             isActive: true,
             tags: []
@@ -118,18 +124,37 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
         }
     });
 
-    const handleAddTag = () => {
-        const val = tagInput().trim();
-        const currentTags = getValue(tagGroupForm, "tags") || [];
-        if (val !== '' && !currentTags.includes(val)) {
-            setValue(tagGroupForm, "tags", [...currentTags, val]);
-            setTagInput("");
+    const handleTagInput = (e: Event) => {
+        const val = (e.currentTarget as HTMLInputElement).value;
+        setTagInput(val);
+        if (!isTagSlugManual() && val) {
+            setTagSlugInput(slugify(val));
+        } else if (!isTagSlugManual() && !val) {
+            setTagSlugInput("");
         }
     };
 
-    const handleRemoveTag = (tagToRemove: string) => {
-        const currentTags = getValue(tagGroupForm, "tags") || [];
-        setValue(tagGroupForm, "tags", currentTags.filter(tag => tag !== tagToRemove));
+    const handleTagSlugInput = (e: Event) => {
+        setTagSlugInput((e.currentTarget as HTMLInputElement).value);
+        setIsTagSlugManual(true);
+    };
+
+    const handleAddTag = () => {
+        const nameVal = tagInput().trim();
+        const slugVal = tagSlugInput().trim();
+        const currentTags = (getValue(tagGroupForm, "tags" as any) || []) as { name: string, slug: string }[];
+
+        if (nameVal !== '' && slugVal !== '' && !currentTags.some(t => t.name === nameVal || t.slug === slugVal)) {
+            setValue(tagGroupForm, "tags" as any, [...currentTags, { name: nameVal, slug: slugVal }]);
+            setTagInput("");
+            setTagSlugInput("");
+            setIsTagSlugManual(false);
+        }
+    };
+
+    const handleRemoveTag = (tagToRemoveSlug: string) => {
+        const currentTags: { name: string, slug: string }[] = (getValue(tagGroupForm, "tags" as any) || []) as { name: string, slug: string }[];
+        setValue(tagGroupForm, "tags" as any, currentTags.filter(t => t.slug !== tagToRemoveSlug));
     };
 
     const handleSubmit = (values: CreateTagGroupFormData) => {
@@ -170,17 +195,55 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                         <h3 class="text-base font-semibold text-slate-900 mb-6">Group Information</h3>
                         <div class="space-y-5">
                             <Field name="name">
-                                {(field, props) => (
-                                    <Input
-                                        {...props}
-                                        label="Group Name (English) *"
-                                        placeholder="e.g. Light Requirements"
-                                        value={field.value}
-                                        error={field.error}
-                                        maxLength={255}
-                                        disabled={isPending()}
-                                    />
-                                )}
+                                {(field, props) => {
+                                    const handleNameChange = (e: Event) => {
+                                        const newName = (e.currentTarget as HTMLInputElement).value;
+                                        // Update the form's name field manually because we're intercepting onInput
+                                        setValue(tagGroupForm, "name", newName);
+
+                                        // Auto-generate slug if not manually edited
+                                        if (!isSlugManual() && newName) {
+                                            setValue(tagGroupForm, "slug", slugify(newName));
+                                        } else if (!isSlugManual() && !newName) {
+                                            setValue(tagGroupForm, "slug", "");
+                                        }
+                                    };
+
+                                    return (
+                                        <Input
+                                            {...props}
+                                            label="Group Name (English) *"
+                                            placeholder="e.g. Light Requirements"
+                                            value={field.value}
+                                            error={field.error}
+                                            maxLength={255}
+                                            disabled={isPending()}
+                                            onInput={handleNameChange}
+                                        />
+                                    );
+                                }}
+                            </Field>
+
+                            <Field name="slug">
+                                {(field, props) => {
+                                    const handleSlugChange = (e: Event) => {
+                                        setValue(tagGroupForm, "slug", (e.currentTarget as HTMLInputElement).value);
+                                        setIsSlugManual(true);
+                                    };
+
+                                    return (
+                                        <Input
+                                            {...props}
+                                            label="Slug *"
+                                            placeholder="e.g. light-requirements"
+                                            value={field.value}
+                                            error={field.error}
+                                            maxLength={255}
+                                            disabled={isPending()}
+                                            onInput={handleSlugChange}
+                                        />
+                                    );
+                                }}
                             </Field>
 
                             <Field name="description">
@@ -250,18 +313,34 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                                 </p>
                             </div>
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-primary-green-50 text-primary-green-700 border border-primary-green-100">
-                                {getValue(tagGroupForm, "tags")?.length || 0} Tags
+                                {(getValue(tagGroupForm, "tags" as any) as any[])?.length || 0} Tags
                             </span>
                         </div>
 
                         <div class="space-y-6">
-                            <div class="flex gap-3 items-end">
-                                <div class="flex-1">
+                            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+                                <div class="w-full sm:flex-1">
                                     <Input
-                                        label="Quick Add Tag"
+                                        label="Tag Name"
                                         placeholder="Type a tag name (e.g. High) and press Enter"
                                         value={tagInput()}
-                                        onInput={(e) => setTagInput(e.currentTarget.value)}
+                                        onInput={handleTagInput}
+                                        maxLength={255}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                handleAddTag();
+                                            }
+                                        }}
+                                        disabled={isPending()}
+                                    />
+                                </div>
+                                <div class="w-full sm:flex-1">
+                                    <Input
+                                        label="Tag Slug"
+                                        placeholder="e.g. high"
+                                        value={tagSlugInput()}
+                                        onInput={handleTagSlugInput}
                                         maxLength={255}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
@@ -275,54 +354,57 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                                 <Button
                                     variant="secondary"
                                     onClick={handleAddTag}
-                                    disabled={!tagInput().trim() || isPending()}
-                                    class="h-11"
+                                    disabled={!tagInput().trim() || !tagSlugInput().trim() || isPending()}
+                                    class="h-11 w-full sm:w-auto mt-1 sm:mt-0"
                                 >
                                     Add Tag
                                 </Button>
                             </div>
 
-                            <Field name="tags" type="string[]">
-                                {(field) => (
-                                    <div class={`p-6 rounded-xl border border-dashed bg-slate-50/50 min-h-[200px] flex flex-wrap gap-2.5 content-start ${field.error ? "border-red-500 bg-red-50/10" : "border-slate-200"}`}>
+                            <FieldArray name="tags">
+                                {(fieldArray) => (
+                                    <div class={`p-6 rounded-xl border border-dashed bg-slate-50/50 min-h-[200px] flex flex-wrap gap-2.5 content-start ${fieldArray.error ? "border-red-500 bg-red-50/10" : "border-slate-200"}`}>
                                         <Show
-                                            when={field.value && field.value.length > 0}
+                                            when={fieldArray.items.length > 0}
                                             fallback={
                                                 <div class="w-full flex flex-col items-center justify-center text-slate-400 py-8">
                                                     <p class="text-sm font-medium">No tags added yet</p>
-                                                    <Show when={field.error}>
-                                                        <p class="text-xs font-medium text-red-500 mt-2">{field.error}</p>
+                                                    <Show when={fieldArray.error}>
+                                                        <p class="text-xs font-medium text-red-500 mt-2">{fieldArray.error}</p>
                                                     </Show>
                                                 </div>
                                             }
                                         >
-                                            <For each={field.value}>
-                                                {(tag) => (
-                                                    <div class="inline-flex items-center gap-2 pl-3.5 pr-1.5 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm transition-all hover:border-primary-green-300">
-                                                        <span class="text-sm font-semibold text-slate-700">{tag}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveTag(tag)}
-                                                            class="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                                                            disabled={isPending()}
-                                                        >
-                                                            ✕
-                                                        </button>
+                                            <For each={fieldArray.items}>
+                                                {(item, index) => (
+                                                    <div class="inline-flex flex-col gap-1 pl-3 pr-2 py-2 rounded-lg bg-white border border-slate-200 shadow-sm transition-all hover:border-primary-green-300">
+                                                        <div class="flex items-center justify-between gap-3">
+                                                            <span class="text-sm font-semibold text-slate-700">{getValue(tagGroupForm, `tags.${index()}.name` as any)}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveTag(getValue(tagGroupForm, `tags.${index()}.slug` as any) as string)}
+                                                                class="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                                disabled={isPending()}
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                        <span class="text-[10px] text-slate-400 font-mono bg-slate-50 px-1 py-0.5 rounded w-max">{getValue(tagGroupForm, `tags.${index()}.slug` as any)}</span>
                                                     </div>
                                                 )}
                                             </For>
                                         </Show>
-                                        <Show when={field.value && field.value.length > 0 && field.error}>
+                                        <Show when={fieldArray.items.length > 0 && fieldArray.error}>
                                             <div class="w-full mt-4 p-3 rounded-lg bg-red-50 border border-red-100 text-xs font-medium text-red-600 flex items-center gap-2">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                {field.error}
+                                                {fieldArray.error}
                                             </div>
                                         </Show>
                                     </div>
                                 )}
-                            </Field>
+                            </FieldArray>
                         </div>
                     </Card>
                 </main>
@@ -344,8 +426,11 @@ export function EditTagGroupForm(props: EditTagGroupFormProps) {
     const updateTrigger = useAction(updateTagGroupAction);
     const submission = useSubmission(updateTagGroupAction);
 
+    const [isSlugManual, setIsSlugManual] = createSignal(true); // Default to true so we don't accidentally overwrite existing slugs
+
     const [tagGroupForm, { Form, Field }] = createForm<UpdateTagGroupFormData>({
         initialValues: {
+            slug: props.group.slug || "",
             isActive: props.group.isActive
         },
         validate: (values) => {
@@ -403,7 +488,30 @@ export function EditTagGroupForm(props: EditTagGroupFormProps) {
                                 <div class="px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-500 font-medium">
                                     {props.group.name || "N/A"}
                                 </div>
+                                <p class="text-[10px] text-slate-400">To edit the name, use the Translations tab.</p>
                             </div>
+
+                            <Field name="slug">
+                                {(field, fieldProps) => {
+                                    const handleSlugChange = (e: Event) => {
+                                        setValue(tagGroupForm, "slug", (e.currentTarget as HTMLInputElement).value);
+                                        setIsSlugManual(true);
+                                    };
+
+                                    return (
+                                        <Input
+                                            {...fieldProps}
+                                            label="Slug *"
+                                            placeholder="e.g. light-requirements"
+                                            value={field.value}
+                                            error={field.error}
+                                            maxLength={255}
+                                            disabled={isPending()}
+                                            onInput={handleSlugChange}
+                                        />
+                                    );
+                                }}
+                            </Field>
 
                             <Field name="isActive" type="boolean">
                                 {(field, fieldProps) => (

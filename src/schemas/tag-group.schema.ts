@@ -2,12 +2,17 @@ import { z } from "zod";
 
 export const createTagGroupSchema = z.object({
     name: z.string().min(1, "Group name is required").max(255, "Name must be less than 255 characters"),
+    slug: z.string().min(1, "Slug is required").max(255, "Slug must be less than 255 characters"),
     description: z.string().max(1000, "Description must be less than 1000 characters").optional(),
     isActive: z.boolean().default(true),
-    tags: z.array(z.string()).min(1, "At least one tag is required").default([]),
+    tags: z.array(z.object({
+        name: z.string().min(1, "Tag name is required"),
+        slug: z.string().min(1, "Tag slug is required")
+    })).min(1, "At least one tag is required").default([]),
 });
 
 export const updateTagGroupSchema = z.object({
+    slug: z.string().min(1, "Slug is required").max(255, "Slug must be less than 255 characters").optional(),
     isActive: z.boolean().default(true),
 });
 
