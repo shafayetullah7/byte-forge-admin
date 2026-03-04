@@ -12,13 +12,13 @@ import {
 } from "~/lib/api/endpoints/categories";
 
 export const route: RouteDefinition = {
-    preload: ({ params }) => getCategoryDetail(params.id!),
+    preload: ({ params }) => getCategoryDetail(params.category_id!),
 };
 
 export default function CategoryManagementHub() {
     const params = useParams();
     const navigate = useNavigate();
-    const categoryData = createAsync(() => getCategoryDetail(params.id!));
+    const categoryData = createAsync(() => getCategoryDetail(params.category_id!));
 
     // Edit state
     const [editName, setEditName] = createSignal("");
@@ -70,7 +70,7 @@ export default function CategoryManagementHub() {
 
     const handleSaveChanges = async () => {
         if (!editName().trim() || !editSlug().trim()) return;
-        await updateCategory(params.id!, {
+        await updateCategory(params.category_id!, {
             name: editName().trim(),
             slug: editSlug().trim(),
             description: editDesc().trim() || undefined,
@@ -81,7 +81,7 @@ export default function CategoryManagementHub() {
 
     const handleDelete = async () => {
         if (confirm("Permanently delete this category? This might affect nested items depending on system rules.")) {
-            await deleteCategory(params.id!);
+            await deleteCategory(params.category_id!);
             navigate("/categories");
         }
     };
@@ -91,7 +91,7 @@ export default function CategoryManagementHub() {
         await createCategory({
             name: newSubName().trim(),
             slug: newSubSlug().trim(),
-            parentId: params.id!,
+            parentId: params.category_id!,
             isActive: true
         });
         setNewSubName("");

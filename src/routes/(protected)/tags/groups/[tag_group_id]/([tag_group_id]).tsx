@@ -27,9 +27,9 @@ import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 
 export const route: RouteDefinition = {
     preload: ({ params }) => {
-        getTagGroupDetail(params.id!);
-        getTagGroupTranslations(params.id!);
-        getTagsByGroup({ groupId: params.id!, limit: 50 });
+        getTagGroupDetail(params.tag_group_id!);
+        getTagGroupTranslations(params.tag_group_id!);
+        getTagsByGroup({ groupId: params.tag_group_id!, limit: 50 });
     }
 };
 
@@ -57,7 +57,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
 
     // Live tag list powered by the dedicated endpoint (allows backend search)
     const tagListData = createAsync(() => getTagsByGroup({
-        groupId: params.id!,
+        groupId: params.tag_group_id!,
         limit: 50,
         search: debouncedSearch() || undefined
     }));
@@ -74,7 +74,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
         }
 
         try {
-            await deleteTagGroup(params.id!);
+            await deleteTagGroup(params.tag_group_id!);
             navigate("/tags");
         } catch (err: any) {
             setDeleteError(err.message || "Failed to delete group.");
@@ -106,7 +106,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
         if (!newTagForm.name.trim() || !newTagForm.slug.trim()) return;
         setNewTagForm("isSubmitting", true);
         try {
-            await createTag(params.id!, {
+            await createTag(params.tag_group_id!, {
                 slug: newTagForm.slug.trim(),
                 translations: [{
                     locale: "en",
@@ -135,13 +135,13 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
 
     // ─── Translation Manager Handlers ───
     const handleUpsertTranslation = async (dto: UpsertTagGroupTranslationDto) => {
-        await upsertTagGroupTranslation(params.id!, dto);
+        await upsertTagGroupTranslation(params.tag_group_id!, dto);
         // Refresh translations (handled internally by router revalidation, but typically we'd mutate cache)
         // Since we don't have direct mutator bound to `createAsync`, revalidate will auto-trigger.
     };
 
     const handleDeleteTranslation = async (locale: string) => {
-        await deleteTagGroupTranslation(params.id!, locale);
+        await deleteTagGroupTranslation(params.tag_group_id!, locale);
     };
 
     return (
@@ -166,7 +166,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                 {/* ─── LEFT COLUMN: Group Settings & Translations ─── */}
                 <div class="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
                     {/* Using the Edit component refactored earlier */}
-                    <EditTagGroupForm group={props.groupData} />
+                    <EditTagGroupForm group={props.groupData} hideHeader />
 
                     {/* Translations Box */}
                     <Card class="p-6">
@@ -290,8 +290,8 @@ export default function TagGroupManagementPage() {
     const params = useParams();
 
     // Data fetch functions initialized here
-    const groupData = createAsync(() => getTagGroupDetail(params.id!));
-    const translationsData = createAsync(() => getTagGroupTranslations(params.id!));
+    const groupData = createAsync(() => getTagGroupDetail(params.tag_group_id!));
+    const translationsData = createAsync(() => getTagGroupTranslations(params.tag_group_id!));
 
     const allData = () => {
         const g = groupData();
