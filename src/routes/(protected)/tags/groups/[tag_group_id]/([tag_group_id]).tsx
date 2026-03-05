@@ -85,6 +85,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
     // Replacing 4 signals with a reactive store for better state management
     const [newTagForm, setNewTagForm] = createStore({
         name: "",
+        nameBn: "",
         slug: "",
         isSlugManual: false,
         isSubmitting: false
@@ -108,14 +109,15 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
         try {
             await createTag(params.tag_group_id!, {
                 slug: newTagForm.slug.trim(),
-                translations: [{
-                    locale: "en",
-                    name: newTagForm.name.trim()
-                }]
+                translations: [
+                    { locale: "en", name: newTagForm.name.trim() },
+                    { locale: "bn", name: newTagForm.nameBn.trim() }
+                ]
             });
             // Reset form
             setNewTagForm({
                 name: "",
+                nameBn: "",
                 slug: "",
                 isSlugManual: false,
                 isSubmitting: false
@@ -225,26 +227,34 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                         {/* Inline Add Tag Form (Using createStore pattern) */}
                         <div class="mb-6 p-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50">
                             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Add New Tag</h3>
-                            <form onSubmit={(e) => { e.preventDefault(); handleAddTag(); }} class="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-                                <div class="w-full sm:flex-1">
+                            <form onSubmit={(e) => { e.preventDefault(); handleAddTag(); }} class="space-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <Input
-                                        label="Tag Name *"
+                                        label="Tag Name (English) *"
                                         placeholder="e.g. Low Light"
                                         value={newTagForm.name}
                                         onInput={(e) => handleNameInput(e.currentTarget.value)}
                                     />
-                                </div>
-                                <div class="w-full sm:flex-1">
                                     <Input
-                                        label="Tag Slug *"
-                                        placeholder="e.g. low-light"
-                                        value={newTagForm.slug}
-                                        onInput={(e) => handleSlugInput(e.currentTarget.value)}
+                                        label="Tag Name (Bengali) *"
+                                        placeholder="e.g. কম আলো"
+                                        value={newTagForm.nameBn}
+                                        onInput={(e) => setNewTagForm("nameBn", e.currentTarget.value)}
                                     />
                                 </div>
-                                <Button type="submit" variant="primary" class="w-full sm:w-auto mt-1 sm:mt-0" isLoading={newTagForm.isSubmitting}>
-                                    Add Tag
-                                </Button>
+                                <div class="flex flex-col sm:flex-row gap-3 items-end">
+                                    <div class="w-full sm:flex-1">
+                                        <Input
+                                            label="Tag Slug *"
+                                            placeholder="e.g. low-light"
+                                            value={newTagForm.slug}
+                                            onInput={(e) => handleSlugInput(e.currentTarget.value)}
+                                        />
+                                    </div>
+                                    <Button type="submit" variant="primary" class="w-full sm:w-auto" isLoading={newTagForm.isSubmitting} disabled={!newTagForm.name.trim() || !newTagForm.nameBn.trim() || !newTagForm.slug.trim()}>
+                                        Add Tag
+                                    </Button>
+                                </div>
                             </form>
                         </div>
 

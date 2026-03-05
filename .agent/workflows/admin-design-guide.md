@@ -209,11 +209,31 @@ When designing a module for managing a specific entity (e.g., a Tag Group, a Cat
 - **No Dark Mode**: The Admin panel is a purely Light-themed interface. Avoid `dark:` classes entirely.
 - **No Vibrant Borders**: Borders should always be `slate-200` or `slate-100`.
 - **No Ad-Hoc hex**: Every single color must map to a pre-defined `--color-` variable.
-- **No i18n**: Avoid localization logic inside admin core templates; use English keys directly.
+- **English-Only UI**: The Admin panel interface (labels, buttons, navigation) must remain strictly in English. No language-swapping or localization is required for the UI components themselves. i18n logic applies only to the content data managed through the system.
 - **No Floating Labels**: Form labels must always be top-aligned block elements for rapid scanning. 
 
 ### ✅ DO
 - Always componentize. Never repeat `<button>` classes; use `<Button>`.
 - Keep spacing consistent: use multiples of 4px.
 - Follow the exact Color Palette limits for the brand.
+
+---
+
+## 11. Multi-language Content Management (i18n)
+
+While the Admin UI is English-only, the system must enforce mandatory bilingual support for all user-facing content data.
+
+### 1. Mandatory Locales
+- **Required**: `en` (English) and `bn` (Bengali).
+- **Rule**: Every translatable entity must have a complete set of translations for both locales before the record is considered valid.
+
+### 2. Form Architecture
+- **Locale Toggling/Splitting**: Use a tabbed interface or stacked sections to clearly separate `English` and `Bengali` input fields within the same form.
+- **Mandatory Visuals**: Explicitly mark both language sections as required (e.g., using red asterisks or locale badges).
+- **Submission Blocking**: The form's `submit` action must remain disabled if mandatory fields in *either* locale are missing or invalid.
+
+### 3. Data Integrity
+- **List Views**: Display the primary English name in tables, but provide visual indicators (badges/icons) if a record is missing its Bengali translation.
+- **Validation Feedback**: All validation messages, error alerts, and success notifications MUST be in **plain English**. For example, "Bengali name is required" or "English description exceeds 1000 characters."
+- **Admin Support**: The focus is on *managing* bilingual content, while the *operational interaction* remains strictly in English.
 

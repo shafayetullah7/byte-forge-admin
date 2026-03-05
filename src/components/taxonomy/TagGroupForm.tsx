@@ -16,23 +16,7 @@ import { createTagGroupSchema, updateTagGroupSchema, type CreateTagGroupFormData
 
 const createTagGroupAction = action(async (data: CreateTagGroupFormData) => {
     "use server";
-    return await createTagGroup({
-        slug: data.slug.trim(),
-        isActive: data.isActive,
-        translations: [{
-            locale: "en",
-            name: data.name.trim(),
-            description: data.description?.trim() || undefined
-        }],
-        tags: data.tags.length > 0 ? (data.tags as { name: string, slug: string }[]).map((tag: { name: string, slug: string }) => ({
-            slug: slugify(tag.slug),
-            isActive: true,
-            translations: [{
-                locale: "en",
-                name: tag.name
-            }]
-        })) : undefined
-    });
+    return await createTagGroup(data);
 }, "create-tag-group");
 
 const updateTagGroupAction = action(async (data: { id: string; form: UpdateTagGroupFormData }) => {
@@ -98,6 +82,7 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
     const submission = useSubmission(createTagGroupAction);
 
     const [tagInput, setTagInput] = createSignal("");
+    const [tagInputBn, setTagInputBn] = createSignal("");
     const [tagSlugInput, setTagSlugInput] = createSignal("");
     const [isTagSlugManual, setIsTagSlugManual] = createSignal(false);
 
@@ -105,10 +90,12 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
 
     const [tagGroupForm, { Form, Field, FieldArray }] = createForm<CreateTagGroupFormData>({
         initialValues: {
-            name: "",
             slug: "",
-            description: "",
             isActive: true,
+            translations: [
+                { locale: "en", name: "", description: "" },
+                { locale: "bn", name: "", description: "" }
+            ],
             tags: []
         },
         validate: (values) => {
@@ -140,13 +127,22 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
     };
 
     const handleAddTag = () => {
-        const nameVal = tagInput().trim();
+        const nameEn = tagInput().trim();
+        const nameBn = tagInputBn().trim();
         const slugVal = tagSlugInput().trim();
-        const currentTags = (getValue(tagGroupForm, "tags" as any) || []) as { name: string, slug: string }[];
+        const currentTags = (getValue(tagGroupForm, "tags" as any) || []) as any[];
 
-        if (nameVal !== '' && slugVal !== '' && !currentTags.some(t => t.name === nameVal || t.slug === slugVal)) {
-            setValue(tagGroupForm, "tags" as any, [...currentTags, { name: nameVal, slug: slugVal }]);
+        if (nameEn !== '' && nameBn !== '' && slugVal !== '' && !currentTags.some(t => t.slug === slugVal)) {
+            setValue(tagGroupForm, "tags" as any, [...currentTags, {
+                slug: slugVal,
+                isActive: true,
+                translations: [
+                    { locale: "en", name: nameEn },
+                    { locale: "bn", name: nameBn }
+                ]
+            }]);
             setTagInput("");
+            setTagInputBn("");
             setTagSlugInput("");
             setIsTagSlugManual(false);
         }
@@ -194,14 +190,12 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                     <Card class="p-6">
                         <h3 class="text-base font-semibold text-slate-900 mb-6">Group Information</h3>
                         <div class="space-y-5">
-                            <Field name="name">
+                            <Field name="translations.0.name">
                                 {(field, props) => {
                                     const handleNameChange = (e: Event) => {
                                         const newName = (e.currentTarget as HTMLInputElement).value;
-                                        // Update the form's name field manually because we're intercepting onInput
-                                        setValue(tagGroupForm, "name", newName);
+                                        setValue(tagGroupForm, "translations.0.name", newName);
 
-                                        // Auto-generate slug if not manually edited
                                         if (!isSlugManual() && newName) {
                                             setValue(tagGroupForm, "slug", slugify(newName));
                                         } else if (!isSlugManual() && !newName) {
@@ -222,6 +216,20 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                                         />
                                     );
                                 }}
+                            </Field>
+
+                            <Field name="translations.1.name">
+                                {(field, props) => (
+                                    <Input
+                                        {...props}
+                                        label="Group Name (Bengali) *"
+                                        placeholder="e.g. আলোর প্রয়োজনীয়তা"
+                                        value={field.value}
+                                        error={field.error}
+                                        maxLength={255}
+                                        disabled={isPending()}
+                                    />
+                                )}
                             </Field>
 
                             <Field name="slug">
@@ -246,28 +254,47 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                                 }}
                             </Field>
 
-                            <Field name="description">
-                                {(field, props) => (
-                                    <div class="space-y-2">
-                                        <label for="group-description" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                            Description (English)
-                                        </label>
-                                        <textarea
-                                            {...props}
-                                            id="group-description"
-                                            rows={4}
-                                            class={`block w-full rounded-lg border bg-white px-3 py-2.5 text-sm ring-offset-white transition-all focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 ${field.error ? "border-red-500" : "border-slate-200"}`}
-                                            placeholder="Briefly describe what attributes this group holds..."
-                                            value={field.value || ""}
-                                            maxLength={1000}
-                                            disabled={isPending()}
-                                        />
-                                        <Show when={field.error}>
-                                            <p class="text-xs font-medium text-red-500">{field.error}</p>
-                                        </Show>
-                                    </div>
-                                )}
-                            </Field>
+                            <div class="grid grid-cols-1 gap-5">
+                                <Field name="translations.0.description">
+                                    {(field, props) => (
+                                        <div class="space-y-2">
+                                            <label for="group-description-en" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Description (English)
+                                            </label>
+                                            <textarea
+                                                {...props}
+                                                id="group-description-en"
+                                                rows={3}
+                                                class={`block w-full rounded-lg border bg-white px-3 py-2.5 text-sm ring-offset-white transition-all focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 ${field.error ? "border-red-500" : "border-slate-200"}`}
+                                                placeholder="English description..."
+                                                value={field.value || ""}
+                                                maxLength={1000}
+                                                disabled={isPending()}
+                                            />
+                                        </div>
+                                    )}
+                                </Field>
+
+                                <Field name="translations.1.description">
+                                    {(field, props) => (
+                                        <div class="space-y-2">
+                                            <label for="group-description-bn" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Description (Bengali)
+                                            </label>
+                                            <textarea
+                                                {...props}
+                                                id="group-description-bn"
+                                                rows={3}
+                                                class={`block w-full rounded-lg border bg-white px-3 py-2.5 text-sm ring-offset-white transition-all focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 ${field.error ? "border-red-500" : "border-slate-200"}`}
+                                                placeholder="Bengali description..."
+                                                value={field.value || ""}
+                                                maxLength={1000}
+                                                disabled={isPending()}
+                                            />
+                                        </div>
+                                    )}
+                                </Field>
+                            </div>
 
                             <Field name="isActive" type="boolean">
                                 {(field, props) => (
@@ -318,47 +345,45 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                         </div>
 
                         <div class="space-y-6">
-                            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-                                <div class="w-full sm:flex-1">
+                            <div class="flex flex-col gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <Input
-                                        label="Tag Name"
-                                        placeholder="Type a tag name (e.g. High) and press Enter"
+                                        label="Tag Name (English) *"
+                                        placeholder="e.g. High"
                                         value={tagInput()}
                                         onInput={handleTagInput}
                                         maxLength={255}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                e.preventDefault();
-                                                handleAddTag();
-                                            }
-                                        }}
                                         disabled={isPending()}
                                     />
-                                </div>
-                                <div class="w-full sm:flex-1">
                                     <Input
-                                        label="Tag Slug"
-                                        placeholder="e.g. high"
-                                        value={tagSlugInput()}
-                                        onInput={handleTagSlugInput}
+                                        label="Tag Name (Bengali) *"
+                                        placeholder="e.g. উচ্চ"
+                                        value={tagInputBn()}
+                                        onInput={(e) => setTagInputBn(e.currentTarget.value)}
                                         maxLength={255}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                e.preventDefault();
-                                                handleAddTag();
-                                            }
-                                        }}
                                         disabled={isPending()}
                                     />
                                 </div>
-                                <Button
-                                    variant="secondary"
-                                    onClick={handleAddTag}
-                                    disabled={!tagInput().trim() || !tagSlugInput().trim() || isPending()}
-                                    class="h-11 w-full sm:w-auto mt-1 sm:mt-0"
-                                >
-                                    Add Tag
-                                </Button>
+                                <div class="flex flex-col sm:flex-row gap-3 items-end">
+                                    <div class="w-full sm:flex-1">
+                                        <Input
+                                            label="Tag Slug *"
+                                            placeholder="e.g. high"
+                                            value={tagSlugInput()}
+                                            onInput={handleTagSlugInput}
+                                            maxLength={255}
+                                            disabled={isPending()}
+                                        />
+                                    </div>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={handleAddTag}
+                                        disabled={!tagInput().trim() || !tagInputBn().trim() || !tagSlugInput().trim() || isPending()}
+                                        class="h-11 w-full sm:w-auto"
+                                    >
+                                        Add Tag
+                                    </Button>
+                                </div>
                             </div>
 
                             <FieldArray name="tags">
@@ -379,7 +404,10 @@ export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
                                                 {(item, index) => (
                                                     <div class="inline-flex flex-col gap-1 pl-3 pr-2 py-2 rounded-lg bg-white border border-slate-200 shadow-sm transition-all hover:border-primary-green-300">
                                                         <div class="flex items-center justify-between gap-3">
-                                                            <span class="text-sm font-semibold text-slate-700">{getValue(tagGroupForm, `tags.${index()}.name` as any)}</span>
+                                                            <div class="flex flex-col">
+                                                                <span class="text-sm font-semibold text-slate-700">{getValue(tagGroupForm, `tags.${index()}.translations.0.name` as any)}</span>
+                                                                <span class="text-xs text-slate-500 font-medium">{getValue(tagGroupForm, `tags.${index()}.translations.1.name` as any)}</span>
+                                                            </div>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleRemoveTag(getValue(tagGroupForm, `tags.${index()}.slug` as any) as string)}

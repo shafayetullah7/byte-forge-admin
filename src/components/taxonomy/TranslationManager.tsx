@@ -90,8 +90,8 @@ export function TranslationManager(props: TranslationManagerProps) {
     };
 
     const handleDelete = async (targetLocale: string) => {
-        if (targetLocale === 'en') {
-            setForm("error", "The base English ('en') translation cannot be deleted.");
+        if (targetLocale === 'en' || targetLocale === 'bn') {
+            setForm("error", `The ${targetLocale === 'en' ? 'English' : 'Bengali'} translation is mandatory and cannot be deleted.`);
             return;
         }
 
@@ -131,10 +131,10 @@ export function TranslationManager(props: TranslationManagerProps) {
                         }>
                             {(t) => (
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 border-l-[3px] border-transparent" classList={{ 'border-l-primary-green-500 bg-primary-green-50/30': t.locale === 'en' }}>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 border-l-[3px] border-transparent" classList={{ 'border-l-primary-green-500 bg-primary-green-50/30': t.locale === 'en' || t.locale === 'bn' }}>
                                         {t.locale.toUpperCase()}
-                                        <Show when={t.locale === 'en'}>
-                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary-green-100 text-primary-green-800">BASE</span>
+                                        <Show when={t.locale === 'en' || t.locale === 'bn'}>
+                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary-green-100 text-primary-green-800">MANDATORY</span>
                                         </Show>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
@@ -155,8 +155,8 @@ export function TranslationManager(props: TranslationManagerProps) {
                                         <button
                                             onClick={() => handleDelete(t.locale)}
                                             class="text-red-600 hover:text-red-900 transition-colors"
-                                            disabled={t.locale === 'en'}
-                                            classList={{ 'opacity-30 cursor-not-allowed': t.locale === 'en' }}
+                                            disabled={t.locale === 'en' || t.locale === 'bn'}
+                                            classList={{ 'opacity-30 cursor-not-allowed': t.locale === 'en' || t.locale === 'bn' }}
                                         >
                                             Delete
                                         </button>
