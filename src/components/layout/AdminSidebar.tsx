@@ -130,7 +130,8 @@ export function AdminSidebar() {
                 >
                     <VerifiedUserIcon class={`${iconBaseClass} ${location.pathname.startsWith("/approvals") ? iconActiveClass : iconInactiveClass}`} />
                     Approvals
-                    <span class="ml-auto bg-amber-500/20 outline outline-1 outline-amber-500 text-amber-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+                    {/* TODO: Fetch pending count from API */}
+                    {/* <span class="ml-auto bg-amber-500/20 outline outline-1 outline-amber-500 text-amber-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{count}</span> */}
                 </A>
 
                 <A
@@ -158,7 +159,7 @@ export function AdminSidebar() {
 
             {/* Bottom Section (Optional: Context or system info) */}
             <div class="p-4 border-t border-primary-green-900 text-xs text-primary-green-500 text-center">
-                Admin Panel v1.0.0
+                Admin Panel
             </div>
         </aside>
     );

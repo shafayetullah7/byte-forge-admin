@@ -1,5 +1,5 @@
 {
-  "name": "example-with-tailwindcss",
+  "name": "byte-forge-admin",
   "type": "module",
   "scripts": {
     "dev": "vinxi dev --port 3050",
@@ -13,7 +13,7 @@
     "@solidjs/start": "^1.1.0",
     "solid-js": "^1.9.5",
     "vinxi": "^0.5.7",
-    "zod": "^4.3.6"
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.7",

@@ -10,6 +10,22 @@ import { EyeSlashIcon } from "~/components/icons/EyeSlashIcon";
 import { authApi } from "~/lib/api";
 import { loginSchema, type LoginFormData } from "~/schemas/login.schema";
 
+// Type definitions for error handling
+interface ValidationError {
+    field: string;
+    message: string;
+}
+
+interface ErrorResponse {
+    message?: string;
+    validationErrors?: ValidationError[];
+}
+
+interface ActionError {
+    message?: string;
+    response?: ErrorResponse;
+}
+
 /**
  * Login Action
  * Handles server-side authentication for the admin panel.
@@ -48,24 +64,24 @@ export default function LoginPage() {
     // Map server errors from the action back to the form fields
     createEffect(() => {
         if (submission.error) {
-            const error = submission.error;
-            const errorData = (error as any).response;
+            const error = submission.error as ActionError;
+            const errorData = error.response;
 
             if (errorData) {
                 let handled = false;
 
                 // Handle validation errors if any
                 if (Array.isArray(errorData.validationErrors)) {
-                    errorData.validationErrors.forEach((err: any) => {
+                    errorData.validationErrors.forEach((err: ValidationError) => {
                         const field = err.field.toLowerCase();
                         if (field === "email" || field === "password") {
-                            setError(loginForm, field as any, err.message);
+                            setError(loginForm, field as keyof LoginFormData, err.message);
                             handled = true;
                         }
                     });
                 }
 
-                const message = errorData.message || (error as any).message;
+                const message = errorData.message || error.message;
                 if (!handled && message) {
                     const lowerMsg = message.toLowerCase();
                     if (lowerMsg.includes("password")) {
@@ -81,7 +97,7 @@ export default function LoginPage() {
                     setErrorMessage(message || "Login failed. Please try again.");
                 }
             } else {
-                setErrorMessage((error as any).message || "An unexpected error occurred.");
+                setErrorMessage(error.message || "An unexpected error occurred.");
             }
         }
     });
