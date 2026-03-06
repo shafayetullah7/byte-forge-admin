@@ -55,7 +55,7 @@ export function EditTagGroupForm(props: EditTagGroupFormProps) {
     });
 
     return (
-        <div class={props.hideHeader ? "" : "px-6 py-8 mx-auto max-w-350"}>
+        <div class={props.hideHeader ? "" : "px-6 py-8"}>
             <Form onSubmit={handleSubmit} class="space-y-6">
                 <Show when={!props.hideHeader}>
                     <FormHeader
@@ -66,36 +66,33 @@ export function EditTagGroupForm(props: EditTagGroupFormProps) {
                     />
                 </Show>
 
-                <Card class="p-6">
-                    <h3 class="text-base font-semibold text-slate-900 mb-6">Group Settings</h3>
-                    <div class="space-y-5">
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-slate-700">Slug</label>
-                            <Field name="slug">
-                                {(field, fieldProps) => (
-                                    <Input
-                                        {...fieldProps}
-                                        label="Slug"
-                                        placeholder="e.g. light-requirements"
-                                        value={field.value}
-                                        error={field.error}
-                                        maxLength={255}
-                                        disabled={isPending()}
-                                        onInput={(e) => {
-                                            setValue(tagGroupForm, "slug", (e.currentTarget as HTMLInputElement).value);
-                                            setIsSlugManual(true);
-                                        }}
-                                    />
-                                )}
-                            </Field>
-                        </div>
+                <Card class="p-5 border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-800 mb-5 uppercase tracking-wider">Group Settings</h3>
+                    <div class="space-y-4">
+                        <Field name="slug">
+                            {(field, fieldProps) => (
+                                <Input
+                                    {...fieldProps}
+                                    label="Slug *"
+                                    placeholder="e.g. light-requirements"
+                                    value={field.value}
+                                    error={field.error}
+                                    maxLength={255}
+                                    disabled={isPending()}
+                                    onInput={(e) => {
+                                        setValue(tagGroupForm, "slug", (e.currentTarget as HTMLInputElement).value);
+                                        setIsSlugManual(true);
+                                    }}
+                                />
+                            )}
+                        </Field>
 
                         <Field name="isActive" type="boolean">
                             {(field, fieldProps) => (
-                                <div class="flex items-center justify-between p-4 rounded-lg border border-slate-100 bg-slate-50/50">
+                                <div class="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50/50">
                                     <div>
-                                        <p class="text-sm font-medium text-slate-900">Active Status</p>
-                                        <p class="text-xs text-slate-500 mt-0.5">Visible globally when enabled.</p>
+                                        <p class="text-xs font-bold text-slate-800">Active Status</p>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">Visible globally</p>
                                     </div>
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -105,7 +102,7 @@ export function EditTagGroupForm(props: EditTagGroupFormProps) {
                                             checked={!!field.value}
                                             disabled={isPending()}
                                         />
-                                        <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-green-600"></div>
+                                        <div class="w-10 h-5.5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-4.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-primary-green-600"></div>
                                     </label>
                                 </div>
                             )}

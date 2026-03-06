@@ -173,10 +173,10 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                 </span>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
 
                 {/* ─── LEFT COLUMN: Group Settings & Translations ─── */}
-                <div class="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
+                <div class="xl:col-span-4 space-y-6 lg:sticky lg:top-6">
                     {/* Using the Edit component refactored earlier */}
                     <EditTagGroupForm group={props.groupData} hideHeader />
 
@@ -211,7 +211,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                 </div>
 
                 {/* ─── RIGHT COLUMN: Tag Library ─── */}
-                <div class="lg:col-span-2 space-y-6">
+                <div class="xl:col-span-8 space-y-6">
                     <Card class="p-6">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                             <div>
@@ -234,37 +234,49 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                             </div>
                         </div>
 
-                        {/* Inline Add Tag Form (Using createStore pattern) */}
-                        <div class="mb-6 p-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50">
-                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Add New Tag</h3>
-                            <form onSubmit={(e) => { e.preventDefault(); handleAddTag(); }} class="space-y-4">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <Input
-                                        label="Tag Name (English) *"
+                        {/* Inline Add Tag Toolbar */}
+                        <div class="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">Quick Add Tag</h3>
+                            <form onSubmit={(e) => { e.preventDefault(); handleAddTag(); }} class="flex flex-col sm:flex-row flex-wrap gap-3 items-end">
+                                <div class="flex-1 min-w-[140px] w-full relative">
+                                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">English (EN) *</label>
+                                    <input
+                                        type="text"
+                                        class="block w-full h-10 rounded-lg border bg-white px-3 py-2 text-sm ring-offset-white transition-all focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 border-slate-200"
                                         placeholder="e.g. Low Light"
                                         value={newTagForm.name}
                                         onInput={(e) => handleNameInput(e.currentTarget.value)}
                                     />
-                                    <Input
-                                        label="Tag Name (Bengali) *"
+                                </div>
+                                <div class="flex-1 min-w-[140px] w-full relative">
+                                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">Bengali (BN) *</label>
+                                    <input
+                                        type="text"
+                                        class="block w-full h-10 rounded-lg border bg-white px-3 py-2 text-sm ring-offset-white transition-all focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 border-slate-200"
                                         placeholder="e.g. কম আলো"
                                         value={newTagForm.nameBn}
                                         onInput={(e) => setNewTagForm("nameBn", e.currentTarget.value)}
                                     />
                                 </div>
-                                <div class="flex flex-col sm:flex-row gap-3 items-end">
-                                    <div class="w-full sm:flex-1">
-                                        <Input
-                                            label="Tag Slug *"
-                                            placeholder="e.g. low-light"
-                                            value={newTagForm.slug}
-                                            onInput={(e) => handleSlugInput(e.currentTarget.value)}
-                                        />
-                                    </div>
-                                    <Button type="submit" variant="primary" class="w-full sm:w-auto" isLoading={newTagForm.isSubmitting} disabled={!newTagForm.name.trim() || !newTagForm.nameBn.trim() || !newTagForm.slug.trim()}>
-                                        Add Tag
-                                    </Button>
+                                <div class="flex-1 min-w-[140px] w-full relative">
+                                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 ml-0.5">Tag Slug *</label>
+                                    <input
+                                        type="text"
+                                        class="block w-full h-10 rounded-lg border bg-white px-3 py-2 text-sm ring-offset-white transition-all focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 border-slate-200"
+                                        placeholder="e.g. low-light"
+                                        value={newTagForm.slug}
+                                        onInput={(e) => handleSlugInput(e.currentTarget.value)}
+                                    />
                                 </div>
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    class="h-10 w-full sm:w-auto px-6 shadow-sm"
+                                    isLoading={newTagForm.isSubmitting}
+                                    disabled={!newTagForm.name.trim() || !newTagForm.nameBn.trim() || !newTagForm.slug.trim()}
+                                >
+                                    + Add Tag
+                                </Button>
                             </form>
                         </div>
 
@@ -323,9 +335,9 @@ export default function TagGroupManagementPage() {
         <Suspense fallback={<div class="animate-pulse space-y-6 px-6 py-8 mx-auto max-w-[1400px]">
             <div class="h-4 w-32 bg-slate-100 rounded" />
             <div class="h-12 w-96 bg-slate-50 rounded-xl" />
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="h-96 bg-slate-50 rounded-2xl" />
-                <div class="col-span-2 h-96 bg-slate-50 rounded-2xl" />
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                <div class="xl:col-span-4 h-96 bg-slate-50 rounded-2xl" />
+                <div class="xl:col-span-8 h-96 bg-slate-50 rounded-2xl" />
             </div>
         </div>}>
             <Show when={allData()}>
