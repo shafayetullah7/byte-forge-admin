@@ -1,18 +1,20 @@
 import { createSignal, Show, Suspense, createEffect, For } from "solid-js";
-import { A, useParams, createAsync, useNavigate, type RouteDefinition } from "@solidjs/router";
+import { A, useParams, createAsync, useNavigate, useAction, type RouteDefinition } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
 import { FolderIcon } from "~/components/icons";
 import {
     getCategoryDetail,
+    getCategoryTranslations,
+} from "~/lib/api/endpoints/categories";
+import {
     createCategory,
     updateCategory,
     deleteCategory,
-    getCategoryTranslations,
     upsertCategoryTranslation,
     deleteCategoryTranslation
-} from "~/lib/api/endpoints/categories";
+} from "~/lib/api/endpoints/categories/categories.actions";
 import { TranslationManager } from "~/components/taxonomy/TranslationManager";
 import { UpsertCategoryTranslationDto } from "~/lib/api/endpoints/categories/categories.types"; // Need to export this if not already
 
@@ -38,6 +40,13 @@ export default function CategoryManagementHub() {
     const [newSubName, setNewSubName] = createSignal("");
     const [newSubSlug, setNewSubSlug] = createSignal("");
     const [isNewSubSlugManual, setIsNewSubSlugManual] = createSignal(false);
+
+    // ─── Actions ──────────────────────────────────────────────────────────────────
+    const updateCategoryAction = useAction(updateCategory);
+    const deleteCategoryAction = useAction(deleteCategory);
+    const createSubCategoryAction = useAction(createCategory);
+    const upsertTranslationAction = useAction(upsertCategoryTranslation);
+    const deleteTranslationAction = useAction(deleteCategoryTranslation);
 
     const generateSlug = (val: string) => {
         return val
@@ -76,7 +85,7 @@ export default function CategoryManagementHub() {
 
     const handleSaveChanges = async () => {
         if (!editName().trim() || !editSlug().trim()) return;
-        await updateCategory(params.category_id!, {
+        await updateCategoryAction(params.category_id!, {
             slug: editSlug().trim(),
             isActive: editActive(),
             parentId: editParentId() || undefined,
@@ -91,23 +100,23 @@ export default function CategoryManagementHub() {
     };
 
     const handleUpsertTranslation = async (dto: UpsertCategoryTranslationDto) => {
-        await upsertCategoryTranslation(params.category_id!, dto);
+        await upsertTranslationAction(params.category_id!, dto);
     };
 
     const handleDeleteTranslation = async (locale: string) => {
-        await deleteCategoryTranslation(params.category_id!, locale);
+        await deleteTranslationAction(params.category_id!, locale);
     };
 
     const handleDelete = async () => {
         if (confirm("Permanently delete this category? This might affect nested items depending on system rules.")) {
-            await deleteCategory(params.category_id!);
+            await deleteCategoryAction(params.category_id!);
             navigate("/categories");
         }
     };
 
     const handleAddSub = async () => {
         if (!newSubName().trim() || !newSubSlug().trim()) return;
-        await createCategory({
+        await createSubCategoryAction({
             slug: newSubSlug().trim(),
             parentId: params.category_id!,
             isActive: true,

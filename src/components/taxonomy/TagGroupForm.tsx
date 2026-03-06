@@ -1,31 +1,16 @@
 import { For, createSignal, Show, createEffect, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
-import { useNavigate, action, useSubmission, useAction } from "@solidjs/router";
+import { useNavigate, useSubmission, useAction } from "@solidjs/router";
 import { createForm, setError, setValue, getValue } from "@modular-forms/solid";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Card } from "../ui/Card";
 import { ArrowLeftIcon } from "../icons/ArrowLeftIcon";
 import { A } from "@solidjs/router";
-import { createTagGroup, updateTagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.api";
+import { createTagGroup, updateTagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.actions";
 import type { TagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.types";
 import { slugify } from "~/lib/utils/slugify";
 import { createTagGroupSchema, updateTagGroupSchema, type CreateTagGroupFormData, type UpdateTagGroupFormData } from "~/schemas/tag-group.schema";
-
-// ─── Actions ──────────────────────────────────────────────────────────────────
-
-const createTagGroupAction = action(async (data: CreateTagGroupFormData) => {
-    "use server";
-    return await createTagGroup(data);
-}, "create-tag-group");
-
-const updateTagGroupAction = action(async (data: { id: string; form: UpdateTagGroupFormData }) => {
-    "use server";
-    return await updateTagGroup(data.id, {
-        slug: data.form.slug?.trim(),
-        isActive: data.form.isActive,
-    });
-}, "update-tag-group");
 
 // ─── Shared Styles/Components ────────────────────────────────────────────────
 
@@ -78,8 +63,8 @@ interface CreateTagGroupFormProps {
 
 export function CreateTagGroupForm(props: CreateTagGroupFormProps = {}) {
     const navigate = useNavigate();
-    const createTrigger = useAction(createTagGroupAction);
-    const submission = useSubmission(createTagGroupAction);
+    const createTrigger = useAction(createTagGroup);
+    const submission = useSubmission(createTagGroup);
 
     const [tagInput, setTagInput] = createSignal("");
     const [tagInputBn, setTagInputBn] = createSignal("");
@@ -451,8 +436,8 @@ interface EditTagGroupFormProps {
 
 export function EditTagGroupForm(props: EditTagGroupFormProps) {
     const navigate = useNavigate();
-    const updateTrigger = useAction(updateTagGroupAction);
-    const submission = useSubmission(updateTagGroupAction);
+    const updateTrigger = useAction(updateTagGroup);
+    const submission = useSubmission(updateTagGroup);
 
     const [isSlugManual, setIsSlugManual] = createSignal(true); // Default to true so we don't accidentally overwrite existing slugs
 
@@ -477,7 +462,10 @@ export function EditTagGroupForm(props: EditTagGroupFormProps) {
     const isPending = () => !!submission.pending;
 
     const handleSubmit = (values: UpdateTagGroupFormData) => {
-        updateTrigger({ id: props.group.id, form: values });
+        updateTrigger(props.group.id, {
+            slug: values.slug?.trim(),
+            isActive: values.isActive,
+        });
     };
 
     createEffect(() => {

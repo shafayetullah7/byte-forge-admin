@@ -1,13 +1,14 @@
 import { createSignal, createEffect } from "solid-js";
-import { A, useNavigate } from "@solidjs/router";
+import { A, useNavigate, useAction } from "@solidjs/router";
 import { ArrowLeftIcon } from "~/components/icons";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
-import { createCategory } from "~/lib/api/endpoints/categories";
+import { createCategory } from "~/lib/api/endpoints/categories/categories.actions";
 
 export default function CreateCategoryPage() {
     const navigate = useNavigate();
+    const createCategoryAction = useAction(createCategory);
     const [name, setName] = createSignal("");
     const [slug, setSlug] = createSignal("");
     const [isSlugManual, setIsSlugManual] = createSignal(false);
@@ -33,7 +34,7 @@ export default function CreateCategoryPage() {
     const handleSubmit = async () => {
         if (!name().trim() || !slug().trim()) return;
 
-        await createCategory({
+        await createCategoryAction({
             slug: slug().trim(),
             isActive: isActive(),
             translations: [

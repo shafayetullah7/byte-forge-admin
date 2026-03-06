@@ -1,14 +1,16 @@
 import { createSignal, Show, Suspense } from "solid-js";
-import { useNavigate, useParams, createAsync, type RouteDefinition } from "@solidjs/router";
+import { useNavigate, useParams, createAsync, useAction, type RouteDefinition } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import {
-    deleteTagGroup,
     getTagGroupDetail,
     getTagGroupTranslations,
+} from "~/lib/api/endpoints/tag-groups";
+import {
+    deleteTagGroup,
     upsertTagGroupTranslation,
     deleteTagGroupTranslation
-} from "~/lib/api/endpoints/tag-groups/tag-groups.api";
+} from "~/lib/api/endpoints/tag-groups/tag-groups.actions";
 import type { TagGroup, TagGroupTranslation, UpsertTagGroupTranslationDto } from "~/lib/api/endpoints/tag-groups/tag-groups.types";
 import { TranslationManager } from "~/components/taxonomy/TranslationManager";
 import { EditTagGroupForm } from "~/components/taxonomy/TagGroupForm";
@@ -25,10 +27,15 @@ function EditContent(props: { group: TagGroup; translations: TagGroupTranslation
     const navigate = useNavigate();
     const [deleteError, setDeleteError] = createSignal("");
 
+    // ─── Actions ──────────────────────────────────────────────────────────────────
+    const deleteGroupAction = useAction(deleteTagGroup);
+    const upsertTranslationAction = useAction(upsertTagGroupTranslation);
+    const deleteTranslationAction = useAction(deleteTagGroupTranslation);
+
     const handleDeleteGroup = async () => {
         setDeleteError("");
         try {
-            await deleteTagGroup(props.group.id);
+            await deleteGroupAction(props.group.id);
             navigate("/tags");
         } catch (err: any) {
             setDeleteError(err.message || "Failed to delete group.");
@@ -36,11 +43,11 @@ function EditContent(props: { group: TagGroup; translations: TagGroupTranslation
     };
 
     const handleUpsertTranslation = async (dto: UpsertTagGroupTranslationDto) => {
-        await upsertTagGroupTranslation(params.tag_group_id!, dto);
+        await upsertTranslationAction(params.tag_group_id!, dto);
     };
 
     const handleDeleteTranslation = async (locale: string) => {
-        await deleteTagGroupTranslation(params.tag_group_id!, locale);
+        await deleteTranslationAction(params.tag_group_id!, locale);
     };
 
     return (

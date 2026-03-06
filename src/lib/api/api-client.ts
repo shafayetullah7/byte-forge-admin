@@ -4,6 +4,7 @@ export interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
   strict?: boolean; // If true, redirects to /login on 401. Default: true
   responseType?: "json" | "blob" | "text";
+  unwrapData?: boolean; // If false, returns full response (with meta). Default: true
 }
 
 const API_BASE_URL =
@@ -84,7 +85,13 @@ export async function fetcher<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const { params, strict = true, responseType, ...fetchOptions } = options;
+  const {
+    params,
+    strict = true,
+    responseType,
+    unwrapData = true,
+    ...fetchOptions
+  } = options;
   const url = buildURL(endpoint, params);
 
   const headers = new Headers(fetchOptions.headers || {});
@@ -234,6 +241,13 @@ export async function fetcher<T>(
 
     // Default to JSON with automatic unwrapping
     const result = await response.json().catch(() => ({}));
+
+    // If unwrapData is false, return the full response (includes meta)
+    if (unwrapData === false) {
+      return result as T;
+    }
+
+    // Default: unwrap and return data
     if (
       result &&
       typeof result === "object" &&

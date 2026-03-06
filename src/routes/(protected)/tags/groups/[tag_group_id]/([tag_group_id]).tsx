@@ -1,23 +1,27 @@
 import { createSignal, For, Show, Suspense, onCleanup } from "solid-js";
 import { createStore } from "solid-js/store";
-import { A, useParams, createAsync, useNavigate, type RouteDefinition } from "@solidjs/router";
+import { A, useParams, createAsync, useNavigate, useAction, type RouteDefinition } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
 import {
     getTagGroupDetail,
-    deleteTagGroup,
     getTagGroupTranslations,
+} from "~/lib/api/endpoints/tag-groups";
+import {
+    deleteTagGroup,
     upsertTagGroupTranslation,
     deleteTagGroupTranslation
-} from "~/lib/api/endpoints/tag-groups";
+} from "~/lib/api/endpoints/tag-groups/tag-groups.actions";
 import type { TagGroup, TagGroupTranslation, UpsertTagGroupTranslationDto } from "~/lib/api/endpoints/tag-groups";
+import {
+    getTagsByGroup,
+} from "~/lib/api/endpoints/tags";
 import {
     createTag,
     updateTag,
     deleteTag,
-    getTagsByGroup
-} from "~/lib/api/endpoints/tags";
+} from "~/lib/api/endpoints/tags/tags.actions";
 import type { UpdateTagDto } from "~/lib/api/endpoints/tags";
 import { TagRow } from "~/components/taxonomy/TagRow";
 import { EditTagGroupForm } from "~/components/taxonomy/TagGroupForm";
@@ -38,6 +42,14 @@ export const route: RouteDefinition = {
 function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslation[] }) {
     const params = useParams();
     const navigate = useNavigate();
+
+    // ─── Actions ──────────────────────────────────────────────────────────────────
+    const createTagAction = useAction(createTag);
+    const updateTagAction = useAction(updateTag);
+    const deleteTagAction = useAction(deleteTag);
+    const upsertTranslationAction = useAction(upsertTagGroupTranslation);
+    const deleteTranslationAction = useAction(deleteTagGroupTranslation);
+    const deleteGroupAction = useAction(deleteTagGroup);
 
     // ─── Tag List State ───
     const [searchQuery, setSearchQuery] = createSignal("");
@@ -74,7 +86,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
         }
 
         try {
-            await deleteTagGroup(params.tag_group_id!);
+            await deleteGroupAction(params.tag_group_id!);
             navigate("/tags");
         } catch (err: any) {
             setDeleteError(err.message || "Failed to delete group.");
@@ -107,7 +119,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
         if (!newTagForm.name.trim() || !newTagForm.slug.trim()) return;
         setNewTagForm("isSubmitting", true);
         try {
-            await createTag(params.tag_group_id!, {
+            await createTagAction(params.tag_group_id!, {
                 slug: newTagForm.slug.trim(),
                 translations: [
                     { locale: "en", name: newTagForm.name.trim() },
@@ -128,22 +140,20 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
     };
 
     const handleUpdateTag = async (id: string, data: UpdateTagDto) => {
-        await updateTag(id, data);
+        await updateTagAction(id, data);
     };
 
     const handleDeleteTag = async (tagId: string) => {
-        await deleteTag(tagId);
+        await deleteTagAction(tagId);
     };
 
     // ─── Translation Manager Handlers ───
     const handleUpsertTranslation = async (dto: UpsertTagGroupTranslationDto) => {
-        await upsertTagGroupTranslation(params.tag_group_id!, dto);
-        // Refresh translations (handled internally by router revalidation, but typically we'd mutate cache)
-        // Since we don't have direct mutator bound to `createAsync`, revalidate will auto-trigger.
+        await upsertTranslationAction(params.tag_group_id!, dto);
     };
 
     const handleDeleteTranslation = async (locale: string) => {
-        await deleteTagGroupTranslation(params.tag_group_id!, locale);
+        await deleteTranslationAction(params.tag_group_id!, locale);
     };
 
     return (
