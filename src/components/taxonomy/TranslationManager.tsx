@@ -22,6 +22,7 @@ interface TranslationManagerProps {
     translations: TranslationItem[];
     onUpsert: (data: UpsertTranslationDto) => Promise<void>;
     onDelete: (locale: string) => Promise<void>;
+    hideMandatory?: boolean;
 }
 
 export function TranslationManager(props: TranslationManagerProps) {
@@ -32,6 +33,11 @@ export function TranslationManager(props: TranslationManagerProps) {
         editingLocale: null as string | null,
         isSubmitting: false,
         error: "",
+    });
+
+    const displayTranslations = createMemo(() => {
+        if (!props.hideMandatory) return props.translations;
+        return props.translations.filter(t => t.locale !== 'en' && t.locale !== 'bn');
     });
 
     const languages = createAsync(() => getLanguages());
@@ -122,7 +128,7 @@ export function TranslationManager(props: TranslationManagerProps) {
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-slate-200">
-                        <For each={props.translations} fallback={
+                        <For each={displayTranslations()} fallback={
                             <tr>
                                 <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-400">
                                     No translations available.

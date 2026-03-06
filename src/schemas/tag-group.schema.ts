@@ -29,6 +29,8 @@ export const createTagGroupSchema = z.object({
 export const updateTagGroupSchema = z.object({
     slug: z.string().min(1, "Slug is required").max(255).optional(),
     isActive: z.boolean().default(true),
+    nameEn: z.string().min(1, "English name is required").max(255).optional(),
+    nameBn: z.string().min(1, "Bengali name is required").max(255).optional(),
 });
 
 export type CreateTagGroupFormData = z.infer<typeof createTagGroupSchema>;
