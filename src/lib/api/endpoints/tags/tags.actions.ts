@@ -1,3 +1,4 @@
+"use action";
 import { action, revalidate } from "@solidjs/router";
 import { apiClient } from "../../api-client";
 import type {
