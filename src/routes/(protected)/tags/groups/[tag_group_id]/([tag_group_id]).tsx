@@ -19,6 +19,8 @@ import {
     createTag,
     updateTag,
     deleteTag,
+    upsertTagTranslation,
+    deleteTagTranslation,
 } from "~/lib/api/endpoints/tags/tags.actions";
 import { TranslationManager } from "~/components/taxonomy/TranslationManager";
 import { SafeErrorBoundary } from "~/components/errors";
@@ -49,6 +51,10 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
     const upsertTranslationAction = useAction(upsertTagGroupTranslation);
     const deleteTranslationAction = useAction(deleteTagGroupTranslation);
     const deleteGroupAction = useAction(deleteTagGroup);
+
+    // Tag Translation Actions
+    const upsertTagTranslationAction = useAction(upsertTagTranslation);
+    const deleteTagTranslationAction = useAction(deleteTagTranslation);
 
     // ─── Search State ───
     const [searchQuery, setSearchQuery] = createSignal("");
@@ -191,6 +197,8 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                             onAddTag={handleAddTag}
                             onUpdateTag={async (id, dto) => { await updateTagAction(id, dto); }}
                             onDeleteTag={async (tagId) => { await deleteTagAction(tagId); }}
+                            onUpsertTagTranslation={async (tagId, dto) => { await upsertTagTranslationAction(tagId, dto); }}
+                            onDeleteTagTranslation={async (tagId, locale) => { await deleteTagTranslationAction(tagId, locale); }}
                             isAdding={isAddingTag()}
                         />
                     </Suspense>

@@ -73,6 +73,7 @@ export const upsertTagTranslation = action(
     );
     // Revalidate tag groups since translations affect display
     revalidate("tag-groups");
+    revalidate("tags-by-group");
     return result;
   },
   "upsert-tag-translation"
@@ -90,6 +91,7 @@ export const deleteTagTranslation = action(
       }
     );
     revalidate("tag-groups");
+    revalidate("tags-by-group");
     return result;
   },
   "delete-tag-translation"

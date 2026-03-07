@@ -21,6 +21,7 @@ interface TagRowProps {
     tag: Tag;
     onUpdate: (id: string, data: UpdateTagDto) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
+    onLocalize: (tag: Tag) => void;
 }
 
 export function TagRow(props: TagRowProps) {
@@ -90,6 +91,15 @@ export function TagRow(props: TagRowProps) {
                         }>
                             <button
                                 class="p-2 text-slate-400 hover:text-primary-green-600 hover:bg-primary-green-50 rounded-lg transition-all"
+                                onClick={() => props.onLocalize(props.tag)}
+                                title="Localize Tag"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" />
+                                </svg>
+                            </button>
+                            <button
+                                class="p-2 text-slate-400 hover:text-primary-green-600 hover:bg-primary-green-50 rounded-lg transition-all"
                                 onClick={startEdit}
                                 title="Edit Tag"
                             >
@@ -122,23 +132,33 @@ export function TagRow(props: TagRowProps) {
                             placeholder="e.g. low-light"
                         />
                     </div>
-                    <p class="text-[10px] text-slate-400">To edit the tag name or description, use the Translations tab.</p>
                 </div>
-                <div class="flex justify-end gap-2 border-t border-primary-green-100 pt-3">
+                <div class="flex items-center justify-between border-t border-primary-green-100 pt-3">
                     <button
-                        onClick={() => setState("isEditing", false)}
-                        disabled={state.isSaving}
-                        class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                        onClick={() => props.onLocalize(props.tag)}
+                        class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary-green-700 hover:text-primary-green-800 transition-colors"
                     >
-                        Cancel
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" />
+                        </svg>
+                        Edit Translations
                     </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={state.isSaving}
-                        class="px-3 py-1.5 rounded-lg bg-primary-green-600 text-white text-sm hover:bg-primary-green-700 transition-colors disabled:opacity-50"
-                    >
-                        {state.isSaving ? "Saving..." : "Save Tag"}
-                    </button>
+                    <div class="flex gap-2">
+                        <button
+                            onClick={() => setState("isEditing", false)}
+                            disabled={state.isSaving}
+                            class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={state.isSaving}
+                            class="px-3 py-1.5 rounded-lg bg-primary-green-600 text-white text-sm hover:bg-primary-green-700 transition-colors disabled:opacity-50"
+                        >
+                            {state.isSaving ? "Saving..." : "Save Tag"}
+                        </button>
+                    </div>
                 </div>
             </div>
         </Show>
