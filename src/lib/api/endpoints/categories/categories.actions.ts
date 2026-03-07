@@ -17,6 +17,7 @@ export const createCategory = action(async (data: CreateCategoryDto) => {
     body: JSON.stringify(data),
   });
   revalidate("category-tree");
+  revalidate("category-detail");
   return result;
 }, "create-category");
 

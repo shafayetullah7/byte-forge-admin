@@ -17,19 +17,17 @@ export interface TagGroupListParams {
 export interface CreateTagGroupDto {
   slug: string;
   isActive?: boolean;
-  translations: {
-    locale: string;
-    name: string;
-    description?: string;
-  }[];
+  translations: [
+    { locale: 'en'; name: string; description?: string | null },
+    { locale: 'bn'; name: string; description?: string | null }
+  ]; // Backend strictly requires 'en' and 'bn' for Tag Groups
   tags?: {
     slug: string;
     isActive?: boolean;
-    translations: {
-      locale: string;
-      name: string;
-      description?: string;
-    }[];
+    translations: [
+        { locale: 'en'; name: string; description?: string | null },
+        { locale: 'bn'; name: string; description?: string | null }
+    ];
   }[];
 }
 

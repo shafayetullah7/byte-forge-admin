@@ -1,37 +1,41 @@
 // ─── Category Translations ──────────────────────────────────────────────────
 
+/** Base link between category and locale data */
 export interface CategoryTranslation {
-  id?: string;
-  categoryId?: string;
+  id: string;          // Required for response
+  categoryId: string;  
   locale: string;
   name: string;
-  description: string | null; // Removed optional '?' to match TranslationItem
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
+/** Payload for POST/PATCH translations */
 export interface UpsertCategoryTranslationDto {
     locale: string;
     name: string;
-    description?: string;
+    description?: string | null;
 }
 
-// ─── Category ────────────────────────────────────────────────────────────────
+// ─── Category DTOs ───────────────────────────────────────────────────────────
 
 /** Request DTO: POST /admin/categories */
 export interface CreateCategoryDto {
   slug: string;
-  parentId?: string;        // UUID — optional, creates a root category if omitted
+  parentId?: string | null;   // UUID — optional, creates a root category if omitted
   isActive?: boolean;
-  commissionRate?: number;  // 0–100, stored as decimal(5,2)
-  translations: CategoryTranslation[];
+  commissionRate?: number;    // 0–100, stored as decimal(5,2)
+  translations: UpsertCategoryTranslationDto[]; // Use the lean DTO here
 }
 
 /** Request DTO: PATCH /admin/categories/:id */
 export interface UpdateCategoryDto {
   slug?: string;
-  parentId?: string;
+  parentId?: string | null;
   isActive?: boolean;
   commissionRate?: number;
-  translations?: CategoryTranslation[];
+  translations?: UpsertCategoryTranslationDto[];
 }
 
 /**
