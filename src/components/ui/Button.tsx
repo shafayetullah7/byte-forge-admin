@@ -1,7 +1,7 @@
 import { JSX, mergeProps } from "solid-js";
 
 interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "outline";
+    variant?: "primary" | "secondary" | "outline" | "danger";
     size?: "sm" | "md" | "lg";
     isLoading?: boolean;
 }
@@ -17,6 +17,7 @@ export function Button(props: ButtonProps) {
         secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
         outline:
             "border border-slate-200 bg-white hover:bg-slate-50 text-slate-900 shadow-sm",
+        danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm focus:ring-red-500",
     };
 
     const sizes = {

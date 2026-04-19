@@ -43,6 +43,31 @@ export interface ShopDetail {
     postalCode: string;
     isVerified: boolean;
   } | null;
+  verification: {
+    id: string;
+    shopId: string;
+    tradeLicenseNumber: string | null;
+    tradeLicenseDocument: string | null;
+    tradeLicenseMedia: {
+      url: string;
+      fileName: string;
+    } | null;
+    tinNumber: string | null;
+    tinDocument: string | null;
+    tinMedia: {
+      url: string;
+      fileName: string;
+    } | null;
+    utilityBillDocument: string | null;
+    utilityBillMedia: {
+      url: string;
+      fileName: string;
+    } | null;
+    status: string;
+    verifiedAt: string | null;
+    rejectionReason: string | null;
+    adminNotes: string | null;
+  } | null;
 }
 
 export interface VerificationHistory {
@@ -58,23 +83,26 @@ export interface VerificationHistory {
 /**
  * Fetch a list of shops (supports pagination, search, and filtering).
  */
-export const getShops = query(async (params?: {
-  status?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
-}) => {
-  const searchParams = new URLSearchParams();
-  if (params) {
-    if (params.status) searchParams.set("status", params.status);
-    if (params.search) searchParams.set("search", params.search);
-    if (params.page) searchParams.set("page", params.page.toString());
-    if (params.limit) searchParams.set("limit", params.limit.toString());
-  }
-  const qs = searchParams.toString();
-  const url = qs ? `/admin/shops?${qs}` : "/admin/shops";
-  return apiClient<{ data: Shop[]; pagination: any }>(url);
-}, "shops-list");
+export const getShops = query(
+  async (params?: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      if (params.status) searchParams.set("status", params.status);
+      if (params.search) searchParams.set("search", params.search);
+      if (params.page) searchParams.set("page", params.page.toString());
+      if (params.limit) searchParams.set("limit", params.limit.toString());
+    }
+    const qs = searchParams.toString();
+    const url = qs ? `/admin/shops?${qs}` : "/admin/shops";
+    return apiClient<{ data: Shop[]; pagination: any }>(url);
+  },
+  "shops-list",
+);
 
 /**
  * Fetch detail for a single shop.
@@ -87,16 +115,20 @@ export const getShopDetail = query(async (id: string) => {
  * Approve a shop.
  */
 export const approveShop = async (id: string) => {
-  return apiClient(`/admin/shops/${id}/approve`, { method: "PATCH" });
+  return apiClient(`/admin/shops/${id}/approve`, { method: "POST" });
 };
 
 /**
  * Reject a shop with reason.
  */
-export const rejectShop = async (id: string, reason: string) => {
+export const rejectShop = async (
+  id: string,
+  reason: string,
+  adminNotes?: string,
+) => {
   return apiClient(`/admin/shops/${id}/reject`, {
-    method: "PATCH",
-    body: JSON.stringify({ reason }),
+    method: "POST",
+    body: JSON.stringify({ reason, adminNotes }),
   });
 };
 

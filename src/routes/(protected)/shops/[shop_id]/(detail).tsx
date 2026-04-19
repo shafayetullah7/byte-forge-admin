@@ -16,13 +16,13 @@ import { ShopStatusBadge } from "~/components/shops/ShopList";
 import { VerificationHistory } from "~/components/shops/VerificationHistory";
 
 export const route: RouteDefinition = {
-  preload: (params) => getShopDetail(params.shop_id),
+  preload: (args) => getShopDetail(args.params.shop_id!),
 };
 
 export default function ShopDetailPage() {
   const params = useParams();
-  const shopData = createAsync(() => getShopDetail(params.shop_id));
-  const historyData = createAsync(() => getVerificationHistory(params.shop_id));
+  const shopData = createAsync(() => getShopDetail(params.shop_id!));
+  const historyData = createAsync(() => getVerificationHistory(params.shop_id!));
 
   const [showRejectModal, setShowRejectModal] = createSignal(false);
   const [showSuspendModal, setShowSuspendModal] = createSignal(false);
@@ -34,6 +34,7 @@ export default function ShopDetailPage() {
 
     setLoading(true);
     try {
+      if (!params.shop_id) return;
       await approveShop(params.shop_id);
       alert("Shop approved successfully");
       // Reload page to refresh data
@@ -53,6 +54,7 @@ export default function ShopDetailPage() {
 
     setLoading(true);
     try {
+      if (!params.shop_id) return;
       await rejectShop(params.shop_id, reason());
       alert("Shop rejected");
       setShowRejectModal(false);
@@ -73,6 +75,7 @@ export default function ShopDetailPage() {
 
     setLoading(true);
     try {
+      if (!params.shop_id) return;
       await suspendShop(params.shop_id, reason());
       alert("Shop suspended");
       setShowSuspendModal(false);
@@ -145,7 +148,7 @@ export default function ShopDetailPage() {
                         variant="primary"
                         size="md"
                         onClick={handleApprove}
-                        loading={loading()}
+                        isLoading={loading()}
                       >
                         Approve Shop
                       </Button>
@@ -258,6 +261,128 @@ export default function ShopDetailPage() {
                   </Card>
                 )}
 
+                {/* Verification Documents */}
+                {shop.verification && (
+                  <Card title="Verification Documents">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Trade License */}
+                      <div class="space-y-3">
+                        <label class="text-xs font-semibold text-slate-500 uppercase block">
+                          Trade License
+                        </label>
+                        <div class="space-y-1">
+                          <p class="text-sm font-medium text-slate-900 truncate">
+                            {shop.verification.tradeLicenseNumber || "N/A"}
+                          </p>
+                          {shop.verification.tradeLicenseMedia ? (
+                            <a
+                              href={shop.verification.tradeLicenseMedia.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="inline-flex items-center gap-2 text-sm text-primary-green-600 hover:text-primary-green-700 font-medium"
+                            >
+                              <span>View Document</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                            </a>
+                          ) : (
+                            <span class="text-xs text-slate-400 italic">No document uploaded</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* TIN */}
+                      <div class="space-y-3">
+                        <label class="text-xs font-semibold text-slate-500 uppercase block">
+                          TIN Number
+                        </label>
+                        <div class="space-y-1">
+                          <p class="text-sm font-medium text-slate-900 truncate">
+                            {shop.verification.tinNumber || "N/A"}
+                          </p>
+                          {shop.verification.tinMedia ? (
+                            <a
+                              href={shop.verification.tinMedia.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="inline-flex items-center gap-2 text-sm text-primary-green-600 hover:text-primary-green-700 font-medium"
+                            >
+                              <span>View Document</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                            </a>
+                          ) : (
+                            <span class="text-xs text-slate-400 italic">No document uploaded</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Utility Bill */}
+                      <div class="space-y-3">
+                        <label class="text-xs font-semibold text-slate-500 uppercase block">
+                          Utility Bill
+                        </label>
+                        <div class="space-y-1">
+                          <p class="text-sm font-medium text-slate-900">Document</p>
+                          {shop.verification.utilityBillMedia ? (
+                            <a
+                              href={shop.verification.utilityBillMedia.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="inline-flex items-center gap-2 text-sm text-primary-green-600 hover:text-primary-green-700 font-medium"
+                            >
+                              <span>View Document</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                            </a>
+                          ) : (
+                            <span class="text-xs text-slate-400 italic">No document uploaded</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
                 {/* Verification History */}
                 <Card title="Verification History">
                   <VerificationHistory history={history || []} />
@@ -304,7 +429,7 @@ export default function ShopDetailPage() {
 
       {/* Reject Modal */}
       <Modal
-        isOpen={showRejectModal()}
+        show={showRejectModal()}
         onClose={() => {
           setShowRejectModal(false);
           setReason("");
@@ -333,7 +458,7 @@ export default function ShopDetailPage() {
             >
               Cancel
             </Button>
-            <Button variant="danger" size="md" onClick={handleReject} loading={loading()}>
+            <Button variant="danger" size="md" onClick={handleReject} isLoading={loading()}>
               Reject Shop
             </Button>
           </div>
@@ -342,7 +467,7 @@ export default function ShopDetailPage() {
 
       {/* Suspend Modal */}
       <Modal
-        isOpen={showSuspendModal()}
+        show={showSuspendModal()}
         onClose={() => {
           setShowSuspendModal(false);
           setReason("");
@@ -371,7 +496,7 @@ export default function ShopDetailPage() {
             >
               Cancel
             </Button>
-            <Button variant="danger" size="md" onClick={handleSuspend} loading={loading()}>
+            <Button variant="danger" size="md" onClick={handleSuspend} isLoading={loading()}>
               Suspend Shop
             </Button>
           </div>
