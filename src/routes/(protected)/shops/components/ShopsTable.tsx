@@ -2,14 +2,15 @@ import { For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Badge } from "~/components/ui/Badge";
-import type { Shop, ShopStatus } from "~/lib/api/endpoints/shops";
+import type { Shop, ShopStatus, ShopVerificationStatus } from "~/lib/api/endpoints/shops";
 
 export interface ShopsTableProps {
   shops: Shop[];
 }
 
-const statusConfig: Record<ShopStatus, { variant: "success" | "warning" | "danger" | "neutral"; label: string }> = {
+const shopStatusConfig: Record<ShopStatus, { variant: "success" | "warning" | "danger" | "neutral"; label: string }> = {
   APPROVED: { variant: "success", label: "Approved" },
+  ACTIVE: { variant: "success", label: "Active" },
   PENDING_VERIFICATION: { variant: "warning", label: "Pending" },
   REJECTED: { variant: "danger", label: "Rejected" },
   SUSPENDED: { variant: "danger", label: "Suspended" },
@@ -18,9 +19,21 @@ const statusConfig: Record<ShopStatus, { variant: "success" | "warning" | "dange
   DELETED: { variant: "neutral", label: "Deleted" },
 };
 
+const verificationStatusConfig: Record<ShopVerificationStatus, { variant: "success" | "warning" | "danger" | "neutral"; label: string }> = {
+  APPROVED: { variant: "success", label: "Verified" },
+  REVIEWING: { variant: "warning", label: "Reviewing" },
+  PENDING: { variant: "neutral", label: "Pending" },
+  REJECTED: { variant: "danger", label: "Rejected" },
+};
+
 function ShopStatusBadge(props: { status: ShopStatus }) {
-  const config = statusConfig[props.status] || { variant: "neutral" as const, label: props.status };
+  const config = shopStatusConfig[props.status] || { variant: "neutral" as const, label: props.status };
   return <Badge variant={config.variant}>{config.label}</Badge>;
+}
+
+function VerificationBadge(props: { status: ShopVerificationStatus }) {
+  const config = verificationStatusConfig[props.status] || { variant: "neutral" as const, label: props.status };
+  return <Badge variant={config.variant} size="sm">{config.label}</Badge>;
 }
 
 export function ShopsTable(props: ShopsTableProps) {
@@ -29,10 +42,11 @@ export function ShopsTable(props: ShopsTableProps) {
       {/* Table Header */}
       <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
         <div class="col-span-3">Shop Name</div>
-        <div class="col-span-2">Location</div>
+        <div class="col-span-2">Owner</div>
+        <div class="col-span-1">Location</div>
         <div class="col-span-2">Status</div>
-        <div class="col-span-2">Created</div>
-        <div class="col-span-2">Actions</div>
+        <div class="col-span-2">Verification</div>
+        <div class="col-span-1">Created</div>
         <div class="col-span-1"></div>
       </div>
 
@@ -79,42 +93,70 @@ export function ShopsTable(props: ShopsTableProps) {
                   </div>
                 </div>
 
-                {/* Location */}
+                {/* Owner */}
                 <div class="col-span-2">
-                  <div class="text-sm text-slate-700">{shop.city || "—"}</div>
-                  <div class="text-xs text-slate-500">{shop.division || "—"}</div>
+                  <Show when={shop.owner} fallback={<span class="text-sm text-slate-400">—</span>}>
+                    <div class="flex items-center gap-2">
+                      {shop.owner!.avatar ? (
+                        <img
+                          src={shop.owner!.avatar}
+                          alt={`${shop.owner!.firstName} ${shop.owner!.lastName}`}
+                          class="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-600">
+                          {shop.owner!.firstName[0]}{shop.owner!.lastName[0]}
+                        </div>
+                      )}
+                      <div class="text-sm text-slate-700 truncate">
+                        {shop.owner!.firstName} {shop.owner!.lastName}
+                      </div>
+                    </div>
+                  </Show>
                 </div>
 
-                {/* Status */}
-                <div class="col-span-2">
+                {/* Location */}
+                <div class="col-span-1">
+                  <div class="text-sm text-slate-700 truncate">{shop.city || "—"}</div>
+                </div>
+
+                {/* Shop Status */}
+                <div class="col-span-2 flex items-center">
                   <ShopStatusBadge status={shop.status} />
                 </div>
 
-                {/* Created Date */}
+                {/* Verification Status */}
                 <div class="col-span-2">
+                  <Show when={shop.verification} fallback={<span class="text-sm text-slate-400">—</span>}>
+                    <div class="flex flex-col gap-1 items-start">
+                      <VerificationBadge status={shop.verification!.status} />
+                      <Show when={shop.verification!.rejectionReason}>
+                        <div class="text-xs text-red-600 truncate max-w-[150px]" title={shop.verification!.rejectionReason!}>
+                          {shop.verification!.rejectionReason}
+                        </div>
+                      </Show>
+                    </div>
+                  </Show>
+                </div>
+
+                {/* Created Date */}
+                <div class="col-span-1">
                   <div class="text-sm text-slate-700">
                     {new Date(shop.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
                       month: "short",
                       day: "numeric",
+                      year: "numeric",
                     })}
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div class="col-span-2">
-                  <A href={`/shops/${shop.id}`}>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </A>
-                </div>
-
                 {/* Arrow */}
                 <div class="col-span-1 flex justify-end">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
+                  <A href={`/shops/${shop.id}`} class="text-slate-400 hover:text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </A>
                 </div>
               </div>
             )}

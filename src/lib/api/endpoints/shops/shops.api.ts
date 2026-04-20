@@ -1,6 +1,6 @@
 import { query } from "@solidjs/router";
 import { apiClient } from "../../api-client";
-import type { PaginatedResponse, PaginationMeta } from "../../types";
+import type { PaginatedResponse, PaginatedResult, PaginationMeta } from "../../types";
 
 /**
  * Shop status enum matching backend TShopStatus
@@ -16,16 +16,39 @@ export type ShopStatus =
   | 'SUSPENDED'
   | 'DELETED';
 
+export type ShopVerificationStatus = 
+  | 'PENDING'
+  | 'REVIEWING'
+  | 'APPROVED'
+  | 'REJECTED';
+
+export type { PaginatedResult };
+
+export interface ShopOwner {
+  firstName: string;
+  lastName: string;
+  userName: string;
+  avatar: string | null;
+}
+
+export interface ShopVerification {
+  status: ShopVerificationStatus;
+  verifiedAt: string | null;
+  rejectionReason: string | null;
+}
+
 export interface Shop {
   id: string;
   ownerId: string;
   slug: string;
   status: ShopStatus;
-  nameEn?: string;  // From English translation
-  division?: string | null;  // From address translation
-  city?: string | null;  // From address translation (district)
+  nameEn?: string;
+  division?: string | null;
+  city?: string | null;
   logoId?: string | null;
-  logoUrl?: string | null;  // Full URL to logo
+  logoUrl?: string | null;
+  owner: ShopOwner | null;
+  verification: ShopVerification | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -125,13 +148,15 @@ export interface VerificationHistory {
 export const getShops = query(
   async (params?: {
     status?: ShopStatus;
+    verificationStatus?: ShopVerificationStatus;
     search?: string;
     page?: number;
     limit?: number;
-  }): Promise<PaginatedResponse<Shop>> => {
+  }): Promise<PaginatedResult<Shop>> => {
     const searchParams = new URLSearchParams();
     if (params) {
       if (params.status) searchParams.set("status", params.status);
+      if (params.verificationStatus) searchParams.set("verificationStatus", params.verificationStatus);
       if (params.search) searchParams.set("search", params.search);
       if (params.page) searchParams.set("page", params.page.toString());
       if (params.limit) searchParams.set("limit", params.limit.toString());
