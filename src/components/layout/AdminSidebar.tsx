@@ -51,6 +51,16 @@ export function AdminSidebar() {
                 </A>
 
                 <A
+                    href="/shops"
+                    class={linkBaseClass}
+                    activeClass={linkActiveClass}
+                    inactiveClass={linkInactiveClass}
+                >
+                    <StorefrontIcon class={`${iconBaseClass} ${location.pathname.startsWith("/shops") ? iconActiveClass : iconInactiveClass}`} />
+                    Shops
+                </A>
+
+                <A
                     href="/vendors"
                     class={linkBaseClass}
                     activeClass={linkActiveClass}

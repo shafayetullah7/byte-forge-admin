@@ -1,15 +1,10 @@
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
-import type { Shop } from "~/lib/api/endpoints/shops";
+import type { Shop, PaginationMeta } from "~/lib/api/endpoints/shops";
 
 interface ShopListProps {
   shops: Shop[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  meta?: PaginationMeta;
 }
 
 export function ShopList(props: ShopListProps) {
@@ -46,16 +41,34 @@ export function ShopList(props: ShopListProps) {
       <div class="divide-y divide-slate-100">
         {props.shops.map((shop) => (
           <div class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-slate-50 transition-colors items-center">
-            {/* Shop Name */}
+            {/* Shop Name with Logo */}
             <div class="col-span-3">
-              <div class="font-medium text-slate-900">{shop.nameEn}</div>
-              <div class="text-sm text-slate-500">{shop.slug}</div>
+              <div class="flex items-center gap-3">
+                {shop.logoUrl ? (
+                  <img
+                    src={shop.logoUrl}
+                    alt={shop.nameEn || shop.slug}
+                    class="w-10 h-10 rounded-lg object-cover border border-slate-200"
+                  />
+                ) : (
+                  <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                  </div>
+                )}
+                <div>
+                  <div class="font-medium text-slate-900">{shop.nameEn || shop.slug}</div>
+                  <div class="text-sm text-slate-500">{shop.slug}</div>
+                </div>
+              </div>
             </div>
 
-            {/* Location */}
+            {/* Location - Show "Not provided" if not available */}
             <div class="col-span-2">
-              <div class="text-sm text-slate-700">{shop.city}</div>
-              <div class="text-xs text-slate-500">{shop.division}</div>
+              <div class="text-sm text-slate-700">{shop.city || "—"}</div>
+              <div class="text-xs text-slate-500">{shop.division || "—"}</div>
             </div>
 
             {/* Status */}
@@ -94,21 +107,21 @@ export function ShopList(props: ShopListProps) {
       </div>
 
       {/* Pagination */}
-      {props.pagination && props.pagination.totalPages > 1 && (
+      {props.meta && props.meta.totalPages > 1 && (
         <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50">
           <div class="text-sm text-slate-600">
-            Showing {(props.pagination.page - 1) * props.pagination.limit + 1} to{" "}
-            {Math.min(props.pagination.page * props.pagination.limit, props.pagination.total)} of{" "}
-            {props.pagination.total} shops
+            Showing {(props.meta.page - 1) * props.meta.limit + 1} to{" "}
+            {Math.min(props.meta.page * props.meta.limit, props.meta.total)} of{" "}
+            {props.meta.total} shops
           </div>
           <div class="flex gap-2">
-            <Button variant="outline" size="sm" disabled={props.pagination.page === 1}>
+            <Button variant="outline" size="sm" disabled={!props.meta.hasPrevious}>
               Previous
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={props.pagination.page === props.pagination.totalPages}
+              disabled={!props.meta.hasNext}
             >
               Next
             </Button>

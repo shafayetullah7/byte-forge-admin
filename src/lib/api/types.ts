@@ -22,18 +22,38 @@ export interface ApiResponse<T> {
 }
 
 /**
- * Standard API response wrapper for paginated lists
+ * Pagination metadata - matches backend PaginationMeta exactly
+ * @see byte-forge-auth/src/common/types/pagination.type.ts
+ */
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+/**
+ * Paginated response wrapper - matches backend PaginatedResult with ResponseService
+ * Includes ResponseService wrapper (success, message)
+ * @see byte-forge-auth/src/common/types/pagination.type.ts
  */
 export interface PaginatedResponse<T> {
   success: boolean;
   message: string;
   data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  meta: PaginationMeta;
+}
+
+/**
+ * Simplified paginated result (without ResponseService wrapper)
+ * Use when backend returns raw PaginatedResult
+ * @see byte-forge-auth/src/common/types/pagination.type.ts
+ */
+export interface PaginatedResult<T> {
+  data: T[];
+  meta: PaginationMeta;
 }
 
 /**
