@@ -1,11 +1,11 @@
 import { A, createAsync, type RouteDefinition } from "@solidjs/router";
-import { createMemo, Suspense, createSignal } from "solid-js";
+import { createMemo, Suspense, createSignal, createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
-import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { Pagination } from "~/components/ui/Pagination";
 import { ShopsHeader, ShopsToolbar, ShopsTable } from "./components";
-import { getShops, getShopStats, type Shop, type ShopStats, type ShopStatus } from "~/lib/api/endpoints/shops";
+import { StatsPanel } from "./StatsPanel";
+import { getShops, type Shop, type ShopStatus } from "~/lib/api/endpoints/shops";
 
 interface FilterState {
   search: string;
@@ -18,26 +18,30 @@ export const route: RouteDefinition = {
 };
 
 export default function ShopsPageIndex() {
-  // Pagination state
   const [page, setPage] = createSignal(1);
   const [limit, setLimit] = createSignal(10);
-  
-  // Both queries use createAsync - SolidStart router caches by query key
-  const shopsData = createAsync(() => getShops({
-    page: page(),
-    limit: limit(),
-  }));
-  const statsData = createAsync(() => getShopStats());
-  
-  // Store for filters
+
+  // Raw async signal — may be undefined while fetching
+  const shopsData = createAsync(() => getShops({ page: page(), limit: limit() }));
+
+  // FIX 1: Stable signal that keeps the last resolved value (stale-while-revalidate)
+  const [stableShops, setStableShops] = createSignal<
+    { data: Shop[]; meta: any } | undefined
+  >(undefined);
+
+  createEffect(() => {
+    const d = shopsData();
+    if (d !== undefined) setStableShops(d);
+  });
+
   const [filters, setFilters] = createStore<FilterState>({
     search: "",
     status: undefined,
   });
 
-  // Filter logic
+  // Use stableShops instead of shopsData to prevent suspension during pagination
   const filteredShops = createMemo(() => {
-    const data = shopsData();
+    const data = stableShops();
     if (!data) return [];
 
     const search = filters.search.toLowerCase().trim();
@@ -57,32 +61,21 @@ export default function ShopsPageIndex() {
     });
   });
 
-  // Metrics - memoized to prevent unnecessary recalculations
-  const metrics = createMemo(() => {
-    const data = statsData();
-    if (!data) return [];
-
-    return [
-      { label: "Total Shops", value: data.totalShops.toString(), subValue: "Registered sellers" },
-      { label: "Approved", value: data.activeShops.toString(), subValue: "Active shops" },
-      { label: "Pending Approval", value: data.pendingShops.toString(), subValue: "Awaiting review" },
-      { label: "Suspended", value: data.suspendedShops.toString(), subValue: "Policy violations" },
-    ];
-  });
-
   return (
     <div class="px-6 py-8 mx-auto max-w-[1400px]">
       {/* Header */}
       <ShopsHeader />
 
-      {/* Stats */}
+      {/* FIX 2: StatsPanel is now an isolated component with its own reactive owner */}
       <div class="mb-8">
         <SafeErrorBoundary
           fallback={(err, reset) => (
             <InlineErrorFallback error={err} reset={reset} label="shop statistics" />
           )}
         >
-          <TagMetricsPanel metrics={metrics()} />
+          <Suspense fallback={<div class="h-24 bg-slate-50 rounded-2xl animate-pulse" />}>
+            <StatsPanel />
+          </Suspense>
         </SafeErrorBoundary>
       </div>
 
@@ -105,13 +98,13 @@ export default function ShopsPageIndex() {
         </Suspense>
       </SafeErrorBoundary>
 
-      {/* Pagination */}
-      {shopsData()?.meta && (
+      {/* Pagination - use stableShops for stable meta */}
+      {stableShops()?.meta && (
         <Pagination
-          meta={shopsData()!.meta}
+          meta={stableShops()!.meta}
           onPageChange={(newPage) => {
             setPage(newPage);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           onLimitChange={(newLimit) => {
             setLimit(newLimit);
