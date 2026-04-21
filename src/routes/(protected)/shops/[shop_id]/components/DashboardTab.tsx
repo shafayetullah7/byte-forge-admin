@@ -27,7 +27,11 @@ const colorClasses: Record<string, { bg: string; iconBg: string; iconColor: stri
   emerald: { bg: "bg-emerald-50", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
 };
 
-export function DashboardTab() {
+interface DashboardTabProps {
+  shopId?: string;
+}
+
+export function DashboardTab(props: DashboardTabProps) {
   return (
     <div class="space-y-6">
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">

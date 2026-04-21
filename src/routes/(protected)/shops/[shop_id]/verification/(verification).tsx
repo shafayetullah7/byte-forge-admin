@@ -1,4 +1,4 @@
-import { VerificationTab } from "./components";
+import { VerificationTab } from "../components";
 
 export default function VerificationRoute() {
   return <VerificationTab />;

@@ -8,7 +8,11 @@ const deliveryOptions = [
   { label: "International Shipping", enabled: false, description: "Not available" },
 ];
 
-export function DeliveryTab() {
+interface DeliveryTabProps {
+  shopId?: string;
+}
+
+export function DeliveryTab(props: DeliveryTabProps) {
   return (
     <div class="space-y-6">
       <div class="bg-white rounded-xl border border-slate-200 p-6">

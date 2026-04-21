@@ -1,4 +1,4 @@
-import { FinancialsTab } from "./components";
+import { FinancialsTab } from "../components";
 
 export default function FinancialsRoute() {
   return <FinancialsTab />;

@@ -1,4 +1,5 @@
-import { useLocation, A, For } from "solid-js";
+import { For } from "solid-js";
+import { useLocation, A } from "@solidjs/router";
 
 export type TabId =
   | "dashboard"
