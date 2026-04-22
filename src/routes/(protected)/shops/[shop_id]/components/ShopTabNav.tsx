@@ -54,7 +54,7 @@ export function ShopTabNav(props: ShopTabNavProps) {
   };
 
   return (
-    <div class="bg-white border-b border-slate-200 sticky top-[60px] z-20">
+    <div class="bg-white border-b border-slate-200 sticky top-0 z-20">
       <div class="px-6">
         <nav class="flex gap-1 overflow-x-auto scrollbar-hide">
           <For each={props.tabs}>
