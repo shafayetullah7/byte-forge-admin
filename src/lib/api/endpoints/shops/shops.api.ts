@@ -75,60 +75,20 @@ interface PaginatedStatsResponse<T> {
 }
 
 export interface ShopDetail {
-  shop: {
-    id: string;
-    ownerId: string;
-    slug: string;
-    status: string;
-    address: string | null;
-    logoId: string | null;
-    bannerId: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
-  translations: Array<{
-    id: string;
-    shopId: string;
-    locale: string;
-    name: string;
-    description: string;
-    businessHours: string | null;
-  }>;
-  address: {
-    id: string;
-    shopId: string;
-    country: string;
-    division: string;
-    district: string;
-    street: string;
-    postalCode: string;
-    isVerified: boolean;
+  id: string;
+  name: string;
+  slug: string;
+  status: "DRAFT" | "PENDING_VERIFICATION" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "SUSPENDED" | "DELETED";
+  logo: string | null;
+  banner: string | null;
+  verificationStatus: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED" | null;
+  owner: {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    avatar: string | null;
   } | null;
-  verification: {
-    id: string;
-    shopId: string;
-    tradeLicenseNumber: string | null;
-    tradeLicenseDocument: string | null;
-    tradeLicenseMedia: {
-      url: string;
-      fileName: string;
-    } | null;
-    tinNumber: string | null;
-    tinDocument: string | null;
-    tinMedia: {
-      url: string;
-      fileName: string;
-    } | null;
-    utilityBillDocument: string | null;
-    utilityBillMedia: {
-      url: string;
-      fileName: string;
-    } | null;
-    status: string;
-    verifiedAt: string | null;
-    rejectionReason: string | null;
-    adminNotes: string | null;
-  } | null;
+  createdAt: string;
 }
 
 export interface VerificationHistory {

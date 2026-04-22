@@ -1,6 +1,7 @@
-import { useParams, type RouteSectionProps } from "@solidjs/router";
+import { ErrorBoundary, Suspense, Show } from "solid-js";
+import { createAsync, useParams, type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
 import { ShopDetailHeader, ShopTabNav, TabId } from "./[shop_id]/components";
-
+import { getShopDetail } from "~/lib/api/endpoints/shops";
 
 const tabs: { id: TabId; label: string; icon: string; path: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: "dashboard", path: "" },
@@ -17,33 +18,34 @@ const tabs: { id: TabId; label: string; icon: string; path: string }[] = [
   { id: "actions", label: "Actions", icon: "settings", path: "actions" },
 ];
 
+export const route: RouteDefinition = {
+  preload: ({ params }) => {
+    return getShopDetail(params.shop_id!);
+  },
+};
+
 export default function ShopDetailLayout(props: RouteSectionProps) {
   const params = useParams();
 
-  const shop = {
-    id: params.shop_id || "demo-shop",
-    name: "Green Garden Nursery",
-    slug: "green-garden-nursery",
-    status: "ACTIVE" as const,
-    verificationStatus: "APPROVED" as const,
-    logo: "https://images.unsplash.com/photo-1416879595882-3373a4f5795d?w=100&h=100&fit=crop",
-    createdAt: "2024-01-15",
-    owner: {
-      firstName: "Md.",
-      lastName: "Rahman",
-      userName: "md_rahman",
-      avatar: null,
-      email: "rahman@example.com",
-    },
-  };
+  const shop = createAsync(() => getShopDetail(params.shop_id!));
 
   return (
     <div class="min-h-screen bg-slate-50">
-      <ShopDetailHeader shop={shop} />
-      <ShopTabNav tabs={tabs} shopId={params.shop_id || ""} />
-      <div class="p-6 max-w-[1400px] mx-auto">
-        {props.children}
-      </div>
+      <ErrorBoundary fallback={<div class="p-6">Failed to load shop details</div>}>
+        <Suspense fallback={<div class="p-6">Loading shop details...</div>}>
+          <Show when={shop()}>
+            {(shopData) => (
+              <>
+                <ShopDetailHeader shop={shopData()} />
+                <ShopTabNav tabs={tabs} shopId={params.shop_id || ""} />
+                <div class="p-6 max-w-[1400px] mx-auto">
+                  {props.children}
+                </div>
+              </>
+            )}
+          </Show>
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

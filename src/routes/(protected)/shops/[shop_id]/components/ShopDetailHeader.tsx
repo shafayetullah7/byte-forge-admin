@@ -7,7 +7,7 @@ interface Shop {
   name: string;
   slug: string;
   status: "DRAFT" | "PENDING_VERIFICATION" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "SUSPENDED" | "DELETED";
-  verificationStatus: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED";
+  verificationStatus: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED" | null;
   logo?: string | null;
   banner?: string | null;
   createdAt: string;
@@ -16,9 +16,7 @@ interface Shop {
     lastName: string;
     userName: string;
     avatar?: string | null;
-    email: string;
-    phone?: string;
-  };
+  } | null;
 }
 
 export interface ShopDetailHeaderProps {
@@ -45,7 +43,7 @@ const verificationStatusConfig: Record<Shop["verificationStatus"], { variant: "s
 
 export function ShopDetailHeader(props: ShopDetailHeaderProps) {
   const statusConfig = shopStatusConfig[props.shop.status];
-  const verificationConfig = verificationStatusConfig[props.shop.verificationStatus];
+  const verificationConfig = props.shop.verificationStatus ? verificationStatusConfig[props.shop.verificationStatus] : null;
 
   return (
     <div class="bg-white border-b border-slate-200 sticky top-0 z-30">
@@ -87,7 +85,9 @@ export function ShopDetailHeader(props: ShopDetailHeaderProps) {
               
               <div class="flex items-center gap-2 mt-3">
                 <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
-                <Badge variant={verificationConfig.variant} size="sm">{verificationConfig.label}</Badge>
+                {verificationConfig && (
+                  <Badge variant={verificationConfig.variant} size="sm">{verificationConfig.label}</Badge>
+                )}
               </div>
             </div>
           </div>
