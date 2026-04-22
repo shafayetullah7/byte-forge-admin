@@ -3,21 +3,19 @@ import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { createSignal, onMount, onCleanup } from "solid-js";
 
-type VerificationStatus = "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED";
-
 interface Shop {
   id: string;
   name: string;
   slug: string;
   status: "DRAFT" | "PENDING_VERIFICATION" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "SUSPENDED" | "DELETED";
-  verificationStatus: VerificationStatus | null;
-  logo?: string | null;
+  verificationStatus: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED" | null;
+  logo: string | null;
   createdAt: string;
   owner: {
     firstName: string;
     lastName: string;
     userName: string;
-    avatar?: string | null;
+    avatar: string | null;
   } | null;
 }
 
@@ -36,7 +34,7 @@ const shopStatusConfig: Record<Shop["status"], { variant: "success" | "warning" 
   DELETED: { variant: "neutral", label: "Deleted" },
 };
 
-const verificationStatusConfig: Record<VerificationStatus, { variant: "success" | "warning" | "danger" | "neutral"; label: string }> = {
+const verificationStatusConfig: Record<"PENDING" | "REVIEWING" | "APPROVED" | "REJECTED", { variant: "success" | "warning" | "danger" | "neutral"; label: string }> = {
   APPROVED: { variant: "success", label: "Verified" },
   REVIEWING: { variant: "warning", label: "Under Review" },
   PENDING: { variant: "neutral", label: "Pending" },
@@ -44,8 +42,6 @@ const verificationStatusConfig: Record<VerificationStatus, { variant: "success" 
 };
 
 export function ShopDetailHeader(props: ShopDetailHeaderProps) {
-  const statusConfig = shopStatusConfig[props.shop.status];
-  const verificationConfig = props.shop.verificationStatus ? verificationStatusConfig[props.shop.verificationStatus] : null;
   const [isScrolled, setIsScrolled] = createSignal(false);
 
   onMount(() => {
@@ -101,9 +97,16 @@ export function ShopDetailHeader(props: ShopDetailHeaderProps) {
               </p>
               
               <div class="flex items-center gap-2 mt-2">
-                <Badge variant={statusConfig.variant} size={isExpanded() ? "md" : "sm"}>{statusConfig.label}</Badge>
-                {verificationConfig && (
-                  <Badge variant={verificationConfig.variant} size={isExpanded() ? "md" : "sm"}>{verificationConfig.label}</Badge>
+                <Badge variant={shopStatusConfig[props.shop.status].variant} size={isExpanded() ? "md" : "sm"}>
+                  {shopStatusConfig[props.shop.status].label}
+                </Badge>
+                {props.shop.verificationStatus && (
+                  <Badge 
+                    variant={verificationStatusConfig[props.shop.verificationStatus].variant} 
+                    size={isExpanded() ? "md" : "sm"}
+                  >
+                    {verificationStatusConfig[props.shop.verificationStatus].label}
+                  </Badge>
                 )}
               </div>
             </div>

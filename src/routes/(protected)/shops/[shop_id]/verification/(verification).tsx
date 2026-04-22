@@ -1,8 +1,23 @@
-import { createAsync, useParams, type RouteDefinition } from "@solidjs/router";
-import { Suspense, Show, ErrorBoundary } from "solid-js";
+import { createAsync, useParams, type RouteDefinition, useAction, useSubmission } from "@solidjs/router";
+import { Suspense, Show, ErrorBoundary, createSignal, createMemo } from "solid-js";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
+import { Modal } from "~/components/ui/Modal";
+import { Input } from "~/components/ui/Input";
 import { getShopVerification, approveShop, rejectShop } from "~/lib/api/endpoints/shops";
+import { 
+  ExclamationCircleIcon, 
+  ShieldCheckIcon, 
+  DocumentIcon,
+  ArrowUpRightIcon
+} from "~/components/icons";
+
+// Helper function for file type detection
+function isImageFile(fileName: string): boolean {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  const lowerName = fileName.toLowerCase();
+  return imageExtensions.some(ext => lowerName.endsWith(ext));
+}
 
 export const route: RouteDefinition = {
   preload: ({ params }) => {
@@ -40,32 +55,83 @@ const statusConfig: Record<string, { variant: "warning" | "success" | "danger" |
 export default function VerificationRoute() {
   const params = useParams();
   const verificationData = createAsync(() => getShopVerification(params.shop_id!));
-
-  const handleApprove = async () => {
-    if (!confirm("Are you sure you want to approve this shop?")) return;
+  
+  // Actions
+  const approveAction = useAction(approveShop);
+  const rejectAction = useAction(rejectShop);
+  
+  // Submission states
+  const approveSubmission = useSubmission(approveShop);
+  const rejectSubmission = useSubmission(rejectShop);
+  
+  // Modal states
+  const [showApproveModal, setShowApproveModal] = createSignal(false);
+  const [showRejectModal, setShowRejectModal] = createSignal(false);
+  
+  // Action result states
+  const [approveError, setApproveError] = createSignal<string | null>(null);
+  const [rejectError, setRejectError] = createSignal<string | null>(null);
+  const [approveSuccess, setApproveSuccess] = createSignal(false);
+  const [rejectSuccess, setRejectSuccess] = createSignal(false);
+  
+  // Reject form state
+  const [rejectReason, setRejectReason] = createSignal("");
+  const [adminNotes, setAdminNotes] = createSignal("");
+  const [errors, setErrors] = createSignal<Record<string, string>>({});
+  
+  const handleApproveClick = () => {
+    setApproveError(null);
+    setApproveSuccess(false);
+    setShowApproveModal(true);
+  };
+  
+  const handleApproveConfirm = async () => {
+    setApproveError(null);
     try {
-      await approveShop(params.shop_id!);
-      alert("Shop approved successfully");
-      // Reload data
-      window.location.reload();
-    } catch (error) {
-      console.error("Failed to approve shop:", error);
-      alert("Failed to approve shop");
+      await approveAction(params.shop_id!);
+      setApproveSuccess(true);
+      setTimeout(() => {
+        setShowApproveModal(false);
+        setApproveSuccess(false);
+      }, 1500);
+    } catch (error: any) {
+      setApproveError(error?.message || "Failed to approve shop. Please try again.");
     }
   };
-
-  const handleReject = async () => {
-    const reason = prompt("Enter rejection reason:");
-    if (!reason) return;
-    const adminNotes = prompt("Admin notes (optional):") || undefined;
+  
+  const handleRejectClick = () => {
+    setRejectError(null);
+    setRejectSuccess(false);
+    setRejectReason("");
+    setAdminNotes("");
+    setErrors({});
+    setShowRejectModal(true);
+  };
+  
+  const validateRejectForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!rejectReason().trim()) {
+      newErrors.reason = "Rejection reason is required";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  const handleRejectConfirm = async () => {
+    if (!validateRejectForm()) return;
+    
+    setRejectError(null);
     try {
-      await rejectShop(params.shop_id!, reason, adminNotes);
-      alert("Shop rejected successfully");
-      // Reload data
-      window.location.reload();
-    } catch (error) {
-      console.error("Failed to reject shop:", error);
-      alert("Failed to reject shop");
+      await rejectAction(params.shop_id!, rejectReason().trim(), adminNotes().trim() || undefined);
+      setRejectSuccess(true);
+      setTimeout(() => {
+        setShowRejectModal(false);
+        setRejectSuccess(false);
+        setRejectReason("");
+        setAdminNotes("");
+      }, 1500);
+    } catch (error: any) {
+      setRejectError(error?.message || "Failed to reject shop. Please try again.");
     }
   };
 
@@ -75,11 +141,7 @@ export default function VerificationRoute() {
         fallback={(error) => (
           <div class="bg-red-50 border border-red-200 rounded-xl p-6">
             <div class="flex items-start gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-red-600 flex-shrink-0 mt-0.5">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
+              <ExclamationCircleIcon class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 class="text-lg font-semibold text-red-900">Failed to Load Verification Data</h3>
                 <p class="text-sm text-red-700 mt-1">
@@ -101,59 +163,57 @@ export default function VerificationRoute() {
         <Suspense fallback={<div class="p-6">Loading verification details...</div>}>
           <Show when={verificationData()}>
           {(data) => {
-            const config = statusConfig[data().status];
+            const config = createMemo(() => statusConfig[data().status]);
             
             return (
               <>
                 {/* Status Banner */}
                 <div class={`rounded-xl p-6 border ${
-                  config.variant === "warning" ? "bg-amber-50 border-amber-200" :
-                  config.variant === "success" ? "bg-green-50 border-green-200" :
+                  config().variant === "warning" ? "bg-amber-50 border-amber-200" :
+                  config().variant === "success" ? "bg-green-50 border-green-200" :
                   "bg-red-50 border-red-200"
                 }`}>
                   <div class="flex items-start justify-between">
                     <div class="flex items-start gap-4">
                       <div class={`p-3 rounded-xl ${
-                        config.variant === "warning" ? "bg-amber-100" :
-                        config.variant === "success" ? "bg-green-100" :
+                        config().variant === "warning" ? "bg-amber-100" :
+                        config().variant === "success" ? "bg-green-100" :
                         "bg-red-100"
                       }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class={
-                          config.variant === "warning" ? "text-amber-600" :
-                          config.variant === "success" ? "text-green-600" :
+                        <ShieldCheckIcon class={`w-6 h-6 ${
+                          config().variant === "warning" ? "text-amber-600" :
+                          config().variant === "success" ? "text-green-600" :
                           "text-red-600"
-                        }>
-                          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                          <line x1="12" y1="19" x2="12" y2="23"></line>
-                          <line x1="8" y1="23" x2="16" y2="23"></line>
-                        </svg>
+                        }`} />
                       </div>
                       <div>
                         <h3 class={`text-lg font-semibold ${
-                          config.variant === "warning" ? "text-amber-900" :
-                          config.variant === "success" ? "text-green-900" :
+                          config().variant === "warning" ? "text-amber-900" :
+                          config().variant === "success" ? "text-green-900" :
                           "text-red-900"
-                        }`}>{config.title}</h3>
+                        }`}>{config().title}</h3>
                         <p class={`text-sm ${
-                          config.variant === "warning" ? "text-amber-700" :
-                          config.variant === "success" ? "text-green-700" :
+                          config().variant === "warning" ? "text-amber-700" :
+                          config().variant === "success" ? "text-green-700" :
                           "text-red-700"
-                        } mt-1`}>{config.description}</p>
+                        } mt-1`}>{config().description}</p>
                         <div class="flex items-center gap-2 mt-3">
-                          <Badge variant={config.variant}>{data().status}</Badge>
+                          <Badge variant={config().variant}>{data().status}</Badge>
                           <span class={`text-xs ${
-                            config.variant === "warning" ? "text-amber-600" :
-                            config.variant === "success" ? "text-green-600" :
+                            config().variant === "warning" ? "text-amber-600" :
+                            config().variant === "success" ? "text-green-600" :
                             "text-red-600"
                           }`}>
                             Submitted on {new Date(data().submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                           </span>
                         </div>
                         {data().rejectionReason && (
-                          <div class="mt-3 p-3 bg-red-100 border border-red-200 rounded-lg">
-                            <p class="text-xs text-red-800 font-medium">Rejection Reason:</p>
-                            <p class="text-sm text-red-700 mt-1">{data().rejectionReason}</p>
+                          <div class="mt-4 p-4 bg-red-100 border-2 border-red-300 rounded-xl">
+                            <div class="flex items-start gap-2 mb-2">
+                              <ExclamationCircleIcon class="w-4 h-4 text-red-700 flex-shrink-0 mt-0.5" />
+                              <p class="text-sm font-bold text-red-900">Rejection Reason</p>
+                            </div>
+                            <p class="text-sm text-red-800 ml-6 leading-relaxed">{data().rejectionReason}</p>
                           </div>
                         )}
                       </div>
@@ -166,8 +226,22 @@ export default function VerificationRoute() {
                   <div class="bg-white rounded-xl border border-slate-200 p-6">
                     <h3 class="text-lg font-semibold text-slate-900 mb-4">Verification Actions</h3>
                     <div class="flex flex-wrap gap-3">
-                      <Button variant="primary" size="md" onClick={handleApprove}>Approve Shop</Button>
-                      <Button variant="outline" size="md" onClick={handleReject}>Reject</Button>
+                      <Button 
+                        variant="primary" 
+                        size="md" 
+                        onClick={handleApproveClick}
+                        disabled={approveSubmission.pending}
+                      >
+                        {approveSubmission.pending ? "Approving..." : "Approve Shop"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="md" 
+                        onClick={handleRejectClick}
+                        disabled={rejectSubmission.pending}
+                      >
+                        {rejectSubmission.pending ? "Rejecting..." : "Reject"}
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -191,14 +265,44 @@ export default function VerificationRoute() {
                         </div>
                       )}
                       {data().tradeLicenseDocument ? (
-                        <a href={data().tradeLicenseDocument.url} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-primary-green-600 hover:text-primary-green-700 font-medium">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                          </svg>
-                          View Document
-                        </a>
+                        <div class="space-y-3">
+                          {/* File Preview Card */}
+                          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                            {/* File Icon/Preview */}
+                            <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden">
+                              {isImageFile(data().tradeLicenseDocument!.name) ? (
+                                <img 
+                                  src={data().tradeLicenseDocument!.url} 
+                                  alt="Preview" 
+                                  class="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <DocumentIcon class="w-6 h-6 text-slate-400" />
+                              )}
+                            </div>
+                            
+                            {/* File Info */}
+                            <div class="flex-1 min-w-0">
+                              <p class="text-xs font-medium text-slate-700 truncate">
+                                {data().tradeLicenseDocument!.name}
+                              </p>
+                              <p class="text-xs text-slate-500 mt-0.5">
+                                Click to view full document
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Action Button */}
+                          <a 
+                            href={data().tradeLicenseDocument!.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-primary-green-600 bg-primary-green-50 hover:bg-primary-green-100 rounded-lg transition-colors"
+                          >
+                            <ArrowUpRightIcon class="w-4 h-4" />
+                            View Full Document
+                          </a>
+                        </div>
                       ) : (
                         <p class="text-xs text-slate-400 italic">No document uploaded</p>
                       )}
@@ -219,14 +323,44 @@ export default function VerificationRoute() {
                         </div>
                       )}
                       {data().tinDocument ? (
-                        <a href={data().tinDocument.url} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-primary-green-600 hover:text-primary-green-700 font-medium">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                          </svg>
-                          View Document
-                        </a>
+                        <div class="space-y-3">
+                          {/* File Preview Card */}
+                          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                            {/* File Icon/Preview */}
+                            <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden">
+                              {isImageFile(data().tinDocument!.name) ? (
+                                <img 
+                                  src={data().tinDocument!.url} 
+                                  alt="Preview" 
+                                  class="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <DocumentIcon class="w-6 h-6 text-slate-400" />
+                              )}
+                            </div>
+                            
+                            {/* File Info */}
+                            <div class="flex-1 min-w-0">
+                              <p class="text-xs font-medium text-slate-700 truncate">
+                                {data().tinDocument!.name}
+                              </p>
+                              <p class="text-xs text-slate-500 mt-0.5">
+                                Click to view full document
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Action Button */}
+                          <a 
+                            href={data().tinDocument!.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-primary-green-600 bg-primary-green-50 hover:bg-primary-green-100 rounded-lg transition-colors"
+                          >
+                            <ArrowUpRightIcon class="w-4 h-4" />
+                            View Full Document
+                          </a>
+                        </div>
                       ) : (
                         <p class="text-xs text-slate-400 italic">No document uploaded</p>
                       )}
@@ -241,14 +375,44 @@ export default function VerificationRoute() {
                         </Badge>
                       </div>
                       {data().utilityBillDocument ? (
-                        <a href={data().utilityBillDocument.url} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-primary-green-600 hover:text-primary-green-700 font-medium">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                          </svg>
-                          View Document
-                        </a>
+                        <div class="space-y-3">
+                          {/* File Preview Card */}
+                          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                            {/* File Icon/Preview */}
+                            <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden">
+                              {isImageFile(data().utilityBillDocument!.name) ? (
+                                <img 
+                                  src={data().utilityBillDocument!.url} 
+                                  alt="Preview" 
+                                  class="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <DocumentIcon class="w-6 h-6 text-slate-400" />
+                              )}
+                            </div>
+                            
+                            {/* File Info */}
+                            <div class="flex-1 min-w-0">
+                              <p class="text-xs font-medium text-slate-700 truncate">
+                                {data().utilityBillDocument!.name}
+                              </p>
+                              <p class="text-xs text-slate-500 mt-0.5">
+                                Click to view full document
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Action Button */}
+                          <a 
+                            href={data().utilityBillDocument!.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-primary-green-600 bg-primary-green-50 hover:bg-primary-green-100 rounded-lg transition-colors"
+                          >
+                            <ArrowUpRightIcon class="w-4 h-4" />
+                            View Full Document
+                          </a>
+                        </div>
                       ) : (
                         <p class="text-xs text-slate-400 italic">No document uploaded</p>
                       )}
@@ -305,6 +469,150 @@ export default function VerificationRoute() {
                     </div>
                   </Show>
                 </div>
+
+                {/* Approve Modal */}
+                <Modal
+                  show={showApproveModal()}
+                  onClose={() => setShowApproveModal(false)}
+                  title="Approve Shop"
+                  footer={
+                    <Show when={!approveSuccess()} fallback={
+                      <div class="flex items-center justify-center w-full">
+                        <span class="text-green-600 font-semibold">✓ Shop approved successfully!</span>
+                      </div>
+                    }>
+                      <div class="flex gap-3 justify-end">
+                        <Button
+                          variant="outline"
+                          size="md"
+                          onClick={() => setShowApproveModal(false)}
+                          disabled={approveSubmission.pending}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="md"
+                          onClick={handleApproveConfirm}
+                          disabled={approveSubmission.pending || approveError() !== null}
+                        >
+                          {approveSubmission.pending ? "Approving..." : "Confirm Approval"}
+                        </Button>
+                      </div>
+                    </Show>
+                  }
+                >
+                  <div class="space-y-4">
+                    {/* Error Alert */}
+                    <Show when={approveError()}>
+                      <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                          <ExclamationCircleIcon class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                          <p class="text-sm text-red-800">{approveError()}</p>
+                        </div>
+                      </div>
+                    </Show>
+                    
+                    <Show when={!approveError()}>
+                      <p class="text-sm text-slate-600">
+                        Are you sure you want to approve this shop? This action will:
+                      </p>
+                      <ul class="list-disc list-inside space-y-2 text-sm text-slate-600 ml-2">
+                        <li>Change the shop status to <strong class="text-green-600">ACTIVE</strong></li>
+                        <li>Mark verification status as <strong class="text-green-600">APPROVED</strong></li>
+                        <li>Mark shop as <strong class="text-green-600">Verified</strong></li>
+                        <li>Allow the shop to operate on the platform</li>
+                      </ul>
+                      <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="text-xs text-amber-800">
+                          <strong class="font-semibold">Note:</strong> This action cannot be undone. If you need to suspend the shop later, you'll need to use the suspension workflow.
+                        </p>
+                      </div>
+                    </Show>
+                  </div>
+                </Modal>
+
+                {/* Reject Modal */}
+                <Modal
+                  show={showRejectModal()}
+                  onClose={() => setShowRejectModal(false)}
+                  title="Reject Shop Verification"
+                  footer={
+                    <Show when={!rejectSuccess()} fallback={
+                      <div class="flex items-center justify-center w-full">
+                        <span class="text-green-600 font-semibold">✓ Shop rejected successfully!</span>
+                      </div>
+                    }>
+                      <div class="flex gap-3 justify-end">
+                        <Button
+                          variant="outline"
+                          size="md"
+                          onClick={() => setShowRejectModal(false)}
+                          disabled={rejectSubmission.pending}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="md"
+                          onClick={handleRejectConfirm}
+                          disabled={rejectSubmission.pending || rejectError() !== null}
+                        >
+                          {rejectSubmission.pending ? "Rejecting..." : "Confirm Rejection"}
+                        </Button>
+                      </div>
+                    </Show>
+                  }
+                >
+                  <div class="space-y-4">
+                    {/* Error Alert */}
+                    <Show when={rejectError()}>
+                      <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                          <ExclamationCircleIcon class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                          <p class="text-sm text-red-800">{rejectError()}</p>
+                        </div>
+                      </div>
+                    </Show>
+                    
+                    <Show when={!rejectError()}>
+                      <div>
+                        <Input
+                          label="Rejection Reason *"
+                          placeholder="Explain why this shop is being rejected"
+                          value={rejectReason()}
+                          onInput={(e) => setRejectReason(e.currentTarget.value)}
+                          error={errors().reason}
+                          required
+                        />
+                        <p class="text-xs text-slate-500 mt-1">
+                          This reason will be visible to the shop owner
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">
+                          Admin Notes (Optional)
+                        </label>
+                        <textarea
+                          class="w-full h-24 px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 text-sm resize-none"
+                          placeholder="Internal notes about this rejection..."
+                          value={adminNotes()}
+                          onInput={(e) => setAdminNotes(e.currentTarget.value)}
+                        />
+                        <p class="text-xs text-slate-500 mt-1">
+                          Internal notes - not visible to shop owner
+                        </p>
+                      </div>
+                      
+                      <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-xs text-red-800">
+                          <strong class="font-semibold">Warning:</strong> Rejecting this shop will prevent it from operating on the platform. The shop owner can resubmit with corrected documents.
+                        </p>
+                      </div>
+                    </Show>
+                  </div>
+                </Modal>
               </>
             );
           }}

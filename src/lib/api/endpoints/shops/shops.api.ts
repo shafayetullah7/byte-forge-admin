@@ -1,4 +1,4 @@
-import { query } from "@solidjs/router";
+import { query, action, revalidate } from "@solidjs/router";
 import { apiClient } from "../../api-client";
 import type { PaginatedResponse, PaginatedResult, PaginationMeta } from "../../types";
 
@@ -42,6 +42,7 @@ export interface Shop {
   ownerId: string;
   slug: string;
   status: ShopStatus;
+  isVerified: boolean;
   nameEn?: string;
   division?: string | null;
   city?: string | null;
@@ -79,6 +80,7 @@ export interface ShopDetail {
   name: string;
   slug: string;
   status: "DRAFT" | "PENDING_VERIFICATION" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "SUSPENDED" | "DELETED";
+  isVerified: boolean;
   logo: string | null;
   banner: string | null;
   verificationStatus: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED" | null;
@@ -171,33 +173,40 @@ export const getShopDetail = query(async (id: string) => {
 /**
  * Approve a shop.
  */
-export const approveShop = async (id: string) => {
-  return apiClient(`/admin/shops/${id}/approve`, { method: "POST" });
-};
+export const approveShop = action(async (id: string): Promise<void> => {
+  await apiClient(`/admin/shops/${id}/approve`, { method: "POST" });
+  revalidate("shop-verification");
+  revalidate("shop-detail");
+});
 
 /**
  * Reject a shop with reason.
  */
-export const rejectShop = async (
+export const rejectShop = action(async (
   id: string,
   reason: string,
   adminNotes?: string,
-) => {
-  return apiClient(`/admin/shops/${id}/reject`, {
+): Promise<void> => {
+  await apiClient(`/admin/shops/${id}/reject`, {
     method: "POST",
     body: JSON.stringify({ reason, adminNotes }),
   });
-};
+  revalidate("shop-verification");
+  revalidate("shop-detail");
+});
 
 /**
  * Suspend a shop with reason.
  */
-export const suspendShop = async (id: string, reason: string) => {
-  return apiClient(`/admin/shops/${id}/suspend`, {
+export const suspendShop = action(async (id: string, reason: string): Promise<void> => {
+  await apiClient(`/admin/shops/${id}/suspend`, {
     method: "PATCH",
     body: JSON.stringify({ reason }),
   });
-};
+  revalidate("shop-verification");
+  revalidate("shop-detail");
+  revalidate("shops-list");
+});
 
 /**
  * Document with URL for download.

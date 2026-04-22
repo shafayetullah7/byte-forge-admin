@@ -18,3 +18,7 @@ export * from "./FolderIcon";
 export * from "./ChevronRightIcon";
 export * from "./ChevronDownIcon";
 export * from "./ArrowLeftIcon";
+export * from "./ExclamationCircleIcon";
+export * from "./ShieldCheckIcon";
+export * from "./DocumentIcon";
+export * from "./ArrowUpRightIcon";
