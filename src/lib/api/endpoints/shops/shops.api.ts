@@ -200,7 +200,59 @@ export const suspendShop = async (id: string, reason: string) => {
 };
 
 /**
- * Fetch verification history for a shop.
+ * Document with URL for download.
+ */
+export interface VerificationDocument {
+  id: string;
+  url: string;
+  name: string;
+}
+
+/**
+ * Verification history entry.
+ */
+export interface VerificationHistoryEntry {
+  id: string;
+  action: string;
+  previousStatus?: string | null;
+  newStatus?: string | null;
+  reason?: string | null;
+  timestamp: string;
+}
+
+/**
+ * Complete shop verification details.
+ */
+export interface ShopVerificationDetails {
+  shopId: string;
+  status: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED";
+  submittedAt: string;
+  verifiedAt: string | null;
+  
+  // Documents
+  tradeLicenseNumber: string | null;
+  tradeLicenseDocument: VerificationDocument | null;
+  tinNumber: string | null;
+  tinDocument: VerificationDocument | null;
+  utilityBillDocument: VerificationDocument | null;
+  
+  // Admin
+  adminNotes: string | null;
+  rejectionReason: string | null;
+  
+  // History
+  history: VerificationHistoryEntry[];
+}
+
+/**
+ * Fetch complete verification details for a shop.
+ */
+export const getShopVerification = query(async (id: string) => {
+  return apiClient<ShopVerificationDetails>(`/admin/shops/${id}/verification`);
+}, "shop-verification");
+
+/**
+ * Fetch verification history for a shop (deprecated - use getShopVerification instead).
  */
 export const getVerificationHistory = query(async (id: string) => {
   return apiClient<VerificationHistory[]>(`/admin/shops/${id}/history`);

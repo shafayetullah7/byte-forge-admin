@@ -90,6 +90,17 @@ Always derive constraints from the backend DTO first:
 | **Files** | Name files exactly what they export. | Use generic names like `utils.ts` or `helpers.ts`. |
 | **Errors** | Always wrap async data sections in `<SafeErrorBoundary>`. | Leave `createAsync` calls unprotected. |
 
+## 8. Error Handling
+
+**Full Documentation:** `.kilo/rules/error-handling.md`
+
+**Quick Rules:**
+- Place ErrorBoundary at the lowest level where errors can occur
+- Never use a single top-level ErrorBoundary for the entire page
+- Scope errors to smallest possible region (child route errors shouldn't break parent layout)
+- Always provide specific error messages with recovery options (retry, navigate)
+- Wrap all `createAsync` calls with Suspense + ErrorBoundary
+
 ## 7. Verification Checklist
 Before finishing a task, Antigravity must check:
 1. Is any file > 500 lines?
