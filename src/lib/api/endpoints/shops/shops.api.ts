@@ -238,7 +238,12 @@ export interface ShopVerificationDetails {
   submittedAt: string;
   verifiedAt: string | null;
   
-  // Documents
+  // Documents - IDs
+  tradeLicenseDocumentId: string | null;
+  tinDocumentId: string | null;
+  utilityBillDocumentId: string | null;
+  
+  // Documents - Full media objects for preview
   tradeLicenseNumber: string | null;
   tradeLicenseDocument: VerificationDocument | null;
   tinNumber: string | null;
