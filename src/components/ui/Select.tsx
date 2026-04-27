@@ -13,7 +13,7 @@ interface SelectProps extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
 
 export function Select(props: SelectProps) {
     const [local, rest] = splitProps(props, ["label", "options", "error", "class", "value", "id"]);
-    const id = local.id || `select-${Math.random().toString(36).slice(2, 11)}`;
+    const id = local.id || `select-${rest.name || local.label.replace(/\s+/g, '-').toLowerCase()}`;
     const errorId = `${id}-error`;
 
     return (
