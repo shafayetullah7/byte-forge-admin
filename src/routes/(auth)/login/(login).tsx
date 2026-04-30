@@ -150,6 +150,7 @@ export default function LoginPage() {
                                     error={field.error}
                                     required
                                     disabled={submission.pending}
+                                    autocomplete="username"
                                 />
                             )}
                         </Field>
@@ -164,6 +165,7 @@ export default function LoginPage() {
                                     error={field.error}
                                     required
                                     disabled={submission.pending}
+                                    autocomplete="current-password"
                                 />
                             )}
                         </Field>
