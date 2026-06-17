@@ -1,9 +1,9 @@
-import { Component, Show, createSignal } from "solid-js";
+import { Component, Show, createEffect, createSignal, type Accessor } from "solid-js";
 
 export interface ImageUploadProps {
   preview?: string | null;
-  isUploading: boolean;
-  isDeleting?: boolean;
+  isUploading: Accessor<boolean>;
+  isDeleting?: Accessor<boolean>;
   error?: string | null;
   onFileSelect: (file: File) => void;
   onDelete?: () => void;
@@ -20,6 +20,12 @@ export const ImageUpload: Component<ImageUploadProps> = (props) => {
 
   const previewUrl = () => props.preview ?? localPreview();
   const hasFile = () => !!(props.preview || localPreview());
+
+  createEffect(() => {
+    if (props.preview) {
+      setLocalPreview(null);
+    }
+  });
 
   const handleChange = (e: Event & { currentTarget: HTMLInputElement }) => {
     const file = e.currentTarget.files?.[0];
@@ -106,10 +112,10 @@ export const ImageUpload: Component<ImageUploadProps> = (props) => {
               <button
                 type="button"
                 class="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50"
-                disabled={props.isDeleting || props.isUploading()}
+                disabled={(props.isDeleting?.() ?? false) || props.isUploading()}
                 onClick={handleDelete}
               >
-                {props.isDeleting ? "Removing…" : "Remove"}
+                {(props.isDeleting?.() ?? false) ? "Removing…" : "Remove"}
               </button>
             </Show>
           </div>
