@@ -1,4 +1,4 @@
-import { Show, type JSX } from "solid-js";
+import { children, Show, type JSX } from "solid-js";
 import { Input } from "~/components/ui/Input";
 
 export interface FilterToolbarProps {
@@ -31,6 +31,8 @@ function SearchIcon() {
 }
 
 export function FilterToolbar(props: FilterToolbarProps) {
+  const resolvedChildren = children(() => props.children);
+
   return (
     <div
       class={`flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm ${props.class ?? ""}`}
@@ -62,9 +64,9 @@ export function FilterToolbar(props: FilterToolbarProps) {
           </Show>
         </div>
       </Show>
-      <Show when={props.children}>
+      <Show when={resolvedChildren()}>
         <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-          {props.children}
+          {resolvedChildren()}
         </div>
       </Show>
     </div>

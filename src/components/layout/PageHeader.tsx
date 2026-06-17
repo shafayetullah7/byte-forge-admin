@@ -1,4 +1,4 @@
-import type { JSX } from "solid-js";
+import { children, Show, type JSX } from "solid-js";
 
 export interface PageHeaderProps {
   title: string;
@@ -9,12 +9,15 @@ export interface PageHeaderProps {
 }
 
 export function PageHeader(props: PageHeaderProps) {
+  const leading = children(() => props.leading);
+  const actions = children(() => props.actions);
+
   return (
     <div
       class={`flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 ${props.class ?? ""}`}
     >
       <div class="flex items-start gap-4">
-        {props.leading}
+        {leading()}
         <div>
           <h1 class="text-2xl font-bold text-slate-900">{props.title}</h1>
           {props.description && (
@@ -22,7 +25,9 @@ export function PageHeader(props: PageHeaderProps) {
           )}
         </div>
       </div>
-      {props.actions && <div class="flex gap-3">{props.actions}</div>}
+      <Show when={actions()}>
+        <div class="flex gap-3">{actions()}</div>
+      </Show>
     </div>
   );
 }
