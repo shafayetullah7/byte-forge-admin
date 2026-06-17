@@ -6,6 +6,7 @@ import { Pagination } from "~/components/ui/Pagination";
 import { ShopsHeader, ShopsToolbar, ShopsTable } from "./components";
 import { StatsPanel } from "./StatsPanel";
 import { getShops, type Shop, type ShopStatus, type ShopVerificationStatus, type PaginatedResult } from "~/lib/api/endpoints/shops";
+import { useDebouncedSignal } from "~/lib/hooks/useDebouncedSignal";
 
 interface FilterState {
   search: string;
@@ -28,14 +29,7 @@ export default function ShopsPageIndex() {
   });
 
   // Debounced search to avoid excessive API calls
-  const [debouncedSearch, setDebouncedSearch] = createSignal("");
-  
-  createEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(filters.search);
-    }, 300);
-    return () => clearTimeout(timer);
-  });
+  const debouncedSearch = useDebouncedSignal(() => filters.search);
 
   // Server-side filtering - pass filters to backend
   const shopsData = createAsync(() => getShops({ 

@@ -1,4 +1,4 @@
-import { createSignal, Show, Suspense, onCleanup } from "solid-js";
+import { createSignal, Show, Suspense } from "solid-js";
 import { A, useParams, createAsync, useNavigate, useAction, type RouteDefinition } from "@solidjs/router";
 import { Card } from "~/components/ui/Card";
 import {
@@ -25,6 +25,7 @@ import {
 import { TranslationManager } from "~/components/taxonomy/TranslationManager";
 import { SafeErrorBoundary } from "~/components/errors";
 import { Button } from "~/components/ui/Button";
+import { useDebouncedSignal } from "~/lib/hooks/useDebouncedSignal";
 
 // Route-local "Page Breakdown" Components
 import { TagGroupSettingsCard } from "./_components/TagGroupSettingsCard";
@@ -58,16 +59,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
 
     // ─── Search State ───
     const [searchQuery, setSearchQuery] = createSignal("");
-    const [debouncedSearch, setDebouncedSearch] = createSignal("");
-    let searchTimeout: ReturnType<typeof setTimeout>;
-
-    const handleSearchChange = (val: string) => {
-        setSearchQuery(val);
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => setDebouncedSearch(val), 300);
-    };
-
-    onCleanup(() => clearTimeout(searchTimeout));
+    const debouncedSearch = useDebouncedSignal(searchQuery);
 
     const tagListData = createAsync(() => getTagsByGroup({
         groupId: params.tag_group_id!,
@@ -193,7 +185,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                             groupName={props.groupData.name || props.groupData.slug}
                             tags={tagListData()}
                             searchQuery={searchQuery()}
-                            onSearchChange={handleSearchChange}
+                            onSearchChange={setSearchQuery}
                             onAddTag={handleAddTag}
                             onUpdateTag={async (id, dto) => { await updateTagAction(id, dto); }}
                             onDeleteTag={async (tagId) => { await deleteTagAction(tagId); }}

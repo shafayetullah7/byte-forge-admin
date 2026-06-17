@@ -7,6 +7,8 @@ import { Input } from "~/components/ui/Input";
 import { Modal } from "~/components/ui/Modal";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { PaymentsIcon } from "~/components/icons";
+import { PageHeader } from "~/components/layout/PageHeader";
+import { FilterToolbar } from "~/components/layout/FilterToolbar";
 import {
   MOCK_PAYMENT_METHODS,
   type PaymentMethod,
@@ -256,68 +258,52 @@ export default function PaymentMethodsPage() {
         </div>
       </Show>
 
-      {/* Header */}
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div class="flex items-start gap-4">
+      <PageHeader
+        title="Payment Methods"
+        description="Manage checkout payment options. Only active methods appear to buyers. Static prototype — changes are local only."
+        leading={
           <div class="w-12 h-12 rounded-xl bg-primary-green-700 flex items-center justify-center shadow-sm flex-shrink-0">
             <PaymentsIcon class="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h1 class="text-2xl font-bold text-slate-900">Payment Methods</h1>
-            <p class="text-sm text-slate-500 mt-1 max-w-2xl">
-              Manage checkout payment options. Only active methods appear to buyers. Static prototype — changes are local only.
-            </p>
-          </div>
-        </div>
-        <Button variant="primary" size="md" onClick={openCreate}>
-          Add Payment Method
-        </Button>
-      </div>
+        }
+        actions={
+          <Button variant="primary" size="md" onClick={openCreate}>
+            Add Payment Method
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <TagMetricsPanel metrics={metrics()} />
 
-      {/* Toolbar */}
-      <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div class="relative w-full sm:max-w-[400px]">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </div>
-          <Input
-            label="Search"
-            placeholder="Search by key or display name..."
-            class="pl-10 w-full"
-            value={searchQuery()}
-            onInput={(e) => setSearchQuery(e.currentTarget.value)}
-          />
-        </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${statusFilter() === "" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            onClick={() => setStatusFilter("")}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${statusFilter() === "ACTIVE" ? "bg-primary-green-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-primary-green-50"}`}
-            onClick={() => setStatusFilter("ACTIVE")}
-          >
-            Active
-          </button>
-          <button
-            type="button"
-            class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${statusFilter() === "INACTIVE" ? "bg-slate-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            onClick={() => setStatusFilter("INACTIVE")}
-          >
-            Inactive
-          </button>
-        </div>
-      </div>
+      <FilterToolbar
+        searchValue={searchQuery()}
+        onSearchChange={setSearchQuery}
+        searchLabel="Search"
+        searchPlaceholder="Search by key or display name..."
+      >
+        <button
+          type="button"
+          class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${statusFilter() === "" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+          onClick={() => setStatusFilter("")}
+        >
+          All
+        </button>
+        <button
+          type="button"
+          class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${statusFilter() === "ACTIVE" ? "bg-primary-green-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-primary-green-50"}`}
+          onClick={() => setStatusFilter("ACTIVE")}
+        >
+          Active
+        </button>
+        <button
+          type="button"
+          class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${statusFilter() === "INACTIVE" ? "bg-slate-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+          onClick={() => setStatusFilter("INACTIVE")}
+        >
+          Inactive
+        </button>
+      </FilterToolbar>
 
       {/* Table */}
       <Card class="overflow-hidden border-slate-200 shadow-sm">

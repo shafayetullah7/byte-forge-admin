@@ -1,9 +1,9 @@
 import { createSignal, createEffect } from "solid-js";
-import { A, useNavigate, useAction, createAsync } from "@solidjs/router";
-import { ArrowLeftIcon } from "~/components/icons";
+import { useNavigate, useAction, createAsync } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
+import { FormHeader } from "~/components/layout/FormHeader";
 import { createCategory } from "~/lib/api/endpoints/categories/categories.actions";
 import { getCategoryTree } from "~/lib/api/endpoints/categories/categories.api";
 import { CategorySelector } from "~/components/categories/CategorySelector";
@@ -68,16 +68,12 @@ export default function CreateCategoryPage() {
     return (
         <SafeErrorBoundary fallback={(err, reset) => <PageErrorFallback error={err} reset={reset} />}>
             <div class="px-6 py-8 mx-auto max-w-[1000px]">
-                <div class="mb-6">
-                    <A href="/categories" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-primary-green-700 transition-colors mb-4">
-                        <ArrowLeftIcon width="16" height="16" />
-                        Back to Categories
-                    </A>
-                    <h1 class="text-2xl font-bold text-slate-900">Add New Category</h1>
-                    <p class="text-sm text-slate-500 mt-1">
-                        Define a catalog category, its hierarchy, and multilingual identity.
-                    </p>
-                </div>
+                <FormHeader
+                    title="Add New Category"
+                    subtitle="Define a catalog category, its hierarchy, and multilingual identity."
+                    backHref="/categories"
+                    backLabel="Back to Categories"
+                />
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Form Area */}

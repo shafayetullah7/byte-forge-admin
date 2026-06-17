@@ -1,12 +1,13 @@
 import { A, createAsync, type RouteDefinition } from "@solidjs/router";
 import { Suspense, createSignal, createMemo } from "solid-js";
 import { Button } from "~/components/ui/Button";
-import { Input } from "~/components/ui/Input";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { CategoryTreeView } from "~/components/categories/CategoryTreeView";
 import { getCategoryTree } from "~/lib/api/endpoints/categories";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { CategoryNode } from "~/lib/api/endpoints/categories/categories.types";
+import { PageHeader } from "~/components/layout/PageHeader";
+import { FilterToolbar } from "~/components/layout/FilterToolbar";
 
 export const route: RouteDefinition = {
     preload: () => getCategoryTree(),
@@ -74,25 +75,22 @@ export default function CategoriesPageIndex() {
     return (
         <div class="px-6 py-8 mx-auto max-w-[1400px]">
 
-            {/* Page Header — outside boundary, state always preserved */}
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Category Management</h1>
-                    <p class="text-sm text-slate-500 mt-1">
-                        Organize the product catalog and define global navigation structures.
-                    </p>
-                </div>
-                <div class="flex gap-3">
-                    <Button variant="outline" size="md">
-                        Import/Export
-                    </Button>
-                    <A href="/categories/create">
-                        <Button variant="primary" size="md">
-                            Add Root Category
+            <PageHeader
+                title="Category Management"
+                description="Organize the product catalog and define global navigation structures."
+                actions={
+                    <>
+                        <Button variant="outline" size="md">
+                            Import/Export
                         </Button>
-                    </A>
-                </div>
-            </div>
+                        <A href="/categories/create">
+                            <Button variant="primary" size="md">
+                                Add Root Category
+                            </Button>
+                        </A>
+                    </>
+                }
+            />
 
             {/* Stats Overview — isolated boundary */}
             <div class="mb-8">
@@ -107,36 +105,23 @@ export default function CategoriesPageIndex() {
                 </SafeErrorBoundary>
             </div>
 
-            {/* Toolbar — outside boundary, state always preserved */}
-            <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div class="relative w-full sm:max-w-[400px]">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                    </div>
-                    <Input
-                        label="Search"
-                        placeholder="Search categories (ROOT, Leaf, or Sub)..."
-                        class="pl-10 w-full"
-                        value={searchTerm()}
-                        onInput={(e) => setSearchTerm(e.currentTarget.value)}
-                    />
-                </div>
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <select
-                        class="h-11 px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 w-full sm:w-auto"
-                        onChange={(e) => {
-                            if (e.currentTarget.value === "Show Active Only") setFilterActive(true);
-                            else if (e.currentTarget.value === "Show All") setFilterActive(false);
-                        }}
-                    >
-                        <option>Show All</option>
-                        <option>Show Active Only</option>
-                    </select>
-                </div>
-            </div>
+            <FilterToolbar
+                searchValue={searchTerm()}
+                onSearchChange={setSearchTerm}
+                searchLabel="Search"
+                searchPlaceholder="Search categories (ROOT, Leaf, or Sub)..."
+            >
+                <select
+                    class="h-11 px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 outline-none focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 w-full sm:w-auto"
+                    onChange={(e) => {
+                        if (e.currentTarget.value === "Show Active Only") setFilterActive(true);
+                        else if (e.currentTarget.value === "Show All") setFilterActive(false);
+                    }}
+                >
+                    <option>Show All</option>
+                    <option>Show Active Only</option>
+                </select>
+            </FilterToolbar>
 
             {/* Tree Structure — isolated boundary */}
             <SafeErrorBoundary

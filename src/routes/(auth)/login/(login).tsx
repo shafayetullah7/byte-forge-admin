@@ -1,4 +1,4 @@
-import { useNavigate, action, useSubmission, useAction } from "@solidjs/router";
+import { action, useSubmission, useAction } from "@solidjs/router";
 import { createSignal, createEffect, Show } from "solid-js";
 import { createForm, setError } from "@modular-forms/solid";
 import { Button } from "~/components/ui/Button";
@@ -9,7 +9,6 @@ import { PottedPlantIcon } from "~/components/icons/PottedPlantIcon";
 import { authApi } from "~/lib/api";
 import { loginSchema, type LoginFormData } from "~/schemas/login.schema";
 
-// Type definitions for error handling
 interface ValidationError {
     field: string;
     message: string;
@@ -25,10 +24,6 @@ interface ActionError {
     response?: ErrorResponse;
 }
 
-/**
- * Login Action
- * Handles server-side authentication for the admin panel.
- */
 const loginAction = action(async (data: LoginFormData) => {
     "use server";
     await authApi.login({
@@ -40,7 +35,6 @@ const loginAction = action(async (data: LoginFormData) => {
 }, "login-admin");
 
 export default function LoginPage() {
-    const navigate = useNavigate();
     const loginTrigger = useAction(loginAction);
     const submission = useSubmission(loginAction);
     const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
@@ -59,7 +53,6 @@ export default function LoginPage() {
         },
     });
 
-    // Map server errors from the action back to the form fields
     createEffect(() => {
         if (submission.error) {
             const error = submission.error as ActionError;
@@ -68,7 +61,6 @@ export default function LoginPage() {
             if (errorData) {
                 let handled = false;
 
-                // Handle validation errors if any
                 if (Array.isArray(errorData.validationErrors)) {
                     errorData.validationErrors.forEach((err: ValidationError) => {
                         const field = err.field.toLowerCase();
@@ -100,10 +92,9 @@ export default function LoginPage() {
         }
     });
 
-    // Handle successful login
     createEffect(() => {
         if (submission.result?.success) {
-            navigate(submission.result.target || "/", { replace: true });
+            window.location.assign(submission.result.target || "/");
         }
     });
 
@@ -114,7 +105,6 @@ export default function LoginPage() {
 
     return (
         <main class="min-h-screen bg-primary-green-50 relative flex items-center justify-center p-4 overflow-hidden">
-            {/* Subtle Grid Background */}
             <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
                 style="background-image: radial-gradient(#1F6F4A 1px, transparent 1px); background-size: 24px 24px;"></div>
             <div class="absolute inset-0 z-0 bg-gradient-to-b from-primary-green-100 to-transparent pointer-events-none"></div>
@@ -129,7 +119,12 @@ export default function LoginPage() {
                 </div>
 
                 <Card class="p-8 group card-premium">
-                    <Form onSubmit={handleSubmit} class="space-y-6">
+                    <Form
+                        id="login-form"
+                        onSubmit={handleSubmit}
+                        class="space-y-6"
+                        autocomplete="on"
+                    >
                         <Show when={errorMessage()}>
                             <div class="bg-red-50 text-red-600 p-4 rounded-lg text-sm border border-red-100 flex items-start gap-3">
                                 <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,6 +138,8 @@ export default function LoginPage() {
                             {(field, props) => (
                                 <Input
                                     {...props}
+                                    name="email"
+                                    id="login-email"
                                     type="email"
                                     label="Email"
                                     placeholder="admin@byteforge.com"
@@ -150,7 +147,7 @@ export default function LoginPage() {
                                     error={field.error}
                                     required
                                     disabled={submission.pending}
-                                    autocomplete="username"
+                                    autocomplete="email"
                                 />
                             )}
                         </Field>
@@ -159,6 +156,8 @@ export default function LoginPage() {
                             {(field, props) => (
                                 <PasswordInput
                                     {...props}
+                                    name="password"
+                                    id="login-password"
                                     label="Password"
                                     placeholder="••••••••"
                                     value={field.value || ""}
@@ -167,6 +166,21 @@ export default function LoginPage() {
                                     disabled={submission.pending}
                                     autocomplete="current-password"
                                 />
+                            )}
+                        </Field>
+
+                        <Field name="rememberMe" type="boolean">
+                            {(field, props) => (
+                                <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+                                    <input
+                                        {...props}
+                                        type="checkbox"
+                                        checked={field.value ?? false}
+                                        autocomplete="off"
+                                        class="rounded border-slate-300 text-primary-green-600 focus:ring-primary-green-500"
+                                    />
+                                    Remember me
+                                </label>
                             )}
                         </Field>
 

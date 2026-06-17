@@ -1,47 +1,16 @@
 import { For, Show, createEffect, createSignal } from "solid-js";
-import { useNavigate, useSubmission, useAction, A, type RouteDefinition } from "@solidjs/router";
+import { useNavigate, useSubmission, useAction, type RouteDefinition } from "@solidjs/router";
 import { createForm, setValue } from "@modular-forms/solid";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
-import { ArrowLeftIcon } from "~/components/icons";
+import { FormHeader } from "~/components/layout/FormHeader";
 import { createTagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.actions";
 import type { CreateTagGroupDto } from "~/lib/api/endpoints/tag-groups/tag-groups.types";
 import { slugify } from "~/lib/utils/slugify";
 import { createTagGroupSchema, type CreateTagGroupFormData } from "~/schemas/tag-group.schema";
 
 export const route: RouteDefinition = {};
-
-// ─── Reusable Form Header ────────────────────────────────────────────────────
-
-interface FormHeaderProps {
-    title: string;
-    subtitle?: string;
-    backHref?: string;
-    backLabel?: string;
-}
-
-function FormHeader(props: FormHeaderProps) {
-    return (
-        <div class="mb-8">
-            <Show when={props.backHref}>
-                <A
-                    href={props.backHref!}
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-primary-green-700 transition-colors mb-4"
-                >
-                    <ArrowLeftIcon width="16" height="16" />
-                    {props.backLabel || "Back"}
-                </A>
-            </Show>
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900">{props.title}</h1>
-                <Show when={props.subtitle}>
-                    <p class="text-sm text-slate-500 mt-1">{props.subtitle}</p>
-                </Show>
-            </div>
-        </div>
-    );
-}
 
 interface CreateTagGroupFormProps {
     hideHeader?: boolean;

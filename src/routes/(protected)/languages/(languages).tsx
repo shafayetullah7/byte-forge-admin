@@ -3,6 +3,7 @@ import { For, Suspense } from "solid-js";
 import { getLanguages } from "~/lib/api/endpoints/languages";
 import { Card } from "~/components/ui/Card";
 import { Badge } from "~/components/ui/Badge";
+import { PageHeader } from "~/components/layout/PageHeader";
 
 export const route: RouteDefinition = {
     preload: () => getLanguages(),
@@ -13,15 +14,10 @@ export default function LanguagesPage() {
 
     return (
         <div class="px-6 py-8 mx-auto max-w-[1000px]">
-            {/* Header Area */}
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900 leading-tight">System Languages</h1>
-                    <p class="text-sm text-slate-500 mt-1 max-w-2xl">
-                        Manage and review the locales available for multi-language content across your product catalog and taxonomy.
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                title="System Languages"
+                description="Manage and review the locales available for multi-language content across your product catalog and taxonomy."
+            />
 
             {/* Table Card */}
             <Card class="overflow-hidden border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md">

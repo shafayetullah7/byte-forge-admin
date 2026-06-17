@@ -3,17 +3,7 @@ import { createEffect, Show, Suspense, type JSX } from "solid-js";
 import { useSession } from "~/lib/auth";
 import { AdminSidebar, AdminNavbar } from "~/components/layout";
 import { SafeErrorBoundary, PageErrorFallback } from "~/components/errors";
-
-function LoadingFallback() {
-    return (
-        <div class="flex items-center justify-center min-h-screen">
-            <div class="flex flex-col items-center gap-3">
-                <div class="w-8 h-8 border-3 border-primary-green-600 border-t-transparent rounded-full animate-spin"></div>
-                <span class="text-sm text-slate-500 font-medium">Loading...</span>
-            </div>
-        </div>
-    );
-}
+import { LoadingFallback } from "~/components/ui/LoadingFallback";
 
 export default function ProtectedLayout(props: { children: JSX.Element }) {
     const user = useSession();
@@ -27,7 +17,7 @@ export default function ProtectedLayout(props: { children: JSX.Element }) {
     });
 
     return (
-        <Show when={user()} fallback={<LoadingFallback />}>
+        <Show when={user()} fallback={<LoadingFallback fullScreen={false} />}>
             <div class="flex h-screen bg-slate-50 overflow-hidden">
                 <AdminSidebar />
                 <div class="flex-1 flex flex-col h-full overflow-hidden">
