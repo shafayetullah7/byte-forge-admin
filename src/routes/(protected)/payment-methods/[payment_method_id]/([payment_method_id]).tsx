@@ -1,11 +1,6 @@
 import { createSignal, createEffect, Show, Suspense } from "solid-js";
 import { A, useParams, createAsync, useAction, useNavigate, type RouteDefinition } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Button } from "~/components/ui/Button";
-import { Badge } from "~/components/ui/Badge";
-import { Card } from "~/components/ui/Card";
-import { Input } from "~/components/ui/Input";
-import { ImageUpload } from "~/components/ui/ImageUpload";
 import { PageShell } from "~/components/layout/PageShell";
 import { SafeErrorBoundary, PageErrorFallback } from "~/components/errors";
 import { ApiError } from "~/lib/api/types";
@@ -17,8 +12,9 @@ import {
   activatePaymentMethod,
   deactivatePaymentMethod,
 } from "~/lib/api/endpoints/payment-methods";
-import { PaymentMethodLogo } from "../components/PaymentMethodLogo";
-import { formatDate } from "../components/format-date";
+import { PaymentMethodSummaryCard } from "./_components/PaymentMethodSummaryCard";
+import { PaymentMethodEditForm } from "./_components/PaymentMethodEditForm";
+import { PaymentMethodStatusActions } from "./_components/PaymentMethodStatusActions";
 
 export const route: RouteDefinition = {
   preload: ({ params }) => {
@@ -37,6 +33,7 @@ export default function PaymentMethodDetailPage() {
   const deactivateAction = useAction(deactivatePaymentMethod);
   const logoUpload = useImageUpload({ maxSizeMB: 3 });
 
+  const [syncedMethodId, setSyncedMethodId] = createSignal<string | null>(null);
   const [displayName, setDisplayName] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [initialLogoId, setInitialLogoId] = createSignal<string | null>(null);
@@ -49,13 +46,19 @@ export default function PaymentMethodDetailPage() {
   const [actionError, setActionError] = createSignal<string | null>(null);
 
   createEffect(() => {
+    const routeId = params.payment_method_id;
     const data = method();
-    if (data) {
-      setDisplayName(data.displayName);
-      setDescription(data.description ?? "");
-      logoUpload.setExisting(data.logoId, data.logoUrl);
-      setInitialLogoId(data.logoId);
-    }
+    if (!data || data.id !== routeId || syncedMethodId() === routeId) return;
+
+    setSyncedMethodId(routeId);
+    setDisplayName(data.displayName);
+    setDescription(data.description ?? "");
+    logoUpload.setExisting(data.logoId, data.logoUrl);
+    setInitialLogoId(data.logoId);
+    setErrors({});
+    setSaveError(null);
+    setConfirmMode(null);
+    setActionError(null);
   });
 
   const showToast = (message: string) => {
@@ -200,197 +203,37 @@ export default function PaymentMethodDetailPage() {
 
                 <div class="flex flex-col lg:flex-row gap-8 items-start">
                   <div class="flex-1 space-y-6 w-full">
-                    <Card class="p-6">
-                      <div class="flex items-start gap-4 mb-6">
-                        <PaymentMethodLogo method={data} size="lg" />
-                        <div>
-                          <h1 class="text-2xl font-bold text-slate-900">{data.displayName}</h1>
-                          <div class="flex items-center gap-2 mt-2">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 font-mono">
-                              {data.key}
-                            </span>
-                            <Badge variant={data.status === "ACTIVE" ? "success" : "secondary"} size="sm">
-                              {data.status}
-                            </Badge>
-                          </div>
-                          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-sm">
-                            <div>
-                              <dt class="text-slate-500">Created</dt>
-                              <dd class="text-slate-800 font-medium">{formatDate(data.createdAt)}</dd>
-                            </div>
-                            <div>
-                              <dt class="text-slate-500">Last updated</dt>
-                              <dd class="text-slate-800 font-medium">{formatDate(data.updatedAt)}</dd>
-                            </div>
-                          </dl>
-                        </div>
-                      </div>
-
-                      <Show when={data.description}>
-                        <div class="pt-4 border-t border-slate-100">
-                          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                            Description
-                          </p>
-                          <p class="text-sm text-slate-700">{data.description}</p>
-                        </div>
-                      </Show>
-                    </Card>
-
-                    <Card class="p-6">
-                      <h2 class="text-base font-bold text-slate-900 mb-6">Edit details</h2>
-                      <form onSubmit={handleSave} class="space-y-4">
-                        <Show when={saveError()}>
-                          <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
-                            {saveError()}
-                          </div>
-                        </Show>
-                        <Input
-                          label="Display Name"
-                          value={displayName()}
-                          onInput={(e) => setDisplayName(e.currentTarget.value)}
-                          error={errors().displayName}
-                        />
-                        <ImageUpload
-                          label="Logo"
-                          preview={logoUpload.preview()}
-                          isUploading={logoUpload.isUploading}
-                          isDeleting={logoUpload.isDeleting}
-                          error={logoUpload.uploadError()}
-                          onFileSelect={logoUpload.upload}
-                          onDelete={handleLogoRemove}
-                          maxSizeMB={3}
-                        />
-                        <div class="space-y-2">
-                          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            Description
-                          </label>
-                          <textarea
-                            class="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-primary-green-500 focus:outline-none focus:ring-2 focus:ring-primary-green-500/20 min-h-[80px] resize-y"
-                            value={description()}
-                            onInput={(e) => setDescription(e.currentTarget.value)}
-                          />
-                        </div>
-                        <p class="text-xs text-slate-400">
-                          Key <span class="font-mono font-semibold">{data.key}</span> cannot be changed after creation.
-                        </p>
-                        <div class="flex justify-end gap-3 pt-2">
-                          <Button type="button" variant="outline" onClick={() => navigate("/payment-methods")}>
-                            Back
-                          </Button>
-                          <Button type="submit" variant="primary" isLoading={saving()}>
-                            Save Changes
-                          </Button>
-                        </div>
-                      </form>
-                    </Card>
+                    <PaymentMethodSummaryCard method={data} />
+                    <PaymentMethodEditForm
+                      methodKey={data.key}
+                      displayName={displayName()}
+                      onDisplayNameChange={setDisplayName}
+                      description={description()}
+                      onDescriptionChange={setDescription}
+                      logoUpload={logoUpload}
+                      onLogoRemove={handleLogoRemove}
+                      errors={errors()}
+                      saveError={saveError()}
+                      saving={saving()}
+                      onSubmit={handleSave}
+                      onBack={() => navigate("/payment-methods")}
+                    />
                   </div>
 
                   <div class="w-full lg:w-80 space-y-4">
-                    <Card class="p-6 border-slate-200">
-                      <h2 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-4">
-                        Status actions
-                      </h2>
-
-                      <Show when={data.status === "INACTIVE"}>
-                        <Show
-                          when={confirmMode() === "activate"}
-                          fallback={
-                            <Button
-                              variant="primary"
-                              class="w-full"
-                              onClick={() => {
-                                setActionError(null);
-                                setConfirmMode("activate");
-                              }}
-                            >
-                              Activate for checkout
-                            </Button>
-                          }
-                        >
-                          <div class="space-y-3 p-4 rounded-xl bg-primary-green-50 border border-primary-green-200">
-                            <p class="text-sm text-slate-700">
-                              Activate <strong>{data.displayName}</strong>? Buyers will be able to select this method at checkout.
-                            </p>
-                            <Show when={actionError()}>
-                              <p class="text-xs text-red-600">{actionError()}</p>
-                            </Show>
-                            <div class="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                class="flex-1"
-                                onClick={() => setConfirmMode(null)}
-                                disabled={actionLoading()}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="primary"
-                                size="sm"
-                                class="flex-1"
-                                isLoading={actionLoading()}
-                                onClick={handleActivate}
-                              >
-                                Confirm
-                              </Button>
-                            </div>
-                          </div>
-                        </Show>
-                      </Show>
-
-                      <Show when={data.status === "ACTIVE"}>
-                        <Show
-                          when={confirmMode() === "deactivate"}
-                          fallback={
-                            <Button
-                              variant="danger"
-                              class="w-full"
-                              onClick={() => {
-                                setActionError(null);
-                                setConfirmMode("deactivate");
-                              }}
-                            >
-                              Deactivate
-                            </Button>
-                          }
-                        >
-                          <div class="space-y-3 p-4 rounded-xl bg-red-50 border border-red-200">
-                            <p class="text-sm text-slate-700">
-                              Deactivate <strong>{data.displayName}</strong>? It will be hidden from checkout.
-                            </p>
-                            <Show when={isLastActive()}>
-                              <p class="text-xs text-red-800 bg-white/80 border border-red-200 rounded-lg p-2">
-                                This is the only active payment method. Deactivating it would leave checkout with no payment options.
-                              </p>
-                            </Show>
-                            <Show when={actionError()}>
-                              <p class="text-xs text-red-600">{actionError()}</p>
-                            </Show>
-                            <div class="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                class="flex-1"
-                                onClick={() => setConfirmMode(null)}
-                                disabled={actionLoading()}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                class="flex-1"
-                                isLoading={actionLoading()}
-                                onClick={handleDeactivate}
-                                disabled={isLastActive()}
-                              >
-                                Confirm
-                              </Button>
-                            </div>
-                          </div>
-                        </Show>
-                      </Show>
-                    </Card>
+                    <PaymentMethodStatusActions
+                      method={data}
+                      isLastActive={isLastActive()}
+                      confirmMode={confirmMode()}
+                      onConfirmModeChange={(mode) => {
+                        setActionError(null);
+                        setConfirmMode(mode);
+                      }}
+                      actionLoading={actionLoading()}
+                      actionError={actionError()}
+                      onActivate={handleActivate}
+                      onDeactivate={handleDeactivate}
+                    />
                   </div>
                 </div>
               </>
