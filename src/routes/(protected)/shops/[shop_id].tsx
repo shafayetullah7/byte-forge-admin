@@ -2,6 +2,7 @@ import { ErrorBoundary, Suspense, Show } from "solid-js";
 import { createAsync, useParams, type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
 import { ShopDetailHeader, ShopTabNav, TabId } from "./[shop_id]/components";
 import { getShopDetail } from "~/lib/api/endpoints/shops";
+import { PAGE_CONTAINER_CLASS } from "~/components/layout/PageShell";
 
 const tabs: { id: TabId; label: string; icon: string; path: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: "dashboard", path: "" },
@@ -30,7 +31,7 @@ export default function ShopDetailLayout(props: RouteSectionProps) {
   const shop = createAsync(() => getShopDetail(params.shop_id!));
 
   return (
-    <div class="min-h-screen bg-slate-50">
+    <>
       {/* Critical error boundary - shop data is required for entire page */}
       <ErrorBoundary
         fallback={(error) => (
@@ -71,7 +72,7 @@ export default function ShopDetailLayout(props: RouteSectionProps) {
               <>
                 <ShopDetailHeader shop={shopData()} />
                 <ShopTabNav tabs={tabs} shopId={params.shop_id || ""} />
-                <div class="p-6 max-w-[1400px] mx-auto">
+                <div class={`${PAGE_CONTAINER_CLASS} py-6`}>
                   {/* Each child route has its own ErrorBoundary for route-specific errors */}
                   {props.children}
                 </div>
@@ -80,6 +81,6 @@ export default function ShopDetailLayout(props: RouteSectionProps) {
           </Show>
         </Suspense>
       </ErrorBoundary>
-    </div>
+    </>
   );
 }

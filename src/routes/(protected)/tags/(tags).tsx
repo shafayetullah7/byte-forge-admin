@@ -7,6 +7,7 @@ import { getTagGroups } from "~/lib/api/endpoints/tag-groups";
 import type { TagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.types";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { PageHeader } from "~/components/layout/PageHeader";
+import { PageShell } from "~/components/layout/PageShell";
 
 export const route: RouteDefinition = {
     preload: () => getTagGroups(),
@@ -48,7 +49,7 @@ export default function TagsPageIndex() {
     };
 
     return (
-        <div class="px-6 py-8 mx-auto max-w-[1400px]">
+        <PageShell>
 
             <PageHeader
                 title="Tag & Attribute Library"
@@ -146,6 +147,6 @@ export default function TagsPageIndex() {
                 </Suspense>
             </SafeErrorBoundary>
 
-        </div>
+        </PageShell>
     );
 }

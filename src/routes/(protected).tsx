@@ -22,7 +22,7 @@ export default function ProtectedLayout(props: { children: JSX.Element }) {
                 <AdminSidebar />
                 <div class="flex-1 flex flex-col h-full overflow-hidden">
                     <AdminNavbar />
-                    <main class="flex-1 overflow-y-auto p-6">
+                    <main class="flex-1 overflow-y-auto">
                         <SafeErrorBoundary fallback={(err, reset) => <PageErrorFallback error={err} reset={reset} />}>
                             <Suspense>{props.children}</Suspense>
                         </SafeErrorBoundary>

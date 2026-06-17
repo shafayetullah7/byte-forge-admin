@@ -1,5 +1,6 @@
 import { For } from "solid-js";
 import { useLocation, A } from "@solidjs/router";
+import { PAGE_CONTAINER_CLASS } from "~/components/layout/PageShell";
 
 export type TabId =
   | "dashboard"
@@ -55,7 +56,7 @@ export function ShopTabNav(props: ShopTabNavProps) {
 
   return (
     <div class="bg-white border-b border-slate-200 sticky top-0 z-20">
-      <div class="px-6">
+      <div class={PAGE_CONTAINER_CLASS}>
         <nav class="flex gap-1 overflow-x-auto scrollbar-hide">
           <For each={props.tabs}>
             {(tab) => (

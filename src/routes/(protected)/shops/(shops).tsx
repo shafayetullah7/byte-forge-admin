@@ -4,6 +4,7 @@ import { createStore } from "solid-js/store";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { Pagination } from "~/components/ui/Pagination";
 import { PageHeader } from "~/components/layout/PageHeader";
+import { PageShell } from "~/components/layout/PageShell";
 import { ShopsToolbar, ShopsTable } from "./components";
 import { StatsPanel } from "./StatsPanel";
 import { getShops, type Shop, type ShopStatus, type ShopVerificationStatus, type PaginatedResult } from "~/lib/api/endpoints/shops";
@@ -67,7 +68,7 @@ export default function ShopsPageIndex() {
   const displayShops = createMemo(() => stableShops()?.data || []);
 
   return (
-    <div class="px-6 py-8 mx-auto max-w-[1400px]">
+    <PageShell>
       {/* Header */}
       <PageHeader
         title="Shop Management"
@@ -136,6 +137,6 @@ export default function ShopsPageIndex() {
           showLimitSelector={true}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

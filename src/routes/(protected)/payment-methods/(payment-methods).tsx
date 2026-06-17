@@ -8,6 +8,7 @@ import { Modal } from "~/components/ui/Modal";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { PaymentsIcon } from "~/components/icons";
 import { PageHeader } from "~/components/layout/PageHeader";
+import { PageShell } from "~/components/layout/PageShell";
 import {
   MOCK_PAYMENT_METHODS,
   type PaymentMethod,
@@ -246,7 +247,7 @@ export default function PaymentMethodsPage() {
   };
 
   return (
-    <div class="px-6 py-8 mx-auto max-w-[1400px]">
+    <PageShell>
       <Title>Payment Methods | ByteForge Admin</Title>
       <Meta name="description" content="Manage platform payment methods" />
 
@@ -623,6 +624,6 @@ export default function PaymentMethodsPage() {
           )}
         </Show>
       </Modal>
-    </div>
+    </PageShell>
   );
 }

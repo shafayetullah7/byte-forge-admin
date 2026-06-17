@@ -24,6 +24,7 @@ import {
 } from "~/lib/api/endpoints/tags/tags.actions";
 import { TranslationManager } from "~/components/taxonomy/TranslationManager";
 import { SafeErrorBoundary } from "~/components/errors";
+import { PageShell } from "~/components/layout/PageShell";
 import { Button } from "~/components/ui/Button";
 
 // Route-local "Page Breakdown" Components
@@ -132,7 +133,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
     };
 
     return (
-        <div class="px-6 py-8 mx-auto max-w-[1500px]">
+        <PageShell>
             {/* Breadcrumbs */}
             <nav class="flex mb-4 text-sm font-medium text-slate-500 bg-slate-50/50 w-fit px-3 py-1.5 rounded-full border border-slate-100">
                 <A href="/tags" class="hover:text-primary-green-700 transition-colors">Tag Library</A>
@@ -195,7 +196,7 @@ function HubContent(props: { groupData: TagGroup; translations: TagGroupTranslat
                     </Suspense>
                 </div>
             </div>
-        </div>
+        </PageShell>
     );
 }
 
@@ -206,13 +207,15 @@ export default function TagGroupManagementPage() {
 
     return (
         <Suspense fallback={
-            <div class="animate-pulse space-y-6 px-6 py-8 mx-auto max-w-[1500px]">
-                <div class="h-8 w-64 bg-slate-100 rounded-full mb-8" />
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-                    <div class="xl:col-span-4 h-[600px] bg-slate-50 rounded-2xl border border-slate-100 animate-pulse" />
-                    <div class="xl:col-span-8 h-[600px] bg-slate-50 rounded-2xl border border-slate-100 animate-pulse" />
+            <PageShell>
+                <div class="animate-pulse space-y-6">
+                    <div class="h-8 w-64 bg-slate-100 rounded-full mb-8" />
+                    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                        <div class="xl:col-span-4 h-[600px] bg-slate-50 rounded-2xl border border-slate-100 animate-pulse" />
+                        <div class="xl:col-span-8 h-[600px] bg-slate-50 rounded-2xl border border-slate-100 animate-pulse" />
+                    </div>
                 </div>
-            </div>
+            </PageShell>
         }>
             <Show when={groupData() && translationsData()}>
                 <HubContent groupData={groupData()!} translations={translationsData()!} />

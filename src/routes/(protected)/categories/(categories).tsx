@@ -8,6 +8,7 @@ import { getCategoryTree } from "~/lib/api/endpoints/categories";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { CategoryNode } from "~/lib/api/endpoints/categories/categories.types";
 import { PageHeader } from "~/components/layout/PageHeader";
+import { PageShell } from "~/components/layout/PageShell";
 
 export const route: RouteDefinition = {
     preload: () => getCategoryTree(),
@@ -73,7 +74,7 @@ export default function CategoriesPageIndex() {
     };
 
     return (
-        <div class="px-6 py-8 mx-auto max-w-[1400px]">
+        <PageShell>
 
             <PageHeader
                 title="Category Management"
@@ -143,6 +144,6 @@ export default function CategoriesPageIndex() {
                 </Suspense>
             </SafeErrorBoundary>
 
-        </div>
+        </PageShell>
     );
 }

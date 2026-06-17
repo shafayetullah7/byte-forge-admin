@@ -4,6 +4,7 @@ import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
 import { FormHeader } from "~/components/layout/FormHeader";
+import { PageShell } from "~/components/layout/PageShell";
 import { createCategory } from "~/lib/api/endpoints/categories/categories.actions";
 import { getCategoryTree } from "~/lib/api/endpoints/categories/categories.api";
 import { CategorySelector } from "~/components/categories/CategorySelector";
@@ -67,7 +68,7 @@ export default function CreateCategoryPage() {
 
     return (
         <SafeErrorBoundary fallback={(err, reset) => <PageErrorFallback error={err} reset={reset} />}>
-            <div class="px-6 py-8 mx-auto max-w-[1000px]">
+            <PageShell>
                 <FormHeader
                     title="Add New Category"
                     subtitle="Define a catalog category, its hierarchy, and multilingual identity."
@@ -182,7 +183,7 @@ export default function CreateCategoryPage() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </PageShell>
         </SafeErrorBoundary>
     );
 }

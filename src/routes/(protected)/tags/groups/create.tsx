@@ -5,6 +5,7 @@ import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
 import { FormHeader } from "~/components/layout/FormHeader";
+import { PageShell } from "~/components/layout/PageShell";
 import { createTagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.actions";
 import type { CreateTagGroupDto } from "~/lib/api/endpoints/tag-groups/tag-groups.types";
 import { slugify } from "~/lib/utils/slugify";
@@ -121,14 +122,24 @@ export default function CreateTagGroupPage(props: CreateTagGroupFormProps) {
 
     // Submit handler - transforms data and calls action
     const handleSubmit = (values: CreateTagGroupFormData) => {
+        const en = values.translations.find((t) => t.locale === "en");
+        const bn = values.translations.find((t) => t.locale === "bn");
+
         const apiData: CreateTagGroupDto = {
             slug: values.slug?.trim() || "",
             isActive: values.isActive ?? true,
-            translations: (values.translations || []).map(t => ({
-                locale: t.locale,
-                name: t.name?.trim() || "",
-                description: t.description?.trim() || undefined
-            })),
+            translations: [
+                {
+                    locale: "en",
+                    name: en?.name?.trim() || "",
+                    description: en?.description?.trim() || null,
+                },
+                {
+                    locale: "bn",
+                    name: bn?.name?.trim() || "",
+                    description: bn?.description?.trim() || null,
+                },
+            ],
             tags: tags()
         };
         console.log({ apiData })
@@ -145,8 +156,7 @@ export default function CreateTagGroupPage(props: CreateTagGroupFormProps) {
     const isPending = () => !!submission.pending;
 
     return (
-        <div class="mx-auto w-full">
-            <div class={props.hideHeader ? "" : "px-6 py-8 mx-auto max-w-350"}>
+        <PageShell>
                 <Form onSubmit={handleSubmit} class="space-y-6">
                     <Show when={!props.hideHeader}>
                         <FormHeader
@@ -449,7 +459,6 @@ export default function CreateTagGroupPage(props: CreateTagGroupFormProps) {
                         </Button>
                     </div>
                 </Form>
-            </div>
-        </div>
+        </PageShell>
     );
 }

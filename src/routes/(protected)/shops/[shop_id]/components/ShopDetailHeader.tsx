@@ -1,7 +1,8 @@
 import { A } from "@solidjs/router";
+import { createSignal, onMount, onCleanup } from "solid-js";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
-import { createSignal, onMount, onCleanup } from "solid-js";
+import { PAGE_CONTAINER_CLASS } from "~/components/layout/PageShell";
 
 interface Shop {
   id: string;
@@ -54,7 +55,7 @@ export function ShopDetailHeader(props: ShopDetailHeaderProps) {
 
   return (
     <div class="bg-white border-b border-slate-200 transition-all duration-200" classList={{ "py-4": isExpanded(), "py-2": !isExpanded() }}>
-      <div class="px-6">
+      <div class={PAGE_CONTAINER_CLASS}>
         {/* Breadcrumb - hidden when scrolled */}
         <div class="flex items-center gap-2 text-sm text-slate-500 mb-2 transition-all duration-200" classList={{ "opacity-0 h-0 overflow-hidden mb-0": !isExpanded(), "opacity-100": isExpanded() }}>
           <A href="/shops" class="hover:text-slate-700 flex items-center gap-1">

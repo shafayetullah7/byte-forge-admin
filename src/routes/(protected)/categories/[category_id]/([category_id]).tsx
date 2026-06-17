@@ -21,6 +21,7 @@ import { CategorySelector } from "~/components/categories/CategorySelector";
 import { UpsertCategoryTranslationDto } from "~/lib/api/endpoints/categories/categories.types";
 import { slugify } from "~/lib/utils/slugify";
 import { SafeErrorBoundary, PageErrorFallback } from "~/components/errors";
+import { PageShell } from "~/components/layout/PageShell";
 
 export const route: RouteDefinition = {
     preload: ({ params }) => {
@@ -155,7 +156,7 @@ export default function CategoryManagementHub() {
 
     return (
         <SafeErrorBoundary fallback={(err, reset) => <PageErrorFallback error={err} reset={reset} />}>
-            <div class="px-6 py-8 mx-auto max-w-[1400px]">
+            <PageShell>
                 <Suspense fallback={<div class="animate-pulse space-y-4">
                     <div class="h-4 w-32 bg-slate-100 rounded" />
                     <div class="h-8 w-64 bg-slate-100 rounded" />
@@ -428,7 +429,7 @@ export default function CategoryManagementHub() {
                         )}
                     </Show>
                 </Suspense>
-            </div>
+            </PageShell>
         </SafeErrorBoundary>
     );
 }

@@ -4,6 +4,7 @@ import { getLanguages } from "~/lib/api/endpoints/languages";
 import { Card } from "~/components/ui/Card";
 import { Badge } from "~/components/ui/Badge";
 import { PageHeader } from "~/components/layout/PageHeader";
+import { PageShell } from "~/components/layout/PageShell";
 
 export const route: RouteDefinition = {
     preload: () => getLanguages(),
@@ -13,7 +14,7 @@ export default function LanguagesPage() {
     const languages = createAsync(() => getLanguages());
 
     return (
-        <div class="px-6 py-8 mx-auto max-w-[1000px]">
+        <PageShell>
             <PageHeader
                 title="System Languages"
                 description="Manage and review the locales available for multi-language content across your product catalog and taxonomy."
@@ -100,6 +101,6 @@ export default function LanguagesPage() {
                     </p>
                 </div>
             </div>
-        </div>
+        </PageShell>
     );
 }
