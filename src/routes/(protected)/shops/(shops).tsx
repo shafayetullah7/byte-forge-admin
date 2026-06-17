@@ -1,12 +1,12 @@
 import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { createMemo, Suspense, createSignal, createEffect, Show } from "solid-js";
+import { createMemo, Suspense, createSignal, createEffect, Show, createDeferred } from "solid-js";
 import { createStore } from "solid-js/store";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { Pagination } from "~/components/ui/Pagination";
-import { ShopsHeader, ShopsToolbar, ShopsTable } from "./components";
+import { PageHeader } from "~/components/layout/PageHeader";
+import { ShopsToolbar, ShopsTable } from "./components";
 import { StatsPanel } from "./StatsPanel";
 import { getShops, type Shop, type ShopStatus, type ShopVerificationStatus, type PaginatedResult } from "~/lib/api/endpoints/shops";
-import { useDebouncedSignal } from "~/lib/hooks/useDebouncedSignal";
 
 interface FilterState {
   search: string;
@@ -29,7 +29,7 @@ export default function ShopsPageIndex() {
   });
 
   // Debounced search to avoid excessive API calls
-  const debouncedSearch = useDebouncedSignal(() => filters.search);
+  const debouncedSearch = createDeferred(() => filters.search, { timeoutMs: 300 });
 
   // Server-side filtering - pass filters to backend
   const shopsData = createAsync(() => getShops({ 
@@ -69,7 +69,10 @@ export default function ShopsPageIndex() {
   return (
     <div class="px-6 py-8 mx-auto max-w-[1400px]">
       {/* Header */}
-      <ShopsHeader />
+      <PageHeader
+        title="Shop Management"
+        description="Review and approve seller shops, manage shop status, and monitor compliance."
+      />
 
       {/* FIX 2: StatsPanel is now an isolated component with its own reactive owner */}
       <div class="mb-8">

@@ -1,4 +1,4 @@
-import { createSignal, For, Suspense } from "solid-js";
+import { createSignal, For, Suspense, createDeferred } from "solid-js";
 import { useNavigate, createAsync, type RouteDefinition } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
@@ -7,8 +7,6 @@ import { getTagGroups } from "~/lib/api/endpoints/tag-groups";
 import type { TagGroup } from "~/lib/api/endpoints/tag-groups/tag-groups.types";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { PageHeader } from "~/components/layout/PageHeader";
-import { FilterToolbar } from "~/components/layout/FilterToolbar";
-import { useDebouncedSignal } from "~/lib/hooks/useDebouncedSignal";
 
 export const route: RouteDefinition = {
     preload: () => getTagGroups(),
@@ -17,19 +15,16 @@ export const route: RouteDefinition = {
 export default function TagsPageIndex() {
     const navigate = useNavigate();
 
-    // Search and filter state
     const [searchQuery, setSearchQuery] = createSignal("");
-    const debouncedSearch = useDebouncedSignal(searchQuery);
+    const debouncedSearch = createDeferred(searchQuery, { timeoutMs: 300 });
     const [activeFilter, setActiveFilter] = createSignal<'all' | 'active' | 'empty'>('all');
 
-    // Backend-driven data fetching based on search/active state
     const tagGroups = createAsync(() => getTagGroups({
         search: debouncedSearch() || undefined,
         isActive: activeFilter() === 'active' ? 'true' : undefined,
-        limit: 100 // Load up to 100 for a reasonable UI experience before we add infinite scroll
+        limit: 100
     }));
 
-    // Local filtering for 'empty' since backend doesn't explicitly filter by tagCount=0
     const filteredGroups = () => {
         const groups = tagGroups();
         if (!groups) return [];
@@ -58,14 +53,12 @@ export default function TagsPageIndex() {
             <PageHeader
                 title="Tag & Attribute Library"
                 description="Define product traits, light requirements, and categorization metadata."
-                actions={
-                    <Button variant="primary" size="md" onClick={() => navigate("/tags/groups/create")}>
-                        Create Tag Group
-                    </Button>
-                }
-            />
+            >
+                <Button variant="primary" size="md" onClick={() => navigate("/tags/groups/create")}>
+                    Create Tag Group
+                </Button>
+            </PageHeader>
 
-            {/* 2. Metrics Block */}
             <div class="mb-8 hidden sm:block">
                 <SafeErrorBoundary
                     fallback={(err, reset) => (
@@ -78,35 +71,48 @@ export default function TagsPageIndex() {
                 </SafeErrorBoundary>
             </div>
 
-            <FilterToolbar
-                searchValue={searchQuery()}
-                onSearchChange={setSearchQuery}
-                searchPlaceholder="Search tag groups by name..."
-            >
-                <button
-                    type="button"
-                    class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter() === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                    onClick={() => setActiveFilter('all')}
-                >
-                    All Groups
-                </button>
-                <button
-                    type="button"
-                    class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter() === 'active' ? 'bg-primary-green-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                    onClick={() => setActiveFilter('active')}
-                >
-                    Active Only
-                </button>
-                <button
-                    type="button"
-                    class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter() === 'empty' ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-amber-100/50 hover:text-amber-700'}`}
-                    onClick={() => setActiveFilter('empty')}
-                >
-                    Empty Groups
-                </button>
-            </FilterToolbar>
+            <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div class="relative w-full sm:max-w-[400px] flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-green-500 focus:border-primary-green-500 outline-none transition-shadow"
+                        placeholder="Search tag groups by name..."
+                        value={searchQuery()}
+                        onInput={(e) => setSearchQuery(e.currentTarget.value)}
+                    />
+                </div>
 
-            {/* 4. Tag Groups Grid */}
+                <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                    <button
+                        type="button"
+                        class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter() === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        onClick={() => setActiveFilter('all')}
+                    >
+                        All Groups
+                    </button>
+                    <button
+                        type="button"
+                        class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter() === 'active' ? 'bg-primary-green-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        onClick={() => setActiveFilter('active')}
+                    >
+                        Active Only
+                    </button>
+                    <button
+                        type="button"
+                        class={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter() === 'empty' ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-amber-100/50 hover:text-amber-700'}`}
+                        onClick={() => setActiveFilter('empty')}
+                    >
+                        Empty Groups
+                    </button>
+                </div>
+            </div>
+
             <SafeErrorBoundary
                 fallback={(err, reset) => (
                     <InlineErrorFallback error={err} reset={reset} label="tag groups" />
