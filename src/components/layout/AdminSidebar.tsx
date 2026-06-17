@@ -162,8 +162,18 @@ export function AdminSidebar() {
                     activeClass={linkActiveClass}
                     inactiveClass={linkInactiveClass}
                 >
-                    <SettingsIcon class={`${iconBaseClass} ${location.pathname.startsWith("/settings") ? iconActiveClass : iconInactiveClass}`} />
-                    Settings
+                    <SettingsIcon class={`${iconBaseClass} ${location.pathname === "/settings/languages" ? iconActiveClass : iconInactiveClass}`} />
+                    Languages
+                </A>
+
+                <A
+                    href="/settings/payment-methods"
+                    class={linkBaseClass}
+                    activeClass={linkActiveClass}
+                    inactiveClass={linkInactiveClass}
+                >
+                    <PaymentsIcon class={`${iconBaseClass} ${location.pathname.startsWith("/settings/payment-methods") ? iconActiveClass : iconInactiveClass}`} />
+                    Payment Methods
                 </A>
             </nav>
 
