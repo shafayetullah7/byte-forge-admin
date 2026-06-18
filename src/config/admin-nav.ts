@@ -46,6 +46,7 @@ export const adminNavSections: NavSection[] = [
     items: [
       { label: "Customers", href: "/customers", icon: UsersIcon, match: "prefix", enabled: false },
       { label: "Approvals", href: "/approvals", icon: VerifiedUserIcon, match: "prefix", enabled: false },
+      { label: "Reviews", href: "/reviews", icon: ClipboardDocumentListIcon, match: "prefix", enabled: true },
       { label: "Reports", href: "/reports", icon: ChartPieIcon, match: "prefix", enabled: false },
     ],
   },
