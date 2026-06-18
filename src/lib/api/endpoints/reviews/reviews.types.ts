@@ -10,6 +10,9 @@ export interface AdminReview {
   comment: string | null;
   isVerifiedPurchase: boolean;
   status: ReviewStatus;
+  isFeatured: boolean;
+  isRemovedByAdmin: boolean;
+  removedReason: string | null;
   createdAt: string;
   updatedAt: string;
   customer: {
@@ -33,6 +36,18 @@ export interface AdminReview {
     orderNumber: string;
     status: string;
   } | null;
+  reports?: Array<{
+    id: string;
+    reason: string;
+    details: string | null;
+    status: "OPEN" | "RESOLVED" | "DISMISSED";
+    createdAt: string;
+    reportedBySeller: {
+      id: string;
+      name: string;
+      userName: string;
+    } | null;
+  }>;
 }
 
 export interface AdminReviewListResponse {
@@ -50,4 +65,9 @@ export interface AdminReviewFilter {
   limit?: number;
   status?: ReviewStatus;
   rating?: number;
+  minRating?: number;
+  maxRating?: number;
+  reportedOnly?: boolean;
+  featuredOnly?: boolean;
+  removedOnly?: boolean;
 }

@@ -1,34 +1,26 @@
 import { createMemo, createSignal, For, Show, Suspense } from "solid-js";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { Meta, Title } from "@solidjs/meta";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
+import { SafeErrorBoundary, PageErrorFallback } from "~/components/errors";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { PageShell } from "~/components/layout/PageShell";
-import { SafeErrorBoundary, PageErrorFallback } from "~/components/errors";
 import { ClipboardDocumentListIcon } from "~/components/icons";
 import {
-  approveAdminReview,
+  featureAdminReview,
   getAdminReviews,
-  rejectAdminReview,
+  removeAdminReview,
+  restoreAdminReview,
+  unfeatureAdminReview,
+  updateAdminReviewReportStatus,
   type AdminReview,
   type ReviewStatus,
 } from "~/lib/api/endpoints/reviews";
 
 export const route: RouteDefinition = {
-  preload: () => getAdminReviews({ status: "PENDING" }),
-};
-
-const statusVariant = (status: ReviewStatus) => {
-  switch (status) {
-    case "APPROVED":
-      return "success";
-    case "REJECTED":
-      return "danger";
-    default:
-      return "warning";
-  }
+  preload: () => getAdminReviews({ limit: 30 }),
 };
 
 const formatDate = (value: string) =>
@@ -38,89 +30,18 @@ const formatDate = (value: string) =>
     year: "numeric",
   });
 
-function ReviewCard(props: {
-  review: AdminReview;
-  actionId: string | null;
-  onApprove: (review: AdminReview) => void;
-  onReject: (review: AdminReview) => void;
-}) {
-  const pending = () => props.actionId === props.review.id;
-
-  return (
-    <Card class="p-5 border-slate-200 shadow-sm">
-      <div class="flex flex-col lg:flex-row lg:items-start gap-4">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-2 flex-wrap">
-            <Badge variant={statusVariant(props.review.status)}>
-              {props.review.status}
-            </Badge>
-            <span class="text-sm font-semibold text-slate-900">
-              {props.review.rating} / 5 stars
-            </span>
-            <Show when={props.review.isVerifiedPurchase}>
-              <span class="text-xs font-medium text-primary-green-700 bg-primary-green-50 px-2 py-0.5 rounded-full">
-                Verified purchase
-              </span>
-            </Show>
-          </div>
-
-          <h3 class="font-semibold text-slate-900">
-            {props.review.title ?? "Untitled review"}
-          </h3>
-          <p class="text-sm text-slate-600 mt-1">
-            {props.review.comment ?? "No written comment provided."}
-          </p>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 text-xs text-slate-500">
-            <div>
-              <span class="font-semibold text-slate-700">Buyer:</span>{" "}
-              {props.review.customer?.name ?? "Unknown"}
-            </div>
-            <div>
-              <span class="font-semibold text-slate-700">Product:</span>{" "}
-              {props.review.product?.name ?? "Unknown"}
-            </div>
-            <div>
-              <span class="font-semibold text-slate-700">Order:</span>{" "}
-              {props.review.order?.orderNumber ?? "Unknown"}
-            </div>
-          </div>
-
-          <p class="text-xs text-slate-400 mt-3">
-            Submitted {formatDate(props.review.createdAt)}
-          </p>
-        </div>
-
-        <Show when={props.review.status === "PENDING"}>
-          <div class="flex gap-2 lg:flex-col">
-            <Button
-              size="sm"
-              variant="primary"
-              isLoading={pending()}
-              onClick={() => props.onApprove(props.review)}
-            >
-              Approve
-            </Button>
-            <Button
-              size="sm"
-              variant="danger"
-              isLoading={pending()}
-              onClick={() => props.onReject(props.review)}
-            >
-              Reject
-            </Button>
-          </div>
-        </Show>
-      </div>
-    </Card>
-  );
-}
+const statusBadge = (review: AdminReview) => {
+  if (review.isRemovedByAdmin) return "danger";
+  if (review.isFeatured) return "success";
+  return review.status === "PENDING" ? "warning" : "neutral";
+};
 
 export default function ReviewsModerationPage() {
-  const [statusFilter, setStatusFilter] = createSignal<"" | ReviewStatus>(
-    "PENDING",
-  );
   const [refreshTick, setRefreshTick] = createSignal(0);
+  const [statusFilter, setStatusFilter] = createSignal<"" | ReviewStatus>("");
+  const [reportedOnly, setReportedOnly] = createSignal(false);
+  const [featuredOnly, setFeaturedOnly] = createSignal(false);
+  const [removedOnly, setRemovedOnly] = createSignal(false);
   const [actionId, setActionId] = createSignal<string | null>(null);
   const [message, setMessage] = createSignal<string | null>(null);
 
@@ -128,6 +49,9 @@ export default function ReviewsModerationPage() {
     refreshTick();
     return getAdminReviews({
       status: statusFilter() || undefined,
+      reportedOnly: reportedOnly() || undefined,
+      featuredOnly: featuredOnly() || undefined,
+      removedOnly: removedOnly() || undefined,
       limit: 50,
     });
   });
@@ -137,29 +61,30 @@ export default function ReviewsModerationPage() {
     const rows = reviews();
     return {
       total: reviewsData()?.meta.total ?? rows.length,
-      pending: rows.filter((review) => review.status === "PENDING").length,
-      approved: rows.filter((review) => review.status === "APPROVED").length,
-      rejected: rows.filter((review) => review.status === "REJECTED").length,
+      reported: rows.filter((item) => (item.reports?.length ?? 0) > 0).length,
+      featured: rows.filter((item) => item.isFeatured).length,
+      removed: rows.filter((item) => item.isRemovedByAdmin).length,
     };
   });
 
-  const runModeration = async (
-    review: AdminReview,
-    action: "approve" | "reject",
-  ) => {
+  const runAction = async (review: AdminReview, type: string) => {
     setActionId(review.id);
     setMessage(null);
     try {
-      if (action === "approve") {
-        await approveAdminReview(review.id);
-        setMessage("Review approved successfully");
-      } else {
-        await rejectAdminReview(review.id);
-        setMessage("Review rejected successfully");
+      if (type === "feature") await featureAdminReview(review.id);
+      if (type === "unfeature") await unfeatureAdminReview(review.id);
+      if (type === "remove")
+        await removeAdminReview(review.id, "Removed by admin policy review");
+      if (type === "restore") await restoreAdminReview(review.id);
+
+      if (type === "resolve-report" && review.reports?.[0]) {
+        await updateAdminReviewReportStatus(review.reports[0].id, "RESOLVED");
       }
+
+      setMessage("Review moderation updated");
       setRefreshTick((value) => value + 1);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Review update failed");
+      setMessage(error instanceof Error ? error.message : "Moderation failed");
     } finally {
       setActionId(null);
     }
@@ -169,11 +94,14 @@ export default function ReviewsModerationPage() {
     <SafeErrorBoundary fallback={(err, reset) => <PageErrorFallback error={err} reset={reset} />}>
       <PageShell>
         <Title>Reviews | ByteForge Admin</Title>
-        <Meta name="description" content="Moderate marketplace reviews" />
+        <Meta
+          name="description"
+          content="Feature, remove, and triage reported marketplace reviews."
+        />
 
         <PageHeader
-          title="Review Moderation"
-          description="Approve or reject verified-purchase reviews before they appear publicly."
+          title="Review Governance"
+          description="Triage seller reports, feature trusted reviews for landing pages, and remove policy-violating reviews."
           icon={ClipboardDocumentListIcon}
         />
 
@@ -191,22 +119,20 @@ export default function ReviewsModerationPage() {
             <p class="text-2xl font-bold text-slate-900">{metrics().total}</p>
           </Card>
           <Card class="p-4">
-            <p class="text-xs font-semibold text-slate-500 uppercase">Pending</p>
-            <p class="text-2xl font-bold text-amber-700">{metrics().pending}</p>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Reported</p>
+            <p class="text-2xl font-bold text-amber-700">{metrics().reported}</p>
           </Card>
           <Card class="p-4">
-            <p class="text-xs font-semibold text-slate-500 uppercase">Approved</p>
-            <p class="text-2xl font-bold text-primary-green-700">
-              {metrics().approved}
-            </p>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Featured</p>
+            <p class="text-2xl font-bold text-primary-green-700">{metrics().featured}</p>
           </Card>
           <Card class="p-4">
-            <p class="text-xs font-semibold text-slate-500 uppercase">Rejected</p>
-            <p class="text-2xl font-bold text-rose-700">{metrics().rejected}</p>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Removed</p>
+            <p class="text-2xl font-bold text-rose-700">{metrics().removed}</p>
           </Card>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 mb-6">
+        <div class="flex flex-wrap gap-2 mb-6">
           <For each={["", "PENDING", "APPROVED", "REJECTED"] as const}>
             {(status) => (
               <button
@@ -222,13 +148,42 @@ export default function ReviewsModerationPage() {
               </button>
             )}
           </For>
+          <button
+            type="button"
+            class={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              reportedOnly()
+                ? "bg-amber-600 text-white"
+                : "bg-white border border-slate-200 text-slate-600"
+            }`}
+            onClick={() => setReportedOnly((value) => !value)}
+          >
+            Reported
+          </button>
+          <button
+            type="button"
+            class={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              featuredOnly()
+                ? "bg-primary-green-700 text-white"
+                : "bg-white border border-slate-200 text-slate-600"
+            }`}
+            onClick={() => setFeaturedOnly((value) => !value)}
+          >
+            Featured
+          </button>
+          <button
+            type="button"
+            class={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              removedOnly()
+                ? "bg-rose-600 text-white"
+                : "bg-white border border-slate-200 text-slate-600"
+            }`}
+            onClick={() => setRemovedOnly((value) => !value)}
+          >
+            Removed
+          </button>
         </div>
 
-        <Suspense
-          fallback={
-            <Card class="h-64 animate-pulse bg-slate-50 border-slate-200 shadow-sm" />
-          }
-        >
+        <Suspense fallback={<Card class="h-64 animate-pulse bg-slate-50 border-slate-200 shadow-sm" />}>
           <div class="space-y-4">
             <For
               each={reviews()}
@@ -236,18 +191,89 @@ export default function ReviewsModerationPage() {
                 <Card class="py-16 text-center">
                   <p class="font-semibold text-slate-700">No reviews found</p>
                   <p class="text-sm text-slate-500 mt-1">
-                    Try a different moderation filter.
+                    Adjust filters to inspect more items.
                   </p>
                 </Card>
               }
             >
               {(review) => (
-                <ReviewCard
-                  review={review}
-                  actionId={actionId()}
-                  onApprove={(row) => runModeration(row, "approve")}
-                  onReject={(row) => runModeration(row, "reject")}
-                />
+                <Card class="p-5 border-slate-200 shadow-sm">
+                  <div class="flex flex-col lg:flex-row gap-4">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <Badge variant={statusBadge(review) as any}>
+                          {review.isRemovedByAdmin
+                            ? "REMOVED"
+                            : review.isFeatured
+                              ? "FEATURED"
+                              : review.status}
+                        </Badge>
+                        <span class="text-sm font-semibold text-slate-900">
+                          {review.rating} / 5 stars
+                        </span>
+                        <Show when={(review.reports?.length ?? 0) > 0}>
+                          <span class="text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                            {review.reports?.length} report(s)
+                          </span>
+                        </Show>
+                      </div>
+                      <h3 class="font-semibold text-slate-900">
+                        {review.title ?? "Untitled review"}
+                      </h3>
+                      <p class="text-sm text-slate-600 mt-1">
+                        {review.comment ?? "No written comment provided."}
+                      </p>
+                      <p class="text-xs text-slate-400 mt-2">
+                        Submitted {formatDate(review.createdAt)} · Buyer{" "}
+                        {review.customer?.name ?? "Unknown"} · Product{" "}
+                        {review.product?.name ?? "Unknown"}
+                      </p>
+                      <Show when={review.reports?.[0]}>
+                        {(report) => (
+                          <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                            <p class="font-semibold">Latest seller report</p>
+                            <p>Reason: {report().reason}</p>
+                            <Show when={report().details}>
+                              <p>Details: {report().details}</p>
+                            </Show>
+                          </div>
+                        )}
+                      </Show>
+                    </div>
+                    <div class="flex gap-2 lg:flex-col">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        isLoading={actionId() === review.id}
+                        onClick={() =>
+                          runAction(review, review.isFeatured ? "unfeature" : "feature")
+                        }
+                      >
+                        {review.isFeatured ? "Unfeature" : "Feature"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={review.isRemovedByAdmin ? "secondary" : "danger"}
+                        isLoading={actionId() === review.id}
+                        onClick={() =>
+                          runAction(review, review.isRemovedByAdmin ? "restore" : "remove")
+                        }
+                      >
+                        {review.isRemovedByAdmin ? "Restore" : "Remove"}
+                      </Button>
+                      <Show when={(review.reports?.length ?? 0) > 0}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          isLoading={actionId() === review.id}
+                          onClick={() => runAction(review, "resolve-report")}
+                        >
+                          Resolve Report
+                        </Button>
+                      </Show>
+                    </div>
+                  </div>
+                </Card>
               )}
             </For>
           </div>
