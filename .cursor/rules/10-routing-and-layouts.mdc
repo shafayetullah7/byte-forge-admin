@@ -1,0 +1,7 @@
+# Routing and Layout Rules
+
+- Use existing file-based route conventions under `src/routes/**`.
+- Protected admin pages belong under `(protected)` route group.
+- Keep auth routes under `(auth)` group.
+- Preserve session guard behavior in protected layout (`/login` redirect on null session).
+- Reuse shared page/layout components before creating custom wrappers.

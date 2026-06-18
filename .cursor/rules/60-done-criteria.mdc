@@ -1,0 +1,10 @@
+# Done Criteria Rules
+
+A change is complete only when:
+
+- Build passes (`npm run build`)
+- No TypeScript regressions in touched files
+- Query/action patterns remain consistent
+- Session/auth redirect behavior remains correct
+- Nav and route implementation status are aligned
+- Shared `fetcher` remains the API transport path

@@ -1,0 +1,7 @@
+# Query and Action Rules
+
+- Reads should use router `query` + `createAsync`.
+- Writes should use router `action` + `useAction/useSubmission`.
+- Keep endpoint calling logic in `lib/api/endpoints/**`, not scattered in route components.
+- Revalidate relevant data after successful mutations.
+- Do not convert read flows into write actions or vice versa without clear need.

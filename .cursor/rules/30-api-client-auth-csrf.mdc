@@ -1,0 +1,9 @@
+# API Client, Auth, and CSRF Rules
+
+- Route all API calls through shared `fetcher` (`lib/api/api-client.ts`).
+- Preserve:
+  - cookie forwarding in SSR
+  - CSRF token header for state-changing requests
+  - 401 silent refresh + retry behavior
+- Avoid raw `fetch` for internal API endpoints unless explicitly necessary.
+- Keep `ApiError` normalization behavior intact.

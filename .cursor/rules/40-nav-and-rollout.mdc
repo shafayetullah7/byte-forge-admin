@@ -1,0 +1,7 @@
+# Navigation and Rollout Rules
+
+- Sidebar source of truth is `src/config/admin-nav.ts`.
+- Enable nav items only for implemented, accessible routes.
+- Keep planned-but-unimplemented sections as `enabled: false`.
+- Ensure `match` mode (`exact`/`prefix`) aligns with route behavior.
+- When adding a new route, update nav state intentionally (enabled or disabled) in the same change.

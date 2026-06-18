@@ -1,0 +1,7 @@
+# Global Safety Rules
+
+- Never commit secrets or environment credentials.
+- Keep edits scoped to requested feature area.
+- Prefer consistency with existing route/component patterns.
+- Avoid broad refactors unless explicitly requested.
+- Keep disabled/placeholder nav entries untouched unless task explicitly changes rollout status.

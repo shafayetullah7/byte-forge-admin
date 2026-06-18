@@ -1,0 +1,11 @@
+# Forms, Validation, and UI State Rules
+
+- Prefer schema-first validation (zod / existing schema files).
+- Use shared form/input primitives from `components/ui`.
+- Ensure each interactive page handles:
+  - loading state
+  - error state
+  - empty state
+  - success feedback
+- Keep submission state explicit for all mutations.
+- Avoid silent failure UX.
