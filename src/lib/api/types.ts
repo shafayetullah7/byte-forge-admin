@@ -23,7 +23,7 @@ export interface ApiResponse<T> {
 
 /**
  * Pagination metadata - matches backend PaginationMeta exactly
- * @see byte-forge-auth/src/common/types/pagination.type.ts
+ * @see byte-forge-backend/src/common/types/pagination.type.ts
  */
 export interface PaginationMeta {
   total: number;
@@ -37,7 +37,7 @@ export interface PaginationMeta {
 /**
  * Paginated response wrapper - matches backend PaginatedResult with ResponseService
  * Includes ResponseService wrapper (success, message)
- * @see byte-forge-auth/src/common/types/pagination.type.ts
+ * @see byte-forge-backend/src/common/types/pagination.type.ts
  */
 export interface PaginatedResponse<T> {
   success: boolean;
@@ -49,7 +49,7 @@ export interface PaginatedResponse<T> {
 /**
  * Simplified paginated result (without ResponseService wrapper)
  * Use when backend returns raw PaginatedResult
- * @see byte-forge-auth/src/common/types/pagination.type.ts
+ * @see byte-forge-backend/src/common/types/pagination.type.ts
  */
 export interface PaginatedResult<T> {
   data: T[];

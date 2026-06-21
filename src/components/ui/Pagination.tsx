@@ -56,7 +56,7 @@ export function Pagination(props: PaginationProps) {
             onChange={(e) => onLimitChange(Number(e.currentTarget.value))}
           >
             {limitOptions.map((limit) => (
-              <option key={limit} value={limit}>
+              <option value={limit}>
                 {limit} per page
               </option>
             ))}

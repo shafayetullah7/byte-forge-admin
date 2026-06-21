@@ -297,7 +297,7 @@ src/routes/(protected)/shops/[shop_id]/
 
 ## API Endpoints Needed
 
-### Backend (byte-forge-auth)
+### Backend (byte-forge-backend)
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
@@ -441,7 +441,7 @@ byte-forge-admin/
 │   │   │   ├── ColorSwatch.tsx            # New component
 │   │   │   ├── MapEmbed.tsx               # New component
 
-byte-forge-auth/
+byte-forge-backend/
 ├── src/
 │   ├── api/admin/admin-shop/
 │   │   ├── admin-shop.controller.ts       # Updated endpoints

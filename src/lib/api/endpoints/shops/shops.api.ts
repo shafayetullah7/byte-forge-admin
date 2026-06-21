@@ -4,7 +4,7 @@ import type { PaginatedResponse, PaginatedResult, PaginationMeta } from "../../t
 
 /**
  * Shop status enum matching backend TShopStatus
- * @see byte-forge-auth/src/_db/drizzle/enum/shop.status.enum.ts
+ * @see byte-forge-backend/src/_db/drizzle/enum/shop.status.enum.ts
  */
 export type ShopStatus = 
   | 'DRAFT'
@@ -65,7 +65,7 @@ export interface ShopStats {
 
 /**
  * Paginated response wrapped by ResponseService.paginated()
- * Matches: byte-forge-auth/src/common/modules/response/response.service.ts
+ * Matches: byte-forge-backend/src/common/modules/response/response.service.ts
  */
 interface PaginatedStatsResponse<T> {
   success: boolean;

@@ -1,7 +1,7 @@
 import { JSX } from "solid-js";
 
 interface CardProps extends JSX.HTMLAttributes<HTMLDivElement> {
-    children: JSX.Element;
+    children?: JSX.Element;
 }
 
 export function Card(props: CardProps) {
