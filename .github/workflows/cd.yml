@@ -1,0 +1,67 @@
+name: CD
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+concurrency:
+  group: production-admin
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+
+    steps:
+      - name: Join Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+          tags: tag:github-actions
+
+      - name: Deploy
+        env:
+          DEPLOY_DIR: ${{ vars.DEPLOY_DIR }}
+          NODE_ENV: ${{ vars.NODE_ENV }}
+          PORT: ${{ vars.PORT }}
+          COMPOSE_PROJECT_NAME: ${{ vars.COMPOSE_PROJECT_NAME }}
+          APP_EXTERNAL_PORT: ${{ vars.APP_EXTERNAL_PORT }}
+          DOCKER_BUILD_TARGET: ${{ vars.DOCKER_BUILD_TARGET }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+        run: |
+          set -euo pipefail
+
+          echo "Deploy triggered"
+
+          tailscale ssh shafayet@home-server bash -s <<EOF
+          set -euo pipefail
+
+          export NODE_ENV="$NODE_ENV"
+          export PORT="$PORT"
+          export COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME"
+          export APP_EXTERNAL_PORT="$APP_EXTERNAL_PORT"
+          export DOCKER_BUILD_TARGET="$DOCKER_BUILD_TARGET"
+          export VITE_API_BASE_URL="$VITE_API_BASE_URL"
+
+          cd "$DEPLOY_DIR"
+
+          test -d .git || { echo "No git repo at $DEPLOY_DIR"; exit 1; }
+          git remote get-url origin | grep -q 'byte-forge-admin' || { echo "Unexpected git remote"; exit 1; }
+          command -v docker >/dev/null || { echo "docker not found"; exit 1; }
+          command -v envsubst >/dev/null || { echo "envsubst not found"; exit 1; }
+
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+
+          bash scripts/deploy.sh
+          EOF

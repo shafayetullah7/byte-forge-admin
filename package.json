@@ -1,10 +1,18 @@
 {
   "name": "byte-forge-admin",
   "type": "module",
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
     "dev": "vinxi dev --port 3050",
     "build": "vinxi build",
-    "start": "vinxi start --port 3050"
+    "start": "vinxi start --host 0.0.0.0 --port 3050",
+    "docker:dev": "NODE_ENV=development docker compose --env-file .env.development up",
+    "docker:dev:build": "NODE_ENV=development docker compose --env-file .env.development build --no-cache",
+    "docker:dev:down": "NODE_ENV=development docker compose --env-file .env.development down",
+    "docker:prod": "NODE_ENV=production DOCKER_BUILD_TARGET=production docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production up --remove-orphans",
+    "docker:prod:build": "NODE_ENV=production DOCKER_BUILD_TARGET=production docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production build --no-cache",
+    "docker:prod:down": "NODE_ENV=production DOCKER_BUILD_TARGET=production docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production down",
+    "docker:logs:prod": "NODE_ENV=production docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production logs -f app"
   },
   "dependencies": {
     "@modular-forms/solid": "^0.25.1",
@@ -17,7 +25,9 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.7",
-    "tailwindcss": "^4.0.7"
+    "@types/node": "^26.0.0",
+    "tailwindcss": "^4.0.7",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=22"
