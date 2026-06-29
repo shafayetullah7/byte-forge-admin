@@ -122,7 +122,11 @@ export default function VerificationRoute() {
     
     setRejectError(null);
     try {
-      await rejectAction(params.shop_id!, rejectReason().trim(), adminNotes().trim() || undefined);
+      await rejectAction({
+        id: params.shop_id!,
+        reason: rejectReason().trim(),
+        adminNotes: adminNotes().trim() || undefined,
+      });
       setRejectSuccess(true);
       setTimeout(() => {
         setShowRejectModal(false);

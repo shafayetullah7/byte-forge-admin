@@ -114,9 +114,18 @@ export function ShopDetailHeader(props: ShopDetailHeaderProps) {
           </div>
 
           <div class="flex items-center gap-3">
-            <Button variant="outline" size={isExpanded() ? "md" : "sm"}>View on Frontend</Button>
-            {props.shop.status === "PENDING_VERIFICATION" && (
-              <Button variant="primary" size={isExpanded() ? "md" : "sm"}>Review Verification</Button>
+            <Button variant="outline" size={isExpanded() ? "md" : "sm"}>
+              View on Frontend
+            </Button>
+            {(props.shop.status === "PENDING_VERIFICATION" ||
+              props.shop.verificationStatus === "PENDING" ||
+              props.shop.verificationStatus === "REVIEWING") && (
+              <A
+                href={`/shops/${props.shop.id}/verification`}
+                class="inline-flex h-11 items-center justify-center rounded-lg bg-primary-green-700 px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-green-800"
+              >
+                Review Verification
+              </A>
             )}
           </div>
         </div>

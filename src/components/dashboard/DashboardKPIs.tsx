@@ -1,64 +1,62 @@
-import { PaymentsIcon, StorefrontIcon, VerifiedUserIcon, ArrowTrendingUpIcon } from "~/components/icons";
+import { createAsync } from "@solidjs/router";
+import { Suspense, Show } from "solid-js";
+import { StorefrontIcon, VerifiedUserIcon, ShoppingCartIcon } from "~/components/icons";
+import { getShopStats } from "~/lib/api/endpoints/shops";
+import { getAdminOrderStats } from "~/lib/api/endpoints/orders";
 
 export function DashboardKPIs() {
-    return (
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between h-[130px]">
-                <div class="flex justify-between items-start">
-                    <span class="text-sm font-medium text-slate-500">Total Revenue</span>
-                    <div class="p-2 bg-slate-50 text-primary-green rounded-lg">
-                        <PaymentsIcon class="w-5 h-5" />
-                    </div>
-                </div>
-                <div>
-                    <div class="flex items-end gap-2 mb-1">
-                        <span class="text-2xl font-extrabold text-slate-900">$124,592</span>
-                    </div>
-                    <div class="flex items-center gap-1 text-xs">
-                        <ArrowTrendingUpIcon class="w-3 h-3 text-emerald-600" />
-                        <span class="text-emerald-600 font-medium">+12.5%</span>
-                        <span class="text-slate-500">vs last month</span>
-                    </div>
-                </div>
-            </div>
+  const shopStats = createAsync(() => getShopStats());
+  const orderStats = createAsync(() => getAdminOrderStats());
 
-            <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between h-[130px]">
-                <div class="flex justify-between items-start">
-                    <span class="text-sm font-medium text-slate-500">Active Vendors</span>
-                    <div class="p-2 bg-slate-50 text-indigo-600 rounded-lg">
-                        <StorefrontIcon class="w-5 h-5" />
-                    </div>
-                </div>
-                <div>
-                    <div class="flex items-end gap-2 mb-1">
-                        <span class="text-2xl font-extrabold text-slate-900">842</span>
-                    </div>
-                    <div class="flex items-center gap-1 text-xs">
-                        <ArrowTrendingUpIcon class="w-3 h-3 text-emerald-600" />
-                        <span class="text-emerald-600 font-medium">+5.2%</span>
-                        <span class="text-slate-500">new this month</span>
-                    </div>
-                </div>
+  return (
+    <Suspense fallback={<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div class="h-[130px] animate-pulse rounded-xl bg-slate-100" />
+      <div class="h-[130px] animate-pulse rounded-xl bg-slate-100" />
+      <div class="h-[130px] animate-pulse rounded-xl bg-slate-100" />
+    </div>}>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div class="flex h-[130px] flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between">
+            <span class="text-sm font-medium text-slate-500">Active shops</span>
+            <div class="rounded-lg bg-slate-50 p-2 text-indigo-600">
+              <StorefrontIcon class="h-5 w-5" />
             </div>
-
-            <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between h-[130px]">
-                <div class="flex justify-between items-start">
-                    <span class="text-sm font-medium text-slate-500">Pending Approvals</span>
-                    <div class="p-2 bg-slate-50 text-amber-600 rounded-lg">
-                        <VerifiedUserIcon class="w-5 h-5" />
-                    </div>
-                </div>
-                <div>
-                    <div class="flex items-end gap-2 mb-1">
-                        <span class="text-2xl font-extrabold text-slate-900">18</span>
-                    </div>
-                    <div class="flex items-center gap-1 text-xs">
-                        <ArrowTrendingUpIcon class="w-3 h-3 text-red-600" />
-                        <span class="text-red-600 font-medium">+2</span>
-                        <span class="text-slate-500">since yesterday</span>
-                    </div>
-                </div>
-            </div>
+          </div>
+          <Show when={shopStats()} fallback={<span class="text-2xl font-extrabold text-slate-300">—</span>}>
+            {(stats) => (
+              <span class="text-2xl font-extrabold text-slate-900">{stats().activeShops}</span>
+            )}
+          </Show>
         </div>
-    );
+
+        <div class="flex h-[130px] flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between">
+            <span class="text-sm font-medium text-slate-500">Pending verifications</span>
+            <div class="rounded-lg bg-slate-50 p-2 text-amber-600">
+              <VerifiedUserIcon class="h-5 w-5" />
+            </div>
+          </div>
+          <Show when={shopStats()} fallback={<span class="text-2xl font-extrabold text-slate-300">—</span>}>
+            {(stats) => (
+              <span class="text-2xl font-extrabold text-slate-900">{stats().pendingVerifications}</span>
+            )}
+          </Show>
+        </div>
+
+        <div class="flex h-[130px] flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between">
+            <span class="text-sm font-medium text-slate-500">Total orders</span>
+            <div class="rounded-lg bg-slate-50 p-2 text-primary-green">
+              <ShoppingCartIcon class="h-5 w-5" />
+            </div>
+          </div>
+          <Show when={orderStats()} fallback={<span class="text-2xl font-extrabold text-slate-300">—</span>}>
+            {(stats) => (
+              <span class="text-2xl font-extrabold text-slate-900">{stats().total}</span>
+            )}
+          </Show>
+        </div>
+      </div>
+    </Suspense>
+  );
 }

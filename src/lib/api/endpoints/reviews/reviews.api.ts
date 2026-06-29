@@ -1,4 +1,4 @@
-import { query, revalidate } from "@solidjs/router";
+import { query } from "@solidjs/router";
 import { apiClient } from "../../api-client";
 import type {
   AdminReview,
@@ -31,47 +31,3 @@ export const getAdminReviews = query(async (filter?: AdminReviewFilter) => {
 export const getAdminReview = query(async (reviewId: string) => {
   return apiClient<AdminReview>(`${BASE_PATH}/${reviewId}`);
 }, "admin-review-detail");
-
-export const featureAdminReview = async (reviewId: string) => {
-  await apiClient<AdminReview>(`${BASE_PATH}/${reviewId}/feature`, {
-    method: "PATCH",
-  });
-  revalidate(getAdminReviews.keyFor());
-  revalidate(getAdminReview.keyFor(reviewId));
-};
-
-export const unfeatureAdminReview = async (reviewId: string) => {
-  await apiClient<AdminReview>(`${BASE_PATH}/${reviewId}/unfeature`, {
-    method: "PATCH",
-  });
-  revalidate(getAdminReviews.keyFor());
-  revalidate(getAdminReview.keyFor(reviewId));
-};
-
-export const removeAdminReview = async (reviewId: string, reason: string) => {
-  await apiClient<AdminReview>(`${BASE_PATH}/${reviewId}/remove`, {
-    method: "PATCH",
-    body: JSON.stringify({ reason }),
-  });
-  revalidate(getAdminReviews.keyFor());
-  revalidate(getAdminReview.keyFor(reviewId));
-};
-
-export const restoreAdminReview = async (reviewId: string) => {
-  await apiClient<AdminReview>(`${BASE_PATH}/${reviewId}/restore`, {
-    method: "PATCH",
-  });
-  revalidate(getAdminReviews.keyFor());
-  revalidate(getAdminReview.keyFor(reviewId));
-};
-
-export const updateAdminReviewReportStatus = async (
-  reportId: string,
-  status: "OPEN" | "RESOLVED" | "DISMISSED"
-) => {
-  await apiClient(`${BASE_PATH}/reports/${reportId}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
-  revalidate(getAdminReviews.keyFor());
-};

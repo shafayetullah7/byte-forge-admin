@@ -1,4 +1,4 @@
-import { query, action, revalidate } from "@solidjs/router";
+import { query } from "@solidjs/router";
 import { apiClient } from "../../api-client";
 import type { PaginatedResponse, PaginatedResult, PaginationMeta } from "../../types";
 
@@ -75,32 +75,69 @@ interface PaginatedStatsResponse<T> {
   timestamp: string;
 }
 
+export interface ShopTranslationDetail {
+  locale: string;
+  name: string;
+  description: string | null;
+  businessHours: string | null;
+  tagline: string | null;
+  about: string | null;
+  sellerStory: string | null;
+  brandMission: string | null;
+}
+
+export interface ShopContactDetail {
+  businessEmail: string | null;
+  phone: string | null;
+  alternativePhone: string | null;
+  whatsapp: string | null;
+  telegram: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  x: string | null;
+}
+
+export interface ShopAddressTranslationDetail {
+  locale: string;
+  country: string | null;
+  division: string | null;
+  district: string | null;
+  street: string | null;
+}
+
+export interface ShopAddressDetail {
+  postalCode: string;
+  latitude: string | null;
+  longitude: string | null;
+  googleMapsLink: string | null;
+  isVerified: boolean;
+  translations: ShopAddressTranslationDetail[];
+}
+
 export interface ShopDetail {
   id: string;
   name: string;
   slug: string;
-  status: "DRAFT" | "PENDING_VERIFICATION" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "SUSPENDED" | "DELETED";
+  status: ShopStatus;
   isVerified: boolean;
   logo: string | null;
   banner: string | null;
-  verificationStatus: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED" | null;
+  verificationStatus: ShopVerificationStatus | null;
   owner: {
+    id: string;
     firstName: string;
     lastName: string;
     userName: string;
     avatar: string | null;
+    email: string | null;
+    emailVerified: boolean;
+    memberSince: string;
   } | null;
+  translations: ShopTranslationDetail[];
+  contact: ShopContactDetail | null;
+  address: ShopAddressDetail | null;
   createdAt: string;
-}
-
-export interface VerificationHistory {
-  id: string;
-  shopId: string;
-  action: string;
-  previousStatus: string;
-  newStatus: string;
-  reason: string | null;
-  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -127,14 +164,11 @@ export const getShops = query(
     const url = qs ? `/admin/shops?${qs}` : "/admin/shops";
     
     const response = await apiClient<PaginatedStatsResponse<Shop> | PaginatedResponse<Shop> | unknown>(url, { unwrapData: false });
-    
-    console.log('[Shops API] Raw response:', response);
-    
+
     // Handle wrapped response from ResponseService.paginated()
     // Format: { success, message, data, meta, timestamp }
     if (response && typeof response === 'object' && 'data' in response && 'meta' in response && 'success' in response) {
       const paginatedResponse = response as PaginatedStatsResponse<Shop>;
-      console.log('[Shops API] Returning paginated data:', paginatedResponse.data);
       return {
         data: paginatedResponse.data,
         meta: paginatedResponse.meta,
@@ -143,12 +177,9 @@ export const getShops = query(
     
     // Handle already wrapped { data, meta } format (direct PaginatedResponse)
     if (response && typeof response === 'object' && 'data' in response && 'meta' in response) {
-      console.log('[Shops API] Returning direct paginated data');
       return response as PaginatedResponse<Shop>;
     }
-    
-    // Unexpected response format - throw error to be caught by error boundary
-    console.error('[Shops API] Unexpected response format:', response);
+
     throw new Error(
       `Shops API returned unexpected format. Expected PaginatedResponse but received ${typeof response}. ` +
       `This may indicate a backend API change or network issue.`
@@ -169,44 +200,6 @@ export const getShopDetail = query(async (id: string) => {
   
   return response;
 }, "shop-detail");
-
-/**
- * Approve a shop.
- */
-export const approveShop = action(async (id: string): Promise<void> => {
-  await apiClient(`/admin/shops/${id}/approve`, { method: "POST" });
-  revalidate("shop-verification");
-  revalidate("shop-detail");
-});
-
-/**
- * Reject a shop with reason.
- */
-export const rejectShop = action(async (
-  id: string,
-  reason: string,
-  adminNotes?: string,
-): Promise<void> => {
-  await apiClient(`/admin/shops/${id}/reject`, {
-    method: "POST",
-    body: JSON.stringify({ reason, adminNotes }),
-  });
-  revalidate("shop-verification");
-  revalidate("shop-detail");
-});
-
-/**
- * Suspend a shop with reason.
- */
-export const suspendShop = action(async (id: string, reason: string): Promise<void> => {
-  await apiClient(`/admin/shops/${id}/suspend`, {
-    method: "PATCH",
-    body: JSON.stringify({ reason }),
-  });
-  revalidate("shop-verification");
-  revalidate("shop-detail");
-  revalidate("shops-list");
-});
 
 /**
  * Document with URL for download.
@@ -264,13 +257,6 @@ export interface ShopVerificationDetails {
 export const getShopVerification = query(async (id: string) => {
   return apiClient<ShopVerificationDetails>(`/admin/shops/${id}/verification`);
 }, "shop-verification");
-
-/**
- * Fetch verification history for a shop (deprecated - use getShopVerification instead).
- */
-export const getVerificationHistory = query(async (id: string) => {
-  return apiClient<VerificationHistory[]>(`/admin/shops/${id}/history`);
-}, "shop-history");
 
 /**
  * Fetch shop statistics (totals by status).

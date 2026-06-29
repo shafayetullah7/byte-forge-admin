@@ -10,9 +10,7 @@ export type TabId =
   | "address"
   | "products"
   | "orders"
-  | "delivery"
   | "owner"
-  | "financials"
   | "history"
   | "actions";
 

@@ -1,82 +1,89 @@
-import { useParams } from "@solidjs/router";
-import { For } from "solid-js";
+import { createAsync, useParams, type RouteDefinition } from "@solidjs/router";
+import { For, Show, Suspense } from "solid-js";
+import { getShopVerification } from "~/lib/api/endpoints/shops";
 
-const mockHistory = [
-  { action: "Shop created", user: "System", date: "Jan 10, 2024", type: "create" },
-  { action: "Submitted for verification", user: "Md. Rahman", date: "Jan 15, 2024", type: "submit" },
-  { action: "Verification started", user: "Admin", date: "Jan 16, 2024", type: "review" },
-  { action: "Documents uploaded", user: "Md. Rahman", date: "Jan 17, 2024", type: "upload" },
-  { action: "Shop approved", user: "Admin", date: "Jan 20, 2024", type: "approve" },
-  { action: "Shop activated", user: "System", date: "Jan 20, 2024", type: "activate" },
-];
+const actionLabel: Record<string, string> = {
+  SUBMITTED: "Verification submitted",
+  APPROVED: "Shop approved",
+  REJECTED: "Shop rejected",
+  SUSPENDED: "Shop suspended",
+  DEACTIVATED: "Shop deactivated",
+  REACTIVATED: "Shop reactivated",
+};
 
-const typeColors: Record<string, { bg: string; dot: string }> = {
-  create: { bg: "bg-slate-50", dot: "bg-slate-400" },
-  submit: { bg: "bg-amber-50", dot: "bg-amber-400" },
-  review: { bg: "bg-blue-50", dot: "bg-blue-400" },
-  upload: { bg: "bg-purple-50", dot: "bg-purple-400" },
-  approve: { bg: "bg-green-50", dot: "bg-green-400" },
-  activate: { bg: "bg-green-50", dot: "bg-green-400" },
+export const route: RouteDefinition = {
+  preload: ({ params }) => getShopVerification(params.shop_id!),
 };
 
 export default function HistoryRoute() {
   const params = useParams();
-  const shopId = params.shop_id;
+  const verification = createAsync(() => getShopVerification(params.shop_id!));
+
+  const formatDate = (value: string) =>
+    new Date(value).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
 
   return (
-    <div class="space-y-6">
-      <div class="bg-white rounded-xl border border-slate-200 p-4">
-        <span class="text-sm text-slate-500">Shop ID: {shopId}</span>
-      </div>
+    <Suspense fallback={<div class="text-sm text-slate-500">Loading history...</div>}>
+      <Show
+        when={verification()}
+        fallback={
+          <div class="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+            No verification history available.
+          </div>
+        }
+      >
+        {(data) => (
+          <div class="space-y-6">
+            <div class="rounded-xl border border-slate-200 bg-white p-6">
+              <h3 class="mb-4 text-lg font-semibold text-slate-900">Verification history</h3>
 
-      <div class="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 class="text-lg font-semibold text-slate-900 mb-4">Activity Timeline</h3>
-        
-        <div class="relative">
-          <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200"></div>
-          
-          <div class="space-y-4">
-            <For each={mockHistory}>
-              {(item) => {
-                const colors = typeColors[item.type];
-                return (
-                  <div class="relative flex items-start gap-4 pl-10">
-                    <div class={`absolute left-2.5 w-3 h-3 rounded-full ${colors.dot} border-2 border-white`}></div>
-                    
-                    <div class={`flex-1 p-4 rounded-lg ${colors.bg}`}>
-                      <div class="flex items-center justify-between mb-1">
-                        <p class="text-sm font-medium text-slate-900">{item.action}</p>
-                        <span class="text-xs text-slate-500">{item.date}</span>
-                      </div>
-                      <p class="text-xs text-slate-600">by {item.user}</p>
-                    </div>
+              <Show
+                when={(data().history?.length ?? 0) > 0}
+                fallback={
+                  <p class="text-sm text-slate-500">No history entries recorded yet.</p>
+                }
+              >
+                <div class="relative">
+                  <div class="absolute bottom-0 left-4 top-0 w-0.5 bg-slate-200" />
+                  <div class="space-y-4">
+                    <For each={data().history ?? []}>
+                      {(entry) => (
+                        <div class="relative flex items-start gap-4 pl-10">
+                          <div class="absolute left-2.5 h-3 w-3 rounded-full border-2 border-white bg-slate-400" />
+                          <div class="flex-1 rounded-lg bg-slate-50 p-4">
+                            <div class="mb-1 flex items-center justify-between gap-3">
+                              <p class="text-sm font-medium text-slate-900">
+                                {actionLabel[entry.action] ?? entry.action}
+                              </p>
+                              <span class="text-xs text-slate-500">
+                                {formatDate(entry.timestamp)}
+                              </span>
+                            </div>
+                            <Show when={entry.previousStatus || entry.newStatus}>
+                              <p class="text-xs text-slate-600">
+                                {entry.previousStatus ?? "—"} → {entry.newStatus ?? "—"}
+                              </p>
+                            </Show>
+                            <Show when={entry.reason}>
+                              <p class="mt-2 text-xs text-slate-700">{entry.reason}</p>
+                            </Show>
+                          </div>
+                        </div>
+                      )}
+                    </For>
                   </div>
-                );
-              }}
-            </For>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 class="text-lg font-semibold text-slate-900 mb-4">Admin Actions</h3>
-        <div class="space-y-3">
-          <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-            <div class="w-2 h-2 rounded-full bg-blue-400"></div>
-            <div class="flex-1">
-              <p class="text-sm text-slate-900">Admin reviewed documents</p>
-              <p class="text-xs text-slate-500">Jan 16, 2024 at 2:15 PM</p>
+                </div>
+              </Show>
             </div>
           </div>
-          <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-            <div class="w-2 h-2 rounded-full bg-green-400"></div>
-            <div class="flex-1">
-              <p class="text-sm text-slate-900">Admin approved shop</p>
-              <p class="text-xs text-slate-500">Jan 20, 2024 at 11:30 AM</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        )}
+      </Show>
+    </Suspense>
   );
 }

@@ -74,11 +74,17 @@ export default function ReviewsModerationPage() {
       if (type === "feature") await featureAdminReview(review.id);
       if (type === "unfeature") await unfeatureAdminReview(review.id);
       if (type === "remove")
-        await removeAdminReview(review.id, "Removed by admin policy review");
+        await removeAdminReview({
+          reviewId: review.id,
+          reason: "Removed by admin policy review",
+        });
       if (type === "restore") await restoreAdminReview(review.id);
 
       if (type === "resolve-report" && review.reports?.[0]) {
-        await updateAdminReviewReportStatus(review.reports[0].id, "RESOLVED");
+        await updateAdminReviewReportStatus({
+          reportId: review.reports[0].id,
+          status: "RESOLVED",
+        });
       }
 
       setMessage("Review moderation updated");

@@ -1,23 +1,19 @@
 export function DashboardSalesChart() {
-    return (
-        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm min-h-[350px] flex flex-col">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-base font-semibold text-slate-900">Sales Trend</h2>
-                <button class="text-primary-green text-sm font-medium hover:underline">View Report</button>
-            </div>
+  return (
+    <div class="flex min-h-[350px] flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-base font-semibold text-slate-900">Sales trend</h2>
+      </div>
 
-            <div class="flex-1 border-2 border-dashed border-slate-100 rounded-lg flex items-center justify-center bg-slate-50">
-                <div class="text-center">
-                    <span class="text-sm text-slate-400 block mb-2 font-medium">Chart Visualization Coming Soon</span>
-                    <div class="flex gap-2 justify-center items-end h-32 px-4">
-                        <div class="w-8 bg-slate-200 rounded-t-sm h-[40%]"></div>
-                        <div class="w-8 bg-slate-200 rounded-t-sm h-[60%]"></div>
-                        <div class="w-8 bg-primary-green/30 rounded-t-sm h-[80%]"></div>
-                        <div class="w-8 bg-primary-green rounded-t-sm h-[100%]"></div>
-                        <div class="w-8 bg-slate-200 rounded-t-sm h-[70%]"></div>
-                    </div>
-                </div>
-            </div>
+      <div class="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-slate-100 bg-slate-50">
+        <div class="max-w-sm px-6 text-center">
+          <p class="text-sm font-medium text-slate-500">Available in Phase 4</p>
+          <p class="mt-2 text-xs leading-relaxed text-slate-400">
+            Revenue charts and time-series analytics are deferred until the growth phase. Order
+            totals are available on the Orders page.
+          </p>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
