@@ -1,4 +1,4 @@
-import type { VerificationHistory as VerificationHistoryType } from "~/lib/api/endpoints/shops";
+import type { VerificationHistoryEntry as VerificationHistoryType } from "~/lib/api/endpoints/shops";
 
 interface VerificationHistoryProps {
   history: VerificationHistoryType[];
@@ -46,7 +46,7 @@ export function VerificationHistory(props: VerificationHistoryProps) {
           <div class="flex gap-4">
             {/* Timeline Dot */}
             <div class="flex flex-col items-center">
-              <div class={`w-3 h-3 rounded-full ${getStatusColor(item.newStatus)}`} />
+              <div class={`w-3 h-3 rounded-full ${getStatusColor(item.newStatus ?? "")}`} />
               {index < props.history.length - 1 && (
                 <div class="w-px h-full bg-slate-200 mt-2" />
               )}
@@ -62,7 +62,7 @@ export function VerificationHistory(props: VerificationHistoryProps) {
                   </p>
                 </div>
                 <p class="text-xs text-slate-500">
-                  {new Date(item.createdAt).toLocaleString("en-US", {
+                  {new Date(item.timestamp).toLocaleString("en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
