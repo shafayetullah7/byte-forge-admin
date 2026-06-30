@@ -1,8 +1,10 @@
 import type { Component } from "solid-js";
 import {
+  ArrowTrendingUpIcon,
   ChartPieIcon,
   ClipboardDocumentListIcon,
   DashboardIcon,
+  DocumentIcon,
   FolderIcon,
   InventoryIcon,
   PaymentsIcon,
@@ -47,6 +49,8 @@ export const adminNavSections: NavSection[] = [
       { label: "Customers", href: "/customers", icon: UsersIcon, match: "prefix", enabled: true },
       { label: "Approvals", href: "/approvals", icon: VerifiedUserIcon, match: "prefix", enabled: false },
       { label: "Reviews", href: "/reviews", icon: ClipboardDocumentListIcon, match: "prefix", enabled: true },
+      { label: "Campaigns", href: "/campaigns", icon: ArrowTrendingUpIcon, match: "prefix", enabled: true },
+      { label: "Articles", href: "/articles", icon: DocumentIcon, match: "prefix", enabled: true },
       { label: "Reports", href: "/reports", icon: ChartPieIcon, match: "prefix", enabled: false },
     ],
   },
