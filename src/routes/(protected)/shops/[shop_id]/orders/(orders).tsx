@@ -43,7 +43,6 @@ export default function ShopOrdersRoute() {
   });
 
   const displayOrders = createMemo(() => stableOrders()?.data ?? []);
-  const meta = () => stableOrders()?.meta;
   const stats = () => statsData();
 
   return (
@@ -81,18 +80,16 @@ export default function ShopOrdersRoute() {
         </Suspense>
       </SafeErrorBoundary>
 
-      <Show when={meta()}>
+      <Show when={stableOrders()?.meta}>
         {(m) => (
           <Pagination
-            page={m().page}
-            totalPages={m().totalPages}
-            total={m().total}
-            limit={m().limit}
+            meta={m()}
             onPageChange={setPage}
-            onLimitChange={(value) => {
-              setLimit(value);
-              setPage(1);
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              if (page() !== 1) setPage(1);
             }}
+            showLimitSelector
           />
         )}
       </Show>

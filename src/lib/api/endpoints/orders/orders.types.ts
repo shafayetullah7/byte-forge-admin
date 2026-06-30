@@ -1,3 +1,7 @@
+import type { PaginatedResult } from "../../types";
+
+export type { PaginatedResult };
+
 export type OrderStatus =
   | "PENDING_PAYMENT"
   | "CONFIRMED"
