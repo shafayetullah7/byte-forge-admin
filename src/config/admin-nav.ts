@@ -72,6 +72,13 @@ export const adminNavSections: NavSection[] = [
         enabled: true,
       },
       {
+        label: "Subscription Coupons",
+        href: "/subscription/coupons",
+        icon: ClipboardDocumentListIcon,
+        match: "prefix",
+        enabled: true,
+      },
+      {
         label: "Payment Methods",
         href: "/payment-methods",
         icon: PaymentsIcon,
