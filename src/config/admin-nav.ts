@@ -65,6 +65,13 @@ export const adminNavSections: NavSection[] = [
         enabled: true,
       },
       {
+        label: "Subscription Plans",
+        href: "/subscription/plans",
+        icon: ArrowTrendingUpIcon,
+        match: "prefix",
+        enabled: true,
+      },
+      {
         label: "Payment Methods",
         href: "/payment-methods",
         icon: PaymentsIcon,

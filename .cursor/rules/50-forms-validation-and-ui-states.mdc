@@ -2,6 +2,7 @@
 
 - Prefer schema-first validation (zod / existing schema files).
 - Use shared form/input primitives from `components/ui`.
+- For labeled fields with hints, use `FieldGroup` with `requirement`: `required` | `optional` | `requiredForReview`. Do not put `*` or `(Optional)` in label strings. See `byte-forge-frontend-2/docs/form-field-conventions.md`.
 - Ensure each interactive page handles:
   - loading state
   - error state
