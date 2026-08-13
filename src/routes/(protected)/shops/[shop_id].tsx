@@ -12,6 +12,7 @@ const tabs: { id: TabId; label: string; icon: string; path: string }[] = [
   { id: "address", label: "Address", icon: "location_on", path: "address" },
   { id: "products", label: "Products", icon: "inventory_2", path: "products" },
   { id: "orders", label: "Orders", icon: "shopping_cart", path: "orders" },
+  { id: "subscription", label: "Subscription", icon: "subscription", path: "subscription" },
   { id: "owner", label: "Owner", icon: "person", path: "owner" },
   { id: "history", label: "History", icon: "history", path: "history" },
   { id: "actions", label: "Actions", icon: "settings", path: "actions" },
