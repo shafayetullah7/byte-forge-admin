@@ -55,9 +55,14 @@ export default function TagsPageIndex() {
                 title="Tag & Attribute Library"
                 description="Define product traits, light requirements, and categorization metadata."
             >
-                <Button variant="primary" size="md" onClick={() => navigate("/tags/groups/create")}>
-                    Create Tag Group
-                </Button>
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" size="md" onClick={() => navigate("/tags/import")}>
+                        Bulk import
+                    </Button>
+                    <Button variant="primary" size="md" onClick={() => navigate("/tags/groups/create")}>
+                        Create Tag Group
+                    </Button>
+                </div>
             </PageHeader>
 
             <div class="mb-8 hidden sm:block">

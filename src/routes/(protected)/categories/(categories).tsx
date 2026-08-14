@@ -1,4 +1,4 @@
-import { A, createAsync, type RouteDefinition } from "@solidjs/router";
+import { A, createAsync, useNavigate, type RouteDefinition } from "@solidjs/router";
 import { Suspense, createSignal, createMemo } from "solid-js";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
@@ -15,6 +15,7 @@ export const route: RouteDefinition = {
 };
 
 export default function CategoriesPageIndex() {
+    const navigate = useNavigate();
     const categories = createAsync(() => getCategoryTree());
     const [searchTerm, setSearchTerm] = createSignal("");
     const [filterActive, setFilterActive] = createSignal(false);
@@ -80,8 +81,8 @@ export default function CategoriesPageIndex() {
                 title="Category Management"
                 description="Organize the product catalog and define global navigation structures."
             >
-                <Button variant="outline" size="md">
-                    Import/Export
+                <Button variant="outline" size="md" onClick={() => navigate("/categories/import")}>
+                    Bulk import
                 </Button>
                 <A href="/categories/create">
                     <Button variant="primary" size="md">
