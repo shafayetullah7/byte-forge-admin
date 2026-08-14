@@ -18,13 +18,14 @@ export interface BulkImportCategoriesPayload {
   items: BulkImportCategoryInput[];
   options: {
     dryRun: boolean;
-    onDuplicate: "skip" | "error";
+    onDuplicate: "skip" | "error" | "upsert";
   };
 }
 
 export interface BulkImportCategoriesSummary {
   created: number;
   skipped: number;
+  updated: number;
   errors: number;
   categoriesCreated: number;
 }
@@ -33,7 +34,7 @@ export interface BulkImportCategoriesRowResult {
   ref: string;
   entity: "category";
   slug: string;
-  status: "created" | "skipped" | "error";
+  status: "created" | "skipped" | "updated" | "error";
   id?: string;
   message?: string;
 }

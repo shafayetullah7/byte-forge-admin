@@ -363,7 +363,7 @@ POST /api/v1/admin/tag-groups/bulk-import
   groups?: TagGroupImportNode[];     // tags
   options: {
     dryRun: boolean;                 // default true when called from review step 1
-    onDuplicate: 'skip' | 'error'; // v1; 'upsert' v2
+    onDuplicate: 'skip' | 'error' | 'upsert';
   };
 }
 ```
@@ -429,26 +429,26 @@ Reuse: `CategorySelector`, `slugify`, `PageShell`, `FormHeader`, `TagMetricsPane
 
 ### Phase 1 — Tags (recommended first)
 
-- [ ] JSON paste + Zod parse + preview table
-- [ ] `POST admin/tag-groups/bulk-import` (create groups + tags, `skip`/`error`)
-- [ ] Dry-run + result report
-- [ ] Entry from `/tags`
+- [x] JSON paste + Zod parse + preview table
+- [x] `POST admin/tag-groups/bulk-import` (create groups + tags, `skip`/`error`/`upsert`)
+- [x] Dry-run + result report
+- [x] Entry from `/tags`
 
 **Rationale:** Backend already bulk-creates tags on group create; smaller surface than closure table.
 
 ### Phase 2 — Categories
 
-- [ ] Nested + flat `parentSlug` normalization
-- [ ] Tree preview + parent editing
-- [ ] `POST admin/categories/bulk-import`
-- [ ] Wire `/categories` Import button
+- [x] Nested + flat `parentSlug` normalization
+- [x] Tree preview + parent editing
+- [x] `POST admin/categories/bulk-import`
+- [x] Wire `/categories` Import button
 
 ### Phase 3 — Polish
 
-- [ ] Export categories JSON
-- [ ] `upsert` mode
-- [ ] sessionStorage draft recovery UI
-- [ ] Virtualized preview for large trees
+- [x] Export categories JSON (`GET admin/categories/export` + **Export JSON** on `/categories`)
+- [x] `upsert` mode (categories + tags; updates translations and `isActive`)
+- [x] sessionStorage draft recovery UI (restored-draft banner on import wizards)
+- [x] Windowed preview for large trees (first 100 rows + show all)
 
 ---
 

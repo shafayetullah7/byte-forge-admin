@@ -1,6 +1,7 @@
 import { For, Show } from "solid-js";
 import { Card } from "~/components/ui/Card";
 import type { PreviewCategoryRow } from "~/lib/api/endpoints/categories/categories-bulk-import.types";
+import { useWindowedRows, WindowedRowsFooter } from "./useWindowedRows";
 
 function StatusBadge(props: { status: string }) {
   const classes = () => {
@@ -11,6 +12,8 @@ function StatusBadge(props: { status: string }) {
         return "bg-amber-100 text-amber-800 border-amber-200";
       case "skipped":
         return "bg-slate-100 text-slate-700 border-slate-200";
+      case "updated":
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "created":
         return "bg-primary-green-100 text-primary-green-800 border-primary-green-200";
       default:
@@ -26,12 +29,14 @@ function StatusBadge(props: { status: string }) {
 }
 
 export function CategoryImportPreview(props: { rows: PreviewCategoryRow[] }) {
+  const windowed = useWindowedRows(() => props.rows);
+
   return (
     <Card class="overflow-hidden border-slate-200">
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto max-h-[32rem] overflow-y-auto">
         <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-slate-100 bg-slate-50/80 text-left text-[11px] uppercase tracking-wider text-slate-500">
+          <thead class="sticky top-0 z-10">
+            <tr class="border-b border-slate-100 bg-slate-50/95 text-left text-[11px] uppercase tracking-wider text-slate-500 backdrop-blur">
               <th class="px-5 py-3">Category</th>
               <th class="px-5 py-3">Parent</th>
               <th class="px-5 py-3">Depth</th>
@@ -40,7 +45,7 @@ export function CategoryImportPreview(props: { rows: PreviewCategoryRow[] }) {
             </tr>
           </thead>
           <tbody>
-            <For each={props.rows}>
+            <For each={windowed.visibleRows()}>
               {(row) => (
                 <tr class="border-b border-slate-50 last:border-0">
                   <td class="px-5 py-3">
@@ -69,6 +74,10 @@ export function CategoryImportPreview(props: { rows: PreviewCategoryRow[] }) {
           </tbody>
         </table>
       </div>
+      <WindowedRowsFooter
+        hiddenCount={windowed.hiddenCount()}
+        onShowAll={() => windowed.setShowAll(true)}
+      />
     </Card>
   );
 }

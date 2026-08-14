@@ -4,7 +4,7 @@ export type BulkImportEntity = "tag_group" | "tag";
 
 export interface BulkImportTagGroupsOptions {
   dryRun: boolean;
-  onDuplicate: "skip" | "error";
+  onDuplicate: "skip" | "error" | "upsert";
 }
 
 export interface BulkImportTagGroupsPayload {
@@ -34,6 +34,7 @@ export interface BulkImportTagGroupInput {
 export interface BulkImportTagGroupsSummary {
   created: number;
   skipped: number;
+  updated: number;
   errors: number;
   groupsCreated: number;
   tagsCreated: number;
@@ -43,7 +44,7 @@ export interface BulkImportTagGroupsRowResult {
   ref: string;
   entity: BulkImportEntity;
   slug: string;
-  status: "created" | "skipped" | "error";
+  status: "created" | "skipped" | "updated" | "error";
   id?: string;
   message?: string;
 }

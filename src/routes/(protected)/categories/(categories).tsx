@@ -1,10 +1,10 @@
 import { A, createAsync, useNavigate, type RouteDefinition } from "@solidjs/router";
-import { Suspense, createSignal, createMemo } from "solid-js";
+import { Suspense, createSignal, createMemo, Show } from "solid-js";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { CategoryTreeView } from "~/components/categories/CategoryTreeView";
-import { getCategoryTree } from "~/lib/api/endpoints/categories";
+import { getCategoryTree, exportCategoriesForImport, downloadCategoryExportJson } from "~/lib/api/endpoints/categories";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { CategoryNode } from "~/lib/api/endpoints/categories/categories.types";
 import { PageHeader } from "~/components/layout/PageHeader";
@@ -19,6 +19,8 @@ export default function CategoriesPageIndex() {
     const categories = createAsync(() => getCategoryTree());
     const [searchTerm, setSearchTerm] = createSignal("");
     const [filterActive, setFilterActive] = createSignal(false);
+    const [exporting, setExporting] = createSignal(false);
+    const [exportError, setExportError] = createSignal<string | null>(null);
 
     const filteredCategories = createMemo(() => {
         const data = categories();
@@ -74,6 +76,19 @@ export default function CategoriesPageIndex() {
         ];
     };
 
+    const handleExportJson = async () => {
+        setExporting(true);
+        setExportError(null);
+        try {
+            const payload = await exportCategoriesForImport();
+            downloadCategoryExportJson(payload);
+        } catch (error) {
+            setExportError(error instanceof Error ? error.message : "Export failed");
+        } finally {
+            setExporting(false);
+        }
+    };
+
     return (
         <PageShell>
 
@@ -84,12 +99,24 @@ export default function CategoriesPageIndex() {
                 <Button variant="outline" size="md" onClick={() => navigate("/categories/import")}>
                     Bulk import
                 </Button>
+                <Button
+                    variant="outline"
+                    size="md"
+                    onClick={handleExportJson}
+                    isLoading={exporting()}
+                >
+                    Export JSON
+                </Button>
                 <A href="/categories/create">
                     <Button variant="primary" size="md">
                         Add Root Category
                     </Button>
                 </A>
             </PageHeader>
+
+            <Show when={exportError()}>
+                <p class="mb-4 text-sm text-red-600">{exportError()}</p>
+            </Show>
 
             {/* Stats Overview — isolated boundary */}
             <div class="mb-8">

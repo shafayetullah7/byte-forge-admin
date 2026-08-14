@@ -18,6 +18,7 @@ import {
   CATEGORY_BULK_IMPORT_SESSION_KEY,
 } from "~/components/taxonomy/bulk-import/category-import.example";
 import { CategoryImportPreview } from "~/components/taxonomy/bulk-import/CategoryImportPreview";
+import { ImportDraftBanner } from "~/components/taxonomy/bulk-import/ImportDraftBanner";
 import {
   buildImportPayload,
   buildPreviewRows,
@@ -34,7 +35,8 @@ export default function CategoryBulkImportPage() {
   const [rawJson, setRawJson] = createSignal("");
   const [parseError, setParseError] = createSignal<string | null>(null);
   const [items, setItems] = createSignal<BulkImportCategoryInput[]>([]);
-  const [onDuplicate, setOnDuplicate] = createSignal<"skip" | "error">("skip");
+  const [onDuplicate, setOnDuplicate] = createSignal<"skip" | "error" | "upsert">("skip");
+  const [draftBannerVisible, setDraftBannerVisible] = createSignal(false);
   const [confirmed, setConfirmed] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
   const [submitError, setSubmitError] = createSignal<string | null>(null);
@@ -54,6 +56,7 @@ export default function CategoryBulkImportPage() {
         if (draft.rawJson) setRawJson(draft.rawJson);
         if (draft.items) setItems(draft.items);
         if (draft.step && draft.step !== "result") setStep(draft.step);
+        setDraftBannerVisible(true);
       } catch {
         sessionStorage.removeItem(CATEGORY_BULK_IMPORT_SESSION_KEY);
       }
@@ -93,7 +96,7 @@ export default function CategoryBulkImportPage() {
     }
   };
 
-  const handleDuplicatePolicyChange = (policy: "skip" | "error") => {
+  const handleDuplicatePolicyChange = (policy: "skip" | "error" | "upsert") => {
     setOnDuplicate(policy);
     if (step() === "review") void runDryRun();
   };
@@ -144,6 +147,10 @@ export default function CategoryBulkImportPage() {
     sessionStorage.removeItem(CATEGORY_BULK_IMPORT_SESSION_KEY);
   };
 
+  const dismissDraftBanner = () => {
+    setDraftBannerVisible(false);
+  };
+
   return (
     <SafeErrorBoundary fallback={(err, reset) => <PageErrorFallback error={err} reset={reset} />}>
       <PageShell>
@@ -163,6 +170,15 @@ export default function CategoryBulkImportPage() {
           <StepPill label="3. Review" active={step() === "review"} done={step() === "result"} />
           <StepPill label="4. Result" active={step() === "result"} done={false} />
         </div>
+
+        <ImportDraftBanner
+          visible={draftBannerVisible()}
+          onResume={dismissDraftBanner}
+          onDiscard={() => {
+            resetWizard();
+            setDraftBannerVisible(false);
+          }}
+        />
 
         <Show when={step() === "paste"}>
           <Card class="p-6 space-y-4">
@@ -233,11 +249,12 @@ export default function CategoryBulkImportPage() {
             </Show>
             <Show when={dryRunResult()}>
               {(result) => (
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <SummaryTile
                     label="Categories to create"
                     value={String(result().summary.categoriesCreated)}
                   />
+                  <SummaryTile label="Updated" value={String(result().summary.updated)} />
                   <SummaryTile label="Skipped" value={String(result().summary.skipped)} />
                   <SummaryTile label="Errors" value={String(result().summary.errors)} />
                 </div>
@@ -264,6 +281,15 @@ export default function CategoryBulkImportPage() {
                     onChange={() => handleDuplicatePolicyChange("error")}
                   />
                   Fail import on duplicates
+                </label>
+                <label class="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="radio"
+                    name="duplicate-policy"
+                    checked={onDuplicate() === "upsert"}
+                    onChange={() => handleDuplicatePolicyChange("upsert")}
+                  />
+                  Update existing rows (translations and status)
                 </label>
               </div>
             </div>
@@ -305,11 +331,12 @@ export default function CategoryBulkImportPage() {
               <h2 class="text-base font-bold text-slate-900">
                 {result().success ? "Import completed" : "Import finished with issues"}
               </h2>
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <SummaryTile
                   label="Categories created"
                   value={String(result().summary.categoriesCreated)}
                 />
+                <SummaryTile label="Updated" value={String(result().summary.updated)} />
                 <SummaryTile label="Skipped" value={String(result().summary.skipped)} />
                 <SummaryTile label="Errors" value={String(result().summary.errors)} />
               </div>

@@ -1,6 +1,7 @@
 import { For, Show } from "solid-js";
 import { Card } from "~/components/ui/Card";
 import type { PreviewGroupRow } from "~/lib/api/endpoints/tag-groups/tag-groups-bulk-import.types";
+import { useWindowedRows, WindowedRowsFooter } from "./useWindowedRows";
 
 function StatusBadge(props: { status: string }) {
   const classes = () => {
@@ -9,6 +10,8 @@ function StatusBadge(props: { status: string }) {
         return "bg-red-100 text-red-700 border-red-200";
       case "skipped":
         return "bg-slate-100 text-slate-700 border-slate-200";
+      case "updated":
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "created":
         return "bg-primary-green-100 text-primary-green-800 border-primary-green-200";
       case "warning":
@@ -26,9 +29,11 @@ function StatusBadge(props: { status: string }) {
 }
 
 export function TagImportPreview(props: { groups: PreviewGroupRow[] }) {
+  const windowed = useWindowedRows(() => props.groups);
+
   return (
     <div class="space-y-4">
-      <For each={props.groups}>
+      <For each={windowed.visibleRows()}>
         {(group) => (
           <Card class="overflow-hidden border-slate-200">
             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -98,6 +103,10 @@ export function TagImportPreview(props: { groups: PreviewGroupRow[] }) {
           </Card>
         )}
       </For>
+      <WindowedRowsFooter
+        hiddenCount={windowed.hiddenCount()}
+        onShowAll={() => windowed.setShowAll(true)}
+      />
     </div>
   );
 }
