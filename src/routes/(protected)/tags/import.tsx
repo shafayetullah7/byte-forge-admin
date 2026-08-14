@@ -19,6 +19,7 @@ import {
 } from "~/components/taxonomy/bulk-import/tag-import.example";
 import { TagImportPreview } from "~/components/taxonomy/bulk-import/TagImportPreview";
 import { ImportDraftBanner } from "~/components/taxonomy/bulk-import/ImportDraftBanner";
+import { isMeaningfulTagImportDraft } from "~/components/taxonomy/bulk-import/import-draft.util";
 import {
   buildImportPayload,
   buildPreviewRows,
@@ -53,6 +54,10 @@ export default function TagBulkImportPage() {
           groups?: BulkImportTagGroupInput[];
           step?: WizardStep;
         };
+        if (!isMeaningfulTagImportDraft(draft)) {
+          sessionStorage.removeItem(TAG_BULK_IMPORT_SESSION_KEY);
+          return;
+        }
         if (draft.rawJson) setRawJson(draft.rawJson);
         if (draft.groups) setGroups(draft.groups);
         if (draft.step && draft.step !== "result") setStep(draft.step);
@@ -66,13 +71,18 @@ export default function TagBulkImportPage() {
   createEffect(() => {
     if (typeof window === "undefined") return;
     if (step() === "result") return;
+    const draft = {
+      rawJson: rawJson(),
+      groups: groups(),
+      step: step(),
+    };
+    if (!isMeaningfulTagImportDraft(draft)) {
+      sessionStorage.removeItem(TAG_BULK_IMPORT_SESSION_KEY);
+      return;
+    }
     sessionStorage.setItem(
       TAG_BULK_IMPORT_SESSION_KEY,
-      JSON.stringify({
-        rawJson: rawJson(),
-        groups: groups(),
-        step: step(),
-      }),
+      JSON.stringify(draft),
     );
   });
 

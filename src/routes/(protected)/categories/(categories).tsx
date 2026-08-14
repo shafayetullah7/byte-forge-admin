@@ -4,7 +4,7 @@ import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { TagMetricsPanel } from "~/components/taxonomy/TagMetricsPanel";
 import { CategoryTreeView } from "~/components/categories/CategoryTreeView";
-import { getCategoryTree, exportCategoriesForImport, downloadCategoryExportJson } from "~/lib/api/endpoints/categories";
+import { getCategoryTree, fetchCategoriesForExport, downloadCategoryExportJson } from "~/lib/api/endpoints/categories";
 import { SafeErrorBoundary, InlineErrorFallback } from "~/components/errors";
 import { CategoryNode } from "~/lib/api/endpoints/categories/categories.types";
 import { PageHeader } from "~/components/layout/PageHeader";
@@ -80,7 +80,7 @@ export default function CategoriesPageIndex() {
         setExporting(true);
         setExportError(null);
         try {
-            const payload = await exportCategoriesForImport();
+            const payload = await fetchCategoriesForExport();
             downloadCategoryExportJson(payload);
         } catch (error) {
             setExportError(error instanceof Error ? error.message : "Export failed");

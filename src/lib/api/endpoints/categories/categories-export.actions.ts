@@ -1,4 +1,3 @@
-import { query } from "@solidjs/router";
 import { apiClient } from "../../api-client";
 import type { BulkImportCategoryInput } from "./categories-bulk-import.types";
 
@@ -6,9 +5,9 @@ export interface CategoryExportPayload {
   items: BulkImportCategoryInput[];
 }
 
-export const exportCategoriesForImport = query(async () => {
+export async function fetchCategoriesForExport(): Promise<CategoryExportPayload> {
   return apiClient<CategoryExportPayload>("/admin/categories/export");
-}, "categories-export");
+}
 
 export function downloadCategoryExportJson(payload: CategoryExportPayload) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], {

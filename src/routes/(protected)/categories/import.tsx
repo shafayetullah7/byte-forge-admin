@@ -19,6 +19,7 @@ import {
 } from "~/components/taxonomy/bulk-import/category-import.example";
 import { CategoryImportPreview } from "~/components/taxonomy/bulk-import/CategoryImportPreview";
 import { ImportDraftBanner } from "~/components/taxonomy/bulk-import/ImportDraftBanner";
+import { isMeaningfulCategoryImportDraft } from "~/components/taxonomy/bulk-import/import-draft.util";
 import {
   buildImportPayload,
   buildPreviewRows,
@@ -53,6 +54,10 @@ export default function CategoryBulkImportPage() {
           items?: BulkImportCategoryInput[];
           step?: WizardStep;
         };
+        if (!isMeaningfulCategoryImportDraft(draft)) {
+          sessionStorage.removeItem(CATEGORY_BULK_IMPORT_SESSION_KEY);
+          return;
+        }
         if (draft.rawJson) setRawJson(draft.rawJson);
         if (draft.items) setItems(draft.items);
         if (draft.step && draft.step !== "result") setStep(draft.step);
@@ -66,13 +71,18 @@ export default function CategoryBulkImportPage() {
   createEffect(() => {
     if (typeof window === "undefined") return;
     if (step() === "result") return;
+    const draft = {
+      rawJson: rawJson(),
+      items: items(),
+      step: step(),
+    };
+    if (!isMeaningfulCategoryImportDraft(draft)) {
+      sessionStorage.removeItem(CATEGORY_BULK_IMPORT_SESSION_KEY);
+      return;
+    }
     sessionStorage.setItem(
       CATEGORY_BULK_IMPORT_SESSION_KEY,
-      JSON.stringify({
-        rawJson: rawJson(),
-        items: items(),
-        step: step(),
-      }),
+      JSON.stringify(draft),
     );
   });
 
