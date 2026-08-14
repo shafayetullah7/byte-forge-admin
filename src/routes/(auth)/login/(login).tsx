@@ -1,4 +1,4 @@
-import { action, useSubmission, useAction } from "@solidjs/router";
+import { action, useSubmission, useAction, A, useSearchParams } from "@solidjs/router";
 import { createSignal, createEffect, Show } from "solid-js";
 import { createForm, setError } from "@modular-forms/solid";
 import { Button } from "~/components/ui/Button";
@@ -37,6 +37,7 @@ const loginAction = action(async (data: LoginFormData) => {
 export default function LoginPage() {
     const loginTrigger = useAction(loginAction);
     const submission = useSubmission(loginAction);
+    const [searchParams] = useSearchParams();
     const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
 
     const [loginForm, { Form, Field }] = createForm<LoginFormData>({
@@ -125,6 +126,12 @@ export default function LoginPage() {
                         class="space-y-6"
                         autocomplete="on"
                     >
+                        <Show when={searchParams.registered === "1"}>
+                            <div class="bg-primary-green-50 text-primary-green-800 p-4 rounded-lg text-sm border border-primary-green-100">
+                                Admin account created. Sign in with your email and password.
+                            </div>
+                        </Show>
+
                         <Show when={errorMessage()}>
                             <div class="bg-red-50 text-red-600 p-4 rounded-lg text-sm border border-red-100 flex items-start gap-3">
                                 <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,6 +202,16 @@ export default function LoginPage() {
                             </Button>
                         </div>
                     </Form>
+
+                    <p class="text-center text-sm text-slate-500 mt-6">
+                        Need an admin account?{" "}
+                        <A
+                            href="/register"
+                            class="font-semibold text-primary-green-700 hover:text-primary-green-800"
+                        >
+                            Register
+                        </A>
+                    </p>
                 </Card>
 
                 <p class="text-center mt-8 text-sm text-slate-400 font-medium">

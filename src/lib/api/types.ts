@@ -84,6 +84,25 @@ export interface LoginLocalAdminDto {
 }
 
 /**
+ * Admin registration (request OTP)
+ */
+export interface RegisterLocalAdminDto {
+  firstName: string;
+  lastName: string;
+  userName: string;
+  email: string;
+  password: string;
+}
+
+export interface RequestAdminRegistrationOtpResponse {
+  expiresAt: string;
+}
+
+export interface CompleteAdminRegistrationDto extends RegisterLocalAdminDto {
+  otp: string;
+}
+
+/**
  * Login response data
  */
 export interface LoginResponse {

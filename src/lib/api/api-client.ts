@@ -138,7 +138,8 @@ export async function fetcher<T>(
     // 3. Silent Refresh & Token Rotation Handling
     const isAuthRoute =
       endpoint.startsWith("/admin/auth/login") ||
-      endpoint.startsWith("/admin/auth/refresh");
+      endpoint.startsWith("/admin/auth/refresh") ||
+      endpoint.startsWith("/admin/auth/register");
 
     if (response.status === 401 && strict && !isAuthRoute) {
       // 3.1 Deduplicate refresh calls and prevent infinite retries
