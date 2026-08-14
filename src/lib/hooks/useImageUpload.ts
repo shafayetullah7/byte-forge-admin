@@ -1,10 +1,12 @@
 import { createSignal } from "solid-js";
 import { deleteAdminMedia, uploadAdminImage } from "~/lib/api/endpoints/media";
 import { ApiError } from "~/lib/api/types";
+import { prepareImageForUpload } from "~/lib/media/prepare-image-for-upload";
 
 export interface UseImageUploadOptions {
   maxSizeMB?: number;
   allowedTypes?: string[];
+  compressBeforeUpload?: boolean;
   onSuccess?: (mediaId: string, mediaUrl: string) => void;
   onError?: (error: Error) => void;
 }
@@ -27,6 +29,7 @@ export function useImageUpload(
   const {
     maxSizeMB = 3,
     allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"],
+    compressBeforeUpload = true,
     onSuccess,
     onError,
   } = options;
@@ -38,14 +41,6 @@ export function useImageUpload(
   const [uploadError, setUploadError] = createSignal<string | null>(null);
 
   const upload = async (file: File) => {
-    const maxSizeBytes = maxSizeMB * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
-      const error = new Error(`File size must be less than ${maxSizeMB}MB`);
-      setUploadError(error.message);
-      onError?.(error);
-      return;
-    }
-
     if (!allowedTypes.includes(file.type)) {
       const error = new Error(
         `Only ${allowedTypes.map((t) => t.split("/")[1]?.toUpperCase()).join(", ")} images are allowed`,
@@ -60,7 +55,17 @@ export function useImageUpload(
     const oldMediaId = mediaId();
 
     try {
-      const response = await uploadAdminImage(file);
+      const uploadFile = await prepareImageForUpload(file, {
+        maxSizeMB,
+        enabled: compressBeforeUpload,
+      });
+
+      const maxSizeBytes = maxSizeMB * 1024 * 1024;
+      if (uploadFile.size > maxSizeBytes) {
+        throw new Error(`File size must be less than ${maxSizeMB}MB`);
+      }
+
+      const response = await uploadAdminImage(uploadFile);
       setMediaId(response.id);
       setPreview(response.url);
       onSuccess?.(response.id, response.url);

@@ -2,6 +2,7 @@ import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { Badge } from "~/components/ui/Badge";
 import type { AdminProductSummary, ProductStatus } from "~/lib/api/endpoints/products";
+import { cloudinaryUrl } from "~/lib/media/cloudinary-url";
 
 const statusVariant: Record<ProductStatus, "success" | "warning" | "danger" | "neutral"> = {
   ACTIVE: "success",
@@ -70,9 +71,11 @@ export function ProductsTable(props: ProductsTableProps) {
                           }
                         >
                           <img
-                            src={product.thumbnailUrl!}
+                            src={cloudinaryUrl(product.thumbnailUrl, "thumb")}
                             alt=""
                             class="h-10 w-10 rounded-lg object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </Show>
                         <div>

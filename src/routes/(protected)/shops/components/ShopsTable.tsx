@@ -3,6 +3,7 @@ import { A } from "@solidjs/router";
 import { Button } from "~/components/ui/Button";
 import { Badge } from "~/components/ui/Badge";
 import type { Shop, ShopStatus, ShopVerificationStatus } from "~/lib/api/endpoints/shops";
+import { cloudinaryUrl } from "~/lib/media/cloudinary-url";
 
 export interface ShopsTableProps {
   shops: Shop[];
@@ -74,9 +75,11 @@ export function ShopsTable(props: ShopsTableProps) {
                   <div class="flex items-center gap-3">
                     {shop.logoUrl ? (
                       <img
-                        src={shop.logoUrl}
+                        src={cloudinaryUrl(shop.logoUrl, "logo-sm")}
                         alt={shop.nameEn || shop.slug}
                         class="w-10 h-10 rounded-lg object-cover border border-slate-200"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
@@ -99,9 +102,11 @@ export function ShopsTable(props: ShopsTableProps) {
                     <div class="flex items-center gap-2">
                       {shop.owner!.avatar ? (
                         <img
-                          src={shop.owner!.avatar}
+                          src={cloudinaryUrl(shop.owner!.avatar, "logo-sm")}
                           alt={`${shop.owner!.firstName} ${shop.owner!.lastName}`}
                           class="w-6 h-6 rounded-full object-cover"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs text-slate-600">
