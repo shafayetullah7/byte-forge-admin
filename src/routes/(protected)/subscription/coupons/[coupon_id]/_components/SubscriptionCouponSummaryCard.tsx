@@ -1,8 +1,8 @@
 import { Card } from "~/components/ui/Card";
 import type { SubscriptionCoupon } from "~/lib/api/endpoints/subscription-coupons";
 import {
+  describeCouponAccessGrant,
   formatCouponDate,
-  formatCouponDuration,
   formatRedemptionCount,
 } from "../../_components/coupon-formatters";
 import { CouponStatusBadge } from "../../_components/CouponStatusBadge";
@@ -14,8 +14,8 @@ export function SubscriptionCouponSummaryCard(props: { coupon: SubscriptionCoupo
         <div>
           <h1 class="text-2xl font-bold font-mono text-slate-900">{props.coupon.code}</h1>
           <div class="flex flex-wrap items-center gap-2 mt-2">
-            <span class="text-sm font-semibold text-slate-700">
-              {formatCouponDuration(props.coupon.durationValue, props.coupon.durationUnit)}
+            <span class="text-sm text-slate-600">
+              {describeCouponAccessGrant(props.coupon.durationValue, props.coupon.durationUnit)}
             </span>
             <CouponStatusBadge isActive={props.coupon.isActive} />
           </div>

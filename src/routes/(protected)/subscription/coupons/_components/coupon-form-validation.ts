@@ -26,7 +26,7 @@ export function validateCouponForm(input: CouponFormInput): {
 
   const duration = Number(input.durationValue);
   if (!Number.isInteger(duration) || duration <= 0) {
-    errors.durationValue = "Duration must be a positive whole number";
+    errors.durationValue = "Length must be a positive whole number (e.g. 3 for three months)";
   }
 
   const max = parseOptionalMaxRedemptions(input.maxRedemptions);

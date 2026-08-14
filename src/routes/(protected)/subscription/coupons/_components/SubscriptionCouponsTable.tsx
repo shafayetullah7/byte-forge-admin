@@ -21,7 +21,7 @@ export function SubscriptionCouponsTable(props: { coupons: SubscriptionCoupon[] 
                 Code
               </th>
               <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Duration
+                Access granted
               </th>
               <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Redemptions

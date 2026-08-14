@@ -14,6 +14,22 @@ export function formatCouponDuration(value: number, unit: string): string {
   return `${value} ${value === 1 ? label : `${label}s`}`;
 }
 
+/** Human sentence for forms and detail views. */
+export function describeCouponAccessGrant(value: number, unit: string): string {
+  return `Grants ${formatCouponDuration(value, unit)} of seller subscription access when redeemed.`;
+}
+
+export function previewCouponAccessGrant(
+  value: string,
+  unit: string,
+): string {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return "Set how long subscription access lasts after a seller redeems this coupon.";
+  }
+  return describeCouponAccessGrant(parsed, unit);
+}
+
 export function formatRedemptionCount(coupon: {
   redemptionCount: number;
   maxRedemptions: number | null;

@@ -63,7 +63,7 @@ export default function CreateSubscriptionCouponPage() {
 
         <FormHeader
           title="Add Subscription Coupon"
-          subtitle="Coupons extend a shop's subscription period. Sellers cannot stack coupons while already active."
+          subtitle="Coupons grant free subscription time when redeemed. Set access length separately from when the code can be used."
           backHref="/subscription/coupons"
           backLabel="Back to Subscription Coupons"
         />
