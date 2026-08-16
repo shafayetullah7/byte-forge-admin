@@ -47,6 +47,13 @@ export const authApi = {
     });
   },
 
+  oidcCheck: async (headers?: HeadersInit): Promise<AdminUser> => {
+    return fetcher<AdminUser>("/admin/auth/oidc-check", {
+      headers,
+      strict: false,
+    });
+  },
+
   logout: async (): Promise<void> => {
     return fetcher<void>("/admin/auth/logout", {
       method: "POST",
