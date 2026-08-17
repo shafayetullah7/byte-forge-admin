@@ -121,15 +121,8 @@ export async function fetcher<T>(
   const method = fetchOptions.method?.toUpperCase() || "GET";
   const stateChangingMethods = ["POST", "PUT", "DELETE", "PATCH"];
   if (stateChangingMethods.includes(method)) {
-    const xsrfToken =
-      getUniversalCookie("xsrf-token", headers) ??
-      getUniversalCookie("bfAdmin-xsrf-token", headers);
+    const xsrfToken = getUniversalCookie("xsrf-token", headers);
     if (xsrfToken) headers.set("X-XSRF-TOKEN", xsrfToken);
-  }
-
-  const oidcAccessToken = getUniversalCookie("bfAdminAccessToken", headers);
-  if (oidcAccessToken && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${oidcAccessToken}`);
   }
 
   const makeRequest = (opts: RequestInit, currentHeaders: Headers) =>

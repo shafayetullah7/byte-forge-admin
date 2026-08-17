@@ -12,13 +12,10 @@ import { authApi } from "~/lib/api/endpoints/auth.api";
 export const getSession = query(async () => {
   "use server";
   try {
-    return await authApi.oidcCheck();
-  } catch {
-    try {
-      return await authApi.checkAuth();
-    } catch {
-      return null;
-    }
+    return await authApi.checkAuth();
+  } catch (error) {
+    // Fail silently for session checks
+    return null;
   }
 }, "admin-session");
 

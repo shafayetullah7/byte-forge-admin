@@ -7,8 +7,6 @@ import { Input } from "~/components/ui/Input";
 import { PasswordInput } from "~/components/ui/PasswordInput";
 import { PottedPlantIcon } from "~/components/icons/PottedPlantIcon";
 import { authApi } from "~/lib/api";
-import { startOidcLogin } from "~/lib/auth/oidc-actions";
-import { getPublicOidcConfig } from "~/lib/auth/oidc-config";
 import { loginSchema, type LoginFormData } from "~/schemas/login.schema";
 
 interface ValidationError {
@@ -39,11 +37,8 @@ const loginAction = action(async (data: LoginFormData) => {
 export default function LoginPage() {
     const loginTrigger = useAction(loginAction);
     const submission = useSubmission(loginAction);
-    const startOidc = useAction(startOidcLogin);
     const [searchParams] = useSearchParams();
     const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
-    const [oidcPending, setOidcPending] = createSignal(false);
-    const oidcConfig = getPublicOidcConfig();
 
     const [loginForm, { Form, Field }] = createForm<LoginFormData>({
         validate: (values) => {
@@ -109,20 +104,6 @@ export default function LoginPage() {
         loginTrigger(values);
     };
 
-    const handleOidcLogin = async () => {
-        if (!oidcConfig.oidcLoginEnabled) return;
-        setOidcPending(true);
-        try {
-            const result = await startOidc("/");
-            if (result?.authorizeUrl) {
-                window.location.assign(result.authorizeUrl);
-            }
-        } catch {
-            setErrorMessage("OIDC sign-in failed. Please try again.");
-            setOidcPending(false);
-        }
-    };
-
     return (
         <main class="min-h-screen bg-primary-green-50 relative flex items-center justify-center p-4 overflow-hidden">
             <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
@@ -145,19 +126,6 @@ export default function LoginPage() {
                         class="space-y-6"
                         autocomplete="on"
                     >
-                        <Show when={oidcConfig.oidcLoginEnabled}>
-                            <Button
-                                type="button"
-                                class="w-full"
-                                variant="secondary"
-                                isLoading={oidcPending()}
-                                onClick={handleOidcLogin}
-                            >
-                                Sign in with Aponika
-                            </Button>
-                        </Show>
-
-                        <Show when={oidcConfig.legacyLoginEnabled}>
                         <Show when={searchParams.registered === "1"}>
                             <div class="bg-primary-green-50 text-primary-green-800 p-4 rounded-lg text-sm border border-primary-green-100">
                                 Admin account created. Sign in with your email and password.
@@ -233,10 +201,8 @@ export default function LoginPage() {
                                 {submission.pending ? "Authenticating..." : "Sign in to Dashboard"}
                             </Button>
                         </div>
-                        </Show>
                     </Form>
 
-                    <Show when={oidcConfig.legacyLoginEnabled}>
                     <p class="text-center text-sm text-slate-500 mt-6">
                         Need an admin account?{" "}
                         <A
@@ -246,7 +212,6 @@ export default function LoginPage() {
                             Register
                         </A>
                     </p>
-                    </Show>
                 </Card>
 
                 <p class="text-center mt-8 text-sm text-slate-400 font-medium">
